@@ -1,10 +1,14 @@
 ---
-title: 'Odoo XML-RPC & Legacy JSON-RPC API Reference'
+title: 'Odoo XML-RPC and Legacy JSON-RPC API Reference Guide'
 sidebarTitle: 'RPC API'
 description: 'Reference for the legacy XML-RPC API: /xmlrpc/2/common for authentication, /xmlrpc/2/object for execute_kw, with Python, PHP, Ruby, and Java examples.'
 ---
 
 The Odoo XML-RPC API provides programmatic access to most ORM model methods over HTTP using the XML-RPC protocol. It exposes two main endpoints: `/xmlrpc/2/common` for unauthenticated operations (version check, login), and `/xmlrpc/2/object` for authenticated model method calls.
+
+<Note>
+Access to the external API is only available on **Custom** Odoo pricing plans. It is not available on *One App Free* or *Standard* plans. Visit the [Odoo pricing page](https://www.odoo.com/pricing-plan) for details.
+</Note>
 
 <Warning>
 **Deprecated since Odoo 19.0.** The XML-RPC and JSON-RPC APIs at `/xmlrpc`, `/xmlrpc/2`, and `/jsonrpc` are scheduled for removal in **Odoo 22** (fall 2028) and **Online 21.1** (winter 2027). Migrate new integrations to the [External JSON-2 API](/developer/reference/external-api).
@@ -113,7 +117,7 @@ Integer uid = (Integer) client.execute(common_config, "authenticate",
 
 All model access goes through `execute_kw` on `/xmlrpc/2/object`:
 
-```
+```text
 execute_kw(db, uid, password, model, method, args, kwargs={})
 ```
 
@@ -172,6 +176,21 @@ records = models.execute_kw(db, uid, password,
     {"fields": ["name", "country_id"], "limit": 5}
 )
 ```
+
+### Count Records
+
+Use `search_count` to retrieve only the number of records matching a domain, without fetching the records themselves. It takes the same domain filter as `search`:
+
+```python
+count = models.execute_kw(db, uid, password,
+    "res.partner", "search_count",
+    [[["is_company", "=", True]]]
+)
+```
+
+<Note>
+Calling `search` and then `search_count` (or vice versa) may not yield coherent results if other users are modifying the database between the two calls.
+</Note>
 
 ### Create Records
 

@@ -1,5 +1,5 @@
 ---
-title: 'JavaScript Modules and Asset Bundles in Odoo'
+title: 'Odoo JavaScript Modules, Asset Bundles, and Patching'
 sidebarTitle: 'JS Modules'
 description: "Understand Odoo's ES module system, @odoo/* import paths, asset bundles, the patching mechanism, and how to add JavaScript to your addon."
 ---
@@ -108,7 +108,7 @@ export function otherFunction(val) { ... }
 The Odoo transpiler is not a full parser. Avoid these patterns:
 
 ```javascript
-// ❌ Not supported — import must start on its own line
+// ❌ Not supported — import must not be preceded by a non-space character
 var a = 1; import X from "xxx";
 
 // ❌ Not supported — export object cannot contain comments
@@ -189,7 +189,7 @@ In `__manifest__.py`:
 ```
 
 <Tip>
-Asset paths use glob patterns. For example, `"myaddon/static/src/**/*"` includes all files recursively. However, for Odoo SaaS databases, list files individually — wildcard inclusion is not supported there.
+Asset paths support glob patterns. For example, `"myaddon/static/src/**/*"` includes all files recursively. However, for Odoo SaaS databases, list files individually — wildcard inclusion is not supported there.
 </Tip>
 
 ### Overriding Bundle Contents
@@ -232,7 +232,7 @@ patch(FormController.prototype, {
 ```
 
 <Warning>
-Always call `super` when patching `setup()` and other lifecycle methods — failing to do so will break all other patches that rely on the original method.
+Always call `super` when patching `setup()` and other lifecycle methods — failing to do so will break all other patches that rely on the original method. Note that `super` is only valid inside a method shorthand (`fn() {}`), not in a regular function (`fn: function() {}`) or an arrow function.
 </Warning>
 
 To unpatch (useful in tests):
@@ -243,4 +243,20 @@ import { patch } from "@web/core/utils/patch";
 const unpatch = patch(SomeClass.prototype, { myMethod() { ... } });
 // later:
 unpatch();
+```
+
+### Patching Static Methods
+
+When patching a class directly (not `.prototype`), static properties are affected:
+
+```javascript
+// patches static methods on the class itself
+patch(MyClass, {
+  myStaticFn() { ... },
+});
+
+// patches instance methods (the usual case)
+patch(MyClass.prototype, {
+  myPrototypeFn() { ... },
+});
 ```

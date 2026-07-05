@@ -1,5 +1,5 @@
 ---
-title: 'Create a Custom JavaScript View in Odoo'
+title: 'How to Build a Custom JavaScript View Type in Odoo'
 sidebarTitle: 'Custom JS View'
 description: 'Step-by-step guide to building a custom Odoo view: controller, renderer, model, arch parser, view registry registration, and XML view record declaration.'
 ---
@@ -47,8 +47,7 @@ The fastest path is to extend an existing view. The example below adds a custom 
     <?xml version="1.0" encoding="UTF-8" ?>
     <templates>
       <t t-name="my_module.CustomKanbanView"
-         t-inherit="web.KanbanView"
-         t-inherit-mode="primary">
+         t-inherit="web.KanbanView">
         <xpath expr="//Layout" position="before">
           <div class="o_custom_ribbon">
             Custom information ribbon

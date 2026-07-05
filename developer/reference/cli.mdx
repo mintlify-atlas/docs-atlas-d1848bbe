@@ -1,5 +1,5 @@
 ---
-title: 'Odoo CLI Reference: odoo-bin Commands and Options'
+title: 'Odoo CLI Reference: All odoo-bin Commands and Options'
 sidebarTitle: 'CLI'
 description: 'Complete odoo-bin CLI reference: server options, database config, multiprocessing, testing, scaffold, shell, populate, cloc, and deploy commands.'
 ---
@@ -37,6 +37,7 @@ This is the **default** command (can be omitted). Starts the Odoo HTTP server.
 | `-d <db>`, `--database <db>` | Database(s) to use (comma-separated restricts access) |
 | `-i <modules>`, `--init <modules>` | Comma-separated modules to install before starting (requires `-d`) |
 | `-u <modules>`, `--update <modules>` | Comma-separated modules to update before starting; use `all` for everything (requires `-d`) |
+| `--reinit <modules>` | Comma-separated modules to reinitialize before starting (loads data in `init` mode; for development only — **do not use in production**) |
 | `--addons-path <dirs>` | Comma-separated directories scanned for modules |
 | `-c <file>`, `--config <file>` | Path to config file (default: `$ODOO_RC` or `~/.odoorc`) |
 | `-D <path>`, `--data-dir <path>` | Directory for filestore and sessions |
@@ -194,8 +195,9 @@ $ odoo-bin populate -d my_database --models res.partner,account.move --factors 1
 | Option | Description |
 |--------|-------------|
 | `-d <database>` | Database to populate |
-| `--models <models>` | Comma-separated list of models to populate |
+| `--models <models>` | Comma-separated list of models to populate (models listed twice are only populated once) |
 | `--factors <factors>` | Comma-separated list of factor sizes; last factor applies to remaining models |
+| `--sep <separator>` | Separator used to generate record names |
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Accept Online Payments with Odoo Payment Providers"
 sidebarTitle: "Payment Providers"
-description: "Connect Stripe, PayPal, Adyen, and 15+ other payment providers to accept online payments on your eCommerce site, customer portal, and sales invoices in Odoo."
+description: "Connect Stripe, PayPal, Adyen, and 15+ other payment providers to accept online payments on your eCommerce site, customer portal, and invoices."
 ---
 
 Odoo embeds integrations with numerous **payment providers** so your customers can pay online — directly from their customer portal, your eCommerce website, or on a sales order or invoice. Customers can settle payments using their preferred method, including credit cards, bank transfers, and digital wallets. Each payment provider is linked to a configurable list of payment methods that can be activated or deactivated based on the needs of your business.
@@ -130,6 +130,20 @@ The icons displayed next to each payment method at checkout come from the **bran
 2. To change the method's icon, hover over the image in the upper-right corner and click the **pencil** icon.
 3. Open the **Brands** tab to view and reorder activated brands. Drag and drop to change their display sequence. Click a brand to edit its icon in the popup window.
 
+### Advanced Configuration
+
+Payment method settings can be further adjusted for advanced use cases.
+
+<Warning>
+  Each payment method is preconfigured to align with its provider's behavior and Odoo integration. Changes to the advanced configuration may cause errors and should be tested on a duplicate or test database first. Modifications only take effect to the extent that the payment method and provider support the relevant capability.
+</Warning>
+
+To access advanced payment method settings:
+
+1. Enable **developer mode** via **Settings → General Settings → Developer Tools → Activate the developer mode**.
+2. Navigate to the payment method list (**Accounting → Configuration → Payment Methods**) and click the relevant method.
+3. Open the **Configuration** tab and adjust the available settings as needed.
+
 ---
 
 ## Tokenization
@@ -189,7 +203,11 @@ To enable express checkout, open the Stripe provider's **Configuration** tab and
 
 ## Availability: Currencies, Countries, and Maximum Amount
 
-You can restrict when a payment provider is offered to customers using the **Configuration** tab:
+You can restrict when a payment provider is offered to customers using the **Configuration** tab.
+
+<Tip>
+  To display an availability diagnostic report — including which providers and methods are enabled, and reasons why any may not be available — enable developer mode, then click the **bug** icon next to the **Choose a payment method** heading on the payment form.
+</Tip>
 
 <Accordion title="Currencies and Countries">
   Each provider has a built-in list of supported currencies and countries that filters availability during checkout. If a customer's currency or country is not in the supported list, the provider's payment methods are not shown to them. You can manually add or remove currencies and countries from the provider's configuration.

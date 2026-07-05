@@ -1,7 +1,7 @@
 ---
 title: "Odoo Python and JavaScript Coding Guidelines"
 sidebarTitle: "Coding Guidelines"
-description: "Odoo coding standards for Python (PEP8 + Odoo idioms), module structure, XML/QWeb formatting, class attribute ordering, method conventions, and JavaScript/SCSS rules."
+description: "Odoo coding standards: module structure, XML IDs, Python PEP 8 conventions, class attribute ordering, naming rules, and CSS/SCSS guidelines."
 ---
 
 Well-structured code is easier to read, easier to debug, and easier for teammates to extend without side effects. These guidelines define the conventions Odoo uses across Python, XML, JavaScript, and SCSS — apply them to every new module and every new piece of development you contribute.
@@ -391,18 +391,19 @@ class Event(models.Model):
     price = fields.Integer(string='Price')
     event_type = fields.Selection(string='Type', selection='_selection_type')
 
-    # 4. Compute, inverse, and search methods (same order as field declarations)
+    # 4. SQL constraints and indexes
+
+    # 5. Compute, inverse, and search methods (same order as field declarations)
     @api.depends('seats_max', 'registration_ids.state', 'registration_ids.nb_register')
     def _compute_seats(self):
         ...
 
+    # 6. Selection methods (return computed values for selection fields)
     @api.model
     def _selection_type(self):
         return []
 
-    # 5. SQL constraints (and indexes)
-
-    # 6. Constraint and onchange methods
+    # 7. Constraint and onchange methods
     @api.constrains('seats_max', 'seats_available')
     def _check_seats_limit(self):
         ...
@@ -411,25 +412,25 @@ class Event(models.Model):
     def _onchange_date_begin(self):
         ...
 
-    # 7. CRUD overrides (create, write, unlink, name_search, …)
+    # 8. CRUD overrides (create, write, unlink, name_search, …)
     @api.model
     def create(self, vals_list):
         ...
 
-    # 8. Action methods
+    # 9. Action methods
     def action_validate(self):
         self.ensure_one()
         ...
 
-    # 9. Business methods
+    # 10. Business methods
     def mail_user_confirm(self):
         ...
 ```
 
 ## JavaScript guidelines
 
-- Always include `'use strict';` at the top of JavaScript files.
-- Use a linter (`jshint` or ESLint with the Odoo config).
+- `use strict;` is recommended for all JavaScript files.
+- Use a linter (e.g. `jshint`).
 - Never include minified JavaScript libraries in the source.
 - Use **PascalCase** for class declarations.
 - Each component should live in its own file with a meaningful name (e.g. `activity.js` for activity widgets).

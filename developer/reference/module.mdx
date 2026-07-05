@@ -1,7 +1,7 @@
 ---
-title: 'Odoo Module Structure and Manifest Reference'
+title: 'Odoo Module Manifest and Directory Structure Reference'
 sidebarTitle: 'Modules'
-description: 'Reference for Odoo module __manifest__.py fields, module file structure, data file loading, demo data, and upgrade/install hooks.'
+description: 'Reference for Odoo module __manifest__.py keys, directory layout, data file loading, demo data, assets bundles, and install/uninstall hooks.'
 ---
 
 An Odoo module (also called an addon) is a Python package that Odoo discovers in one or more `addons_path` directories. Every module must contain at minimum a `__manifest__.py` file that describes it and a `__init__.py` that makes it a Python package. Everything in the Odoo ecosystem — business apps, technical modules, localization packs, themes — is delivered as a module with this same structure.
@@ -153,7 +153,7 @@ Paths (relative to the module root) of XML or CSV files that are loaded every ti
 <Accordion title="demo">
 **Type:** `list[str]`
 
-Paths to data files that are loaded **only** when Odoo is running in demonstration mode (started with `--load-language` demo data or when a new database is created with demo data enabled). These files typically populate the database with realistic-looking sample records.
+Paths to data files that are loaded **only** when Odoo is running in demonstration mode (when a new database is created with demo data enabled). These files typically populate the database with realistic-looking sample records.
 
 ```python
 'demo': [
@@ -165,7 +165,7 @@ Paths to data files that are loaded **only** when Odoo is running in demonstrati
 <Accordion title="license">
 **Type:** `str` | Default: `LGPL-3`
 
-Distribution license. Accepted values: `GPL-2`, `GPL-3`, `AGPL-3`, `LGPL-3`, `OEEL-1` (Enterprise), `OPL-1` (Proprietary), `Other OSI approved licence`, `Other proprietary`.
+Distribution license. Accepted values: `GPL-2`, `GPL-2 or any later version`, `GPL-3`, `GPL-3 or any later version`, `AGPL-3`, `LGPL-3`, `Other OSI approved licence`, `OEEL-1` (Odoo Enterprise Edition License v1.0), `OPL-1` (Odoo Proprietary License v1.0), `Other proprietary`.
 </Accordion>
 
 <Accordion title="application">
@@ -216,6 +216,49 @@ Hooks called at install/uninstall time. Each receives the Odoo `env` as its sing
 # __init__.py
 def post_init_hook(env):
     env['estate.property'].search([]).write({'state': 'new'})
+```
+</Accordion>
+
+<Accordion title="installable">
+**Type:** `bool` | Default: `True`
+
+Whether a user should be able to install the module from the Web UI. Set to `False` to hide the module from the Apps list while still allowing it to be loaded as a dependency.
+
+```python
+'installable': True,
+```
+</Accordion>
+
+<Accordion title="external_dependencies">
+**Type:** `dict`
+
+Declares Python package or system binary dependencies. Odoo will refuse to install the module if any listed dependency is absent from the host machine.
+
+```python
+'external_dependencies': {
+    'python': ['lxml', 'pdfminer'],
+    'bin': ['wkhtmltopdf'],
+},
+```
+</Accordion>
+
+<Accordion title="maintainer">
+**Type:** `str`
+
+Person or entity responsible for maintaining this module. Defaults to the value of `author` if not specified.
+
+```python
+'maintainer': 'My Company Support Team',
+```
+</Accordion>
+
+<Accordion title="sequence">
+**Type:** `int` | Default: `100`
+
+Controls where the module appears in the Apps list. Lower numbers appear higher in the list.
+
+```python
+'sequence': 10,
 ```
 </Accordion>
 

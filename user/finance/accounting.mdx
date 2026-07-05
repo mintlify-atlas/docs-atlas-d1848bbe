@@ -1,7 +1,7 @@
 ---
 title: "Odoo Accounting: Double-Entry Bookkeeping & Invoicing"
 sidebarTitle: "Accounting"
-description: "Odoo Accounting provides double-entry bookkeeping, customer invoicing, vendor bills, bank reconciliation, multi-currency support, and real-time financial reporting."
+description: "Odoo Accounting provides double-entry bookkeeping, customer invoicing, vendor bills, bank reconciliation, and real-time financial reporting."
 ---
 
 Odoo Accounting is a full-featured accounting solution built around the double-entry bookkeeping standard. Every financial transaction — customer invoices, vendor bills, point-of-sale orders, expense reports, inventory valuations — automatically generates the underlying journal entries, keeping your books accurate without manual data entry. A lighter **Odoo Invoicing** app is also available for businesses that only need to create invoices, manage payments, and handle vendor bills, without the full accounting feature set.
@@ -67,6 +67,12 @@ Parent companies and their **branches** operate under shared accounting and repo
   The Fiscal Localization package is set on the parent company and applies to all its branches. Adding a branch enables multi-company functions — see [Odoo's pricing page](https://www.odoo.com/pricing-plan) for licensing implications.
 </Note>
 
+### VAT and Tax Returns for Branches
+
+Each company and branch must be configured with its own legal information, including a VAT number where applicable. Depending on the organizational structure, branches may share the parent company's VAT number or have their own, resulting in either a combined or separate VAT return.
+
+This flexible setup allows users to generate individual reports and tax returns for each entity when needed.
+
 ---
 
 ## Multi-Currency Environment
@@ -90,7 +96,7 @@ Odoo provides three ways to give an external accountant access to your invoices 
 <Accordion title="Grant database access rights">
   Add the accountant as a new user in your database and assign the **Administrator** role in the **Accounting** section of their access rights. Also enable **Bank account validation** as needed.
 
-  Adding an accountant user to an Odoo Online database is free if they have an Odoo account registered under the same email address as the company user record.
+  Adding an accountant user to an **Odoo Online** database is free if they have an Odoo account registered under the same email address as the company user record. However, **Odoo.sh** and **On-premise** deployments may involve extra charges for each additional user — refer to [Odoo's pricing page](https://www.odoo.com/pricing-plan) for details.
 </Accordion>
 
 <Accordion title="Auto-send copies of a journal's documents">

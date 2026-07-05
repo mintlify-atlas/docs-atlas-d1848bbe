@@ -1,5 +1,5 @@
 ---
-title: 'Create an Odoo Accounting Localization Package'
+title: 'Create an Odoo Accounting Localization (l10n) Module'
 sidebarTitle: 'Accounting Localization'
 description: 'Build a country-specific accounting localization: Chart of Accounts, account groups, tax templates, fiscal positions, tax reports, and demo company data.'
 ---
@@ -22,15 +22,13 @@ For example: if the company's country is Switzerland, `l10n_ch` is automatically
 
 A minimal `l10n_XX` module follows this layout:
 
-```
+```text
 l10n_xx/
 ├── data/
 │   ├── template/
 │   │   ├── account.account-xx.csv        # Chart of Accounts
 │   │   ├── account.group-xx.csv          # Account groups
-│   │   ├── account.tax.group-xx.csv      # Tax groups
-│   │   ├── account.tax-xx.csv            # Tax definitions
-│   │   └── account.fiscal.position-xx.csv # Fiscal positions
+│   │   └── account.tax.group-xx.csv      # Tax groups
 │   └── other_data.xml
 ├── views/
 │   └── xxxmodel_views.xml

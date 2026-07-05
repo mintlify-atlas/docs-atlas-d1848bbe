@@ -1,7 +1,7 @@
 ---
-title: 'Build UI with Odoo OWL Components'
+title: 'Odoo OWL Components: Hooks and Generic UI Reference'
 sidebarTitle: 'OWL Components'
-description: 'Learn how to build Odoo web UI with OWL: class-based components, lifecycle hooks, QWeb templates, slots, and Odoo-specific hooks like useBus and useService.'
+description: 'Learn to build Odoo web UI with OWL: class-based components, lifecycle hooks, QWeb templates, slots, and Odoo-specific hooks like useBus and useService.'
 ---
 
 OWL (Odoo Web Library) is the declarative component system used throughout the Odoo web client. Loosely inspired by Vue and React, OWL components are JavaScript classes with QWeb XML templates that re-render reactively when observed state changes. All new Odoo UI development should use OWL; the legacy widget system is being phased out.
@@ -90,7 +90,7 @@ The Odoo web framework ships a suite of reusable OWL components for common UI pa
     Wraps any element to add swipe-left/swipe-right actions (e.g. mark as read on mobile).
   </Card>
   <Card title="CheckBox" icon="check-square">
-    Simple checkbox with a clickable label. Linked via `t-on-change`.
+    Simple checkbox component with a label. The checkbox is toggled whenever the label is clicked.
   </Card>
   <Card title="Dropdown / DropdownItem" icon="chevron-down">
     Full-featured dropdown with keyboard navigation, RTL support, and nested dropdowns.
@@ -167,12 +167,27 @@ class MyComponent extends Component {
 | `total` | `number` | Total record count |
 | `onUpdate` | `function` | Called when the page changes (may be async) |
 | `isEditable` | `boolean` | Allow clicking the page indicator to edit it (default: `true`) |
+| `withAccessKey` | `boolean` | Binds access key `p`/`n` to previous/next page buttons (default: `true`) |
 
 ---
 
 ## Odoo-Specific Hooks
 
 Hooks wrap lifecycle-dependent logic into composable functions. Import all standard hooks from `@web/core/utils/hooks`.
+
+### `useAssets`
+
+Lazily loads additional asset bundles (JS/CSS) at runtime. Import from `@web/core/assets`:
+
+```javascript
+import { useAssets } from "@web/core/assets";
+
+class MyComponent extends Component {
+  setup() {
+    useAssets({ jsLibs: ["/web/static/lib/some_lib/some_lib.js"] });
+  }
+}
+```
 
 ### `useService`
 
@@ -230,7 +245,7 @@ class MyComponent extends Component {
 
 ### `usePager`
 
-Connects a component's pagination state to the control panel's `Pager` component:
+Connects a component's pagination state to the control panel's `Pager` component. Import from `@web/search/pager_hook`:
 
 ```javascript
 import { usePager } from "@web/search/pager_hook";
@@ -250,7 +265,7 @@ class CustomView extends Component {
 
 ### `usePosition`
 
-Positions a *popper* element relative to a *reference* element, updating on scroll and resize:
+Positions a *popper* element relative to a *reference* element, updating on scroll and resize. Import from `@web/core/position_hook`:
 
 ```javascript
 import { usePosition } from "@web/core/position_hook";
@@ -258,7 +273,7 @@ import { Component, xml, useRef } from "@odoo/owl";
 
 class DropMenu extends Component {
   static template = xml`
-    <button t-ref="toggler">Toggle</button>
+    <button t-ref="toggler">Toggle Menu</button>
     <div t-ref="menu">
       <t t-slot="default">Menu content</t>
     </div>
@@ -284,7 +299,7 @@ class DropMenu extends Component {
 
 ### `useSpellCheck`
 
-Activates spellcheck on focused `input`, `textarea`, or `contenteditable` elements:
+Activates spellcheck on focused `input`, `textarea`, or `contenteditable` elements. Import from `@web/core/utils/hooks`:
 
 ```javascript
 import { useSpellCheck } from "@web/core/utils/hooks";

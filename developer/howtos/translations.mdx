@@ -1,7 +1,7 @@
 ---
-title: 'Add Translations to Your Odoo Module'
+title: 'Translating Odoo Modules: Python, JS, and PO Files'
 sidebarTitle: 'Translations'
-description: 'Mark Python and JavaScript strings for translation, export .pot files, create .po language files, handle lazy translations, and avoid common translation pitfalls.'
+description: 'Mark Python and JavaScript strings for translation, export .pot templates, create .po language files, use lazy translations, and avoid common pitfalls.'
 ---
 
 Odoo has built-in internationalization support for both server-side Python code and client-side JavaScript. This guide covers how to mark strings for translation in your module, export the translation template, create language files, and follow best practices for robust i18n.
@@ -257,7 +257,7 @@ From the `.pot` template, create per-language `.po` files:
 
 Place finished `.po` files in `<yourmodule>/i18n/`:
 
-```
+```text
 myaddon/
 └── i18n/
     ├── myaddon.pot      # template

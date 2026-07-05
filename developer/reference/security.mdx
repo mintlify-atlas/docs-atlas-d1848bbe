@@ -132,7 +132,8 @@ Record rules are **group rules** (applying to specific groups) or **global rules
 | `name` | Description of the rule. |
 | `model_id` | The model this rule applies to. |
 | `domain_force` | Domain expression. Available variables: `user` (current user recordset), `time` (Python time module), `company_id` (current company ID), `company_ids` (list of accessible company IDs). |
-| `groups` | Many2many to `res.groups`. If empty, the rule is **global**. |
+| `groups` | Many2many to `res.groups`. If empty, the rule is **global** (applies to all users). |
+| `global` | Computed from `groups`. `True` when no groups are set (read-only). |
 | `perm_read` | Apply the rule to read operations (default `True`). |
 | `perm_write` | Apply the rule to write operations (default `True`). |
 | `perm_create` | Apply the rule to create operations (default `True`). |

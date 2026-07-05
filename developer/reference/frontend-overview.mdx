@@ -1,5 +1,5 @@
 ---
-title: 'Odoo Frontend Framework: JavaScript Architecture Overview'
+title: 'Odoo Frontend JavaScript Framework Architecture Guide'
 sidebarTitle: 'Frontend Overview'
 description: 'Explore the Odoo JavaScript frontend architecture: ES modules, OWL components, services, registries, asset bundles, and the environment system.'
 ---
@@ -66,7 +66,7 @@ Every OWL component in the web client shares a common `env` object. Odoo extends
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `qweb` | object | All loaded QWeb templates |
+| `qweb` | object | Required by OWL — contains all loaded templates |
 | `bus` | EventBus | Global event bus for coordinating system events |
 | `services` | object | All active services (use `useService` to access) |
 | `debug` | string | Non-empty when debug mode is active |
@@ -199,7 +199,7 @@ const domain = new Domain(["&", "&", ["a", "=", 1], ["b", "=", 2], ["c", "=", 3]
 domain.contains({ a: 1, b: 2, c: 3 }); // true
 
 // Combine domains
-Domain.or([[[" a", "=", 1]], "[('b', '<=', 3)]"]).toString();
+Domain.or([[["a", "=", 1]], "[('b', '<=', 3)]"]).toString();
 // → ["│", ("a", "=", 1), ("b", "<=", 3)]
 ```
 
@@ -220,10 +220,14 @@ Key bus events:
 |-------|---------|------|
 | `WEB_CLIENT_READY` | — | Web client has been mounted |
 | `ACTION_MANAGER:UI-UPDATED` | update mode | Current action rendering complete |
+| `ACTION_MANAGER:UPDATE` | next rendering info | Action manager finished computing next interface |
+| `MENUS:APP-CHANGED` | — | The menu service's current app has changed |
 | `ROUTE_CHANGE` | — | URL hash changed |
 | `RPC:REQUEST` | rpc id | RPC request started |
 | `RPC:RESPONSE` | rpc id | RPC request completed |
+| `FOCUS-VIEW` | — | The main view should focus itself |
 | `CLEAR-CACHES` | — | All internal caches should be cleared |
+| `CLEAR-UNCOMMITTED-CHANGES` | list of functions | Views with uncommitted changes should clear them |
 
 ## Browser Object
 

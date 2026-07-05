@@ -20,7 +20,7 @@ There are two editions of Odoo to choose from before selecting a hosting method.
 </CardGroup>
 
 <Tip>
-  You can [switch from Community to Enterprise](/admin/on-premise#switching-community-to-enterprise) at any time — except when running a source install.
+  You can [switch from Community to Enterprise](/admin/on-premise#switching-from-community-to-enterprise) at any time.
 </Tip>
 
 ## Hosting Options
@@ -64,10 +64,19 @@ You can migrate between hosting types at any time. The process depends on your c
     **To Odoo Online:**
     1. Create a duplicate of the database and uninstall all non-standard apps (Odoo Online does not support custom modules).
     2. Use the database manager to export a dump with filestore.
-    3. [Open a support ticket](https://www.odoo.com/help-form) including your subscription number, desired URL, dump file, target region, database name, version, and administrator email.
+    3. [Open a support ticket](https://www.odoo.com/help-form) including the following:
+       - your **subscription number**
+       - the **URL** you want to use for the database (e.g., `company.odoo.com`)
+       - the **dump** as an attachment or as a link to the file (required for 60 MB+ files)
+       - the **region** you wish to be hosted in
+       - the **name** you want for the database
+       - what **version** the database is in
+       - the login (email) of the **administrator** user
+       - whether you wish to have a first **test** deployment (strongly recommended, especially if you have ever installed third-party apps)
+       - **when** you want the production database to be put online (day, time of day, and your timezone)
 
     <Note>
-      The database's current version must be a [supported version](/admin/upgrade#support-policy). Odoo validates compatibility before going live.
+      The database's current version must be a [supported version](/admin/upgrade#support-policy). Odoo validates compatibility before going live. If you have time constraints, open the support ticket as soon as possible to schedule the transfer.
     </Note>
 
     **To Odoo.sh:** Follow the [Import a database](/admin/odoo-sh#importing-a-database) instructions in the Odoo.sh documentation.
@@ -75,10 +84,14 @@ You can migrate between hosting types at any time. The process depends on your c
 
   <Accordion title="Transferring an Odoo Online Database">
     <Warning>
-      Odoo Online intermediary versions (e.g., 16.3, 17.2) are **not** supported by Odoo.sh or on-premise. You must first upgrade to the next major version before transferring.
+      Odoo Online intermediary versions (e.g., 16.3, 17.2) are **not** supported by Odoo.sh or on-premise. You must first upgrade to the next major version before transferring. For example, transferring a database on Odoo 16.3 requires upgrading to Odoo 17.0 first.
     </Warning>
 
-    **To on-premise:** Sign in to the [Odoo Online database manager](https://www.odoo.com/my/databases), click the gear icon next to your database, select **Download**, then restore the backup on your local server.
+    <Note>
+      If there is an active Odoo subscription linked to the database being migrated, reach out to your Customer Service Manager or [contact Odoo Support](https://www.odoo.com/help) to complete the subscription transfer.
+    </Note>
+
+    **To on-premise:** Sign in to the [Odoo Online database manager](https://www.odoo.com/my/databases), click the gear icon next to your database, select **Download**, then restore the backup on your local server. If the download fails due to the file being too large, [contact Odoo Support](https://www.odoo.com/help).
 
     **To Odoo.sh:** Download the backup the same way, then follow the Odoo.sh import process.
   </Accordion>

@@ -1,7 +1,7 @@
 ---
-title: 'Odoo Actions: Window, Server, Report and URL Actions'
+title: 'Odoo Actions: Window, Server, Report, and URL Actions'
 sidebarTitle: 'Actions'
-description: 'Reference for all Odoo action types: ir.actions.act_window for views, ir.actions.server for automation, ir.actions.report for PDFs, and ir.actions.act_url.'
+description: 'Reference for Odoo action types: ir.actions.act_window for views, ir.actions.server for server code, ir.actions.report for PDFs, and ir.actions.act_url.'
 ---
 
 Actions define how the Odoo system responds to user interactions — clicking a menu item, pressing a button, selecting a record, or running a scheduled job. An action tells the client what to do next: open a view, run server-side code, generate a report, redirect to a URL, or trigger a client-side component. Actions can be stored as database records (referenced by ID or external ID) or returned directly as dictionaries from Python methods.
@@ -121,7 +121,7 @@ Server actions execute Python code or predefined operations on the server when t
 | Field | Description |
 |---|---|
 | `model_id` | The model the action operates on. |
-| `state` | What the action does: `code`, `object_create`, `object_write`, `multi`, `client_action`. |
+| `state` | What the action does: `code`, `object_create`, `object_write`, `multi`. |
 | `code` | Python code to execute (when `state='code'`). Exposes `env`, `model`, `record`, `records`. |
 | `child_ids` | List of sub-actions to run sequentially (when `state='multi'`). |
 | `crud_model_id` | Model to create/update in (when `state='object_create'` or `object_write`). |
@@ -143,7 +143,7 @@ for partner in records:
 ```
 
 <Note>
-In server action code, the following names are available: `env` (the ORM environment), `model` (the model class), `record` (single record, may be empty), `records` (all selected records), `time`, `datetime`, `dateutil`, `timezone`, `uid`, `user`, and `Warning` (alias for `odoo.exceptions.Warning`).
+In server action code, the following names are available: `env` (the ORM environment), `model` (the model class), `record` (single record, may be empty), `records` (all selected records), `datetime`, `dateutil`, `time`, `timezone` (corresponding Python modules), `log` (a `log(message, level='info')` function that records debug information in `ir.logging`), and `UserError` (constructor for the `UserError` exception).
 </Note>
 
 ### Code Action That Returns a Next Action
@@ -198,7 +198,10 @@ Report actions generate PDF or HTML documents from QWeb templates.
 | `print_report_name` | Python expression returning the filename, e.g. `"'Property - %s' % object.name"`. |
 | `binding_model_id` | Bind to a model so the report appears in the Print menu. |
 | `paperformat_id` | Many2one to `report.paperformat`; defaults to company format. |
-| `attachment_use` | If `True`, store the generated PDF as an attachment and reuse it on re-print. |
+| `groups_id` | Many2many to `res.groups`; restricts which groups can view or use the report. |
+| `multi` | If `True`, the action will not be displayed on a form view. |
+| `attachment_use` | If `True`, the report is generated once and re-printed from the stored attachment on subsequent requests. |
+| `attachment` | Python expression defining the attachment name; the record is accessible as `object`. |
 
 ### Example
 

@@ -1,7 +1,7 @@
 ---
 title: "RST Formatting Guidelines for Odoo Docs"
 sidebarTitle: "RST Guidelines"
-description: "Complete RST syntax reference for Odoo documentation: headings, code blocks, hyperlinks, cross-references, admonitions, toctrees, tables, and document metadata."
+description: "RST syntax reference for Odoo docs: headings, inline markup, code blocks, hyperlinks, admonitions, tables, content tabs, toctrees, and document metadata."
 ---
 
 The Odoo documentation is written in **reStructuredText (RST)**, a lightweight plaintext markup language processed by [Sphinx](https://www.sphinx-doc.org/). RST is straightforward once you know a handful of conventions. This page is both a style guide and a cheat sheet — keep it open while writing.
@@ -299,6 +299,11 @@ Common language tags: `python`, `xml`, `javascript`, `scss`, `html`, `bash`, `co
      Use this to show a concrete example.
   ```
 
+  ```rst Exercise
+  .. exercise::
+     Use this to suggest an exercise to the reader.
+  ```
+
   ```rst See also
   .. seealso::
      - :doc:`Accounting documentation <../../../applications/finance/accounting>`
@@ -461,6 +466,7 @@ Page title
 | `:hide-page-toc:` | Hides the "On this page" sidebar; uses full width |
 | `:nosearch:` | Excludes the page from search results |
 | `:orphan:` | Suppresses the requirement to include the file in a toctree |
+| `:code-column:` | Shows a dynamic side column for interactive tutorials or code excerpts |
 | `:custom-css:` | Links one or more CSS files (comma-separated) to the page |
 | `:custom-js:` | Links one or more JS files (comma-separated) to the page |
 | `:classes:` | Assigns CSS classes to the `<main>` element |

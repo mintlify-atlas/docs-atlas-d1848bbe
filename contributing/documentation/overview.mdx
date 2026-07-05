@@ -1,7 +1,7 @@
 ---
 title: "Contribute to Odoo Documentation: Getting Started"
 sidebarTitle: "Overview"
-description: "Learn how the Odoo documentation is structured with Sphinx and RST, how to set up your local environment, build docs with make html, and submit changes via GitHub PRs."
+description: "Set up your local environment, build Odoo docs with make html, and submit improvements via GitHub pull requests following the official RST guidelines."
 ---
 
 The Odoo documentation is an open-source effort written in **reStructuredText (RST)** and built into HTML using [Sphinx](https://www.sphinx-doc.org/). Anyone — whether an Odoo employee, community developer, or general user — can propose improvements. This guide walks you through everything you need to go from zero to your first merged pull request.
@@ -123,7 +123,7 @@ Once your environment is set up, build the full site with:
 make html
 ```
 
-Then open `_build/html/index.html` in your browser to preview the result.
+Then open `documentation/_build/html/index.html` in your browser to preview the result.
 
 ### Useful build variants
 
@@ -133,7 +133,7 @@ Then open `_build/html/index.html` in your browser to preview the result.
 | `make clean` | Deletes all build artefacts |
 | `make test` | Runs guidelines linter tests |
 | `make html CURRENT_LANG=fr` | Builds only the French version |
-| `make html VERSIONS=17.0,18.0,saas-18.4` | Enables the version switcher |
+| `make html VERSIONS=17.0,18.0,saas-18.4,19.0,master` | Enables the version switcher |
 
 <Tip>
   Run `make help` to see all available targets and their descriptions.
@@ -213,7 +213,7 @@ Use Git when adding new pages, restructuring sections, or making changes that re
   <Step title="Build and preview">
     ```bash
     make html
-    # Open _build/html/index.html in your browser
+    # Open documentation/_build/html/index.html in your browser
     ```
   </Step>
 

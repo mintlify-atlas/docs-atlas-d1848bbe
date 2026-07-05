@@ -1,5 +1,5 @@
 ---
-title: "Deploy and Manage Odoo on Odoo.sh Cloud Platform"
+title: "Deploy and Manage Odoo Projects on the Odoo.sh Platform"
 sidebarTitle: "Odoo.sh"
 description: "Learn how to use Odoo.sh: GitHub integration, branch stages, CI builds, SSH access, web shell, submodules, and database monitoring."
 ---
@@ -127,11 +127,15 @@ From the Builds view you can:
 
 ## Collaborator Roles
 
-Access to Odoo.sh features is controlled by collaborator roles. Add a collaborator by entering their GitHub username in **Settings → Collaborators**.
+Access to Odoo.sh features is controlled by collaborator roles. Add a collaborator by entering their GitHub username in **Settings → Collaborators**. By default, new collaborators are granted the **Developer** role. Use the dropdown to assign a different role.
+
+- **Admin**: full access to all Odoo.sh features and tools, including project settings. Intended for project managers.
+- **Tester**: access to staging and development databases and their tools. Intended for user acceptance testing (UAT). Testers cannot access the production database through Odoo.sh tools.
+- **Developer**: access to development databases only. Developers cannot connect to production or staging databases and do not have access to the web shell or server logs for those stages.
 
 | Role | Production | Staging | Development | Settings |
 |------|------------|---------|-------------|----------|
-| **Developer** | ❌ No access | ❌ No access | ✅ Full access | ❌ |
+| **Developer** | ❌ No access | ⚠️ History only | ✅ Full access | ❌ |
 | **Tester** | ❌ No access | ✅ Full access | ✅ Full access | ❌ |
 | **Admin** | ✅ Full access | ✅ Full access | ✅ Full access | ✅ |
 
@@ -186,11 +190,11 @@ Git submodules let you include modules from other repositories in your Odoo.sh b
 # Checkout the branch where you want to add the submodule
 git checkout <branch>
 
-# Add the submodule
-git submodule add -b <branch> git@github.com:<username>/<repository.git> <path>
+# Add the submodule (replace the URL with the SSH URL of the repository)
+git submodule add -b <branch> <git@yourprovider.com>:<username/repository.git> <path>
 
 # Commit and push
-git commit -a && git push -u origin <branch>
+git commit -a && git push -u <remote> <branch>
 ```
 
 <Note>

@@ -35,7 +35,7 @@ When the preconfigured filters are not specific enough, build a custom filter:
     Click the **▾** dropdown in the search bar, then select **Filters → Add Custom Filter**.
   </Step>
   <Step title="Configure the matching logic">
-    Choose **Match all of the following rules** (AND) or **Match any of the following rules** (OR) from the dropdown at the top of the popup.
+    By default, the popup is set to **Match any of the following rules** (OR), meaning a record matches if it satisfies any rule. To require all rules to match, switch to **Match all of the following rules** (AND). At least two rules must be present to switch to **Match all**.
   </Step>
   <Step title="Add filter rules">
     Each rule has three parts:
@@ -224,3 +224,80 @@ $ 32.000,00
 ### Date Format
 
 When importing CSV files, verify the **Date Format** shown in the Formatting section. Use ISO 8601 format (`YYYY-MM-DD`) to ensure consistent parsing regardless of locale — for example, July 24 1981 should be written as `1981-07-24`.
+
+---
+
+## Stages
+
+**Stages** organize an app's pipeline and track the progress of records (referred to as cards) through a workflow. Apps such as CRM, Helpdesk, and Project use stages to represent the progression of tickets, leads, or tasks.
+
+To view or modify stages, navigate to the desired app and go to **Configuration → Stages**.
+
+<Note>
+  Developer mode must be activated to access the Stages configuration menu. Enable it via **Settings → General Settings → Developer Tools → Activate the developer mode**.
+</Note>
+
+The **Stages** list view displays all available stages in pipeline order. To reorder stages, drag the handle icon to the left of the stage name to the desired position. You can also reorder stages on the Kanban view by dragging and dropping columns.
+
+To create a new stage, click **New** and enter a **Name** for the stage.
+
+---
+
+## Activities
+
+**Activities** are follow-up tasks tied to a record in an Odoo database. They help teams track scheduled calls, emails, meetings, document uploads, and other actions directly on any record.
+
+The icon displayed for an activity indicates its type:
+- **Clock** — the default activity icon.
+- **Phone** — a phone call is scheduled.
+- **Envelope** — an email is scheduled.
+- **Check** — a to-do is scheduled.
+- **Users** — a meeting is scheduled.
+- **Upload** — a document upload is scheduled.
+- **Signature** — a signature request is scheduled.
+
+Activities can be scheduled from any record that has a **chatter** thread, or from Kanban, list, and activity views.
+
+To schedule a new activity from a record's chatter, click the **Activity** button at the top of the chatter, fill in the **Schedule Activity** form, and save.
+
+---
+
+## Contacts
+
+The **Contacts** application stores information about customers and suppliers the company interacts with. A contact record is a central repository of business information — name, address, email, phone, and more — that is shared across all Odoo apps.
+
+Odoo supports two contact types:
+- **Company** — an organization.
+- **Person** — an individual, optionally linked to a Company.
+
+To create a new contact, navigate to **Contacts** and click **New**. Enter the contact's name (mandatory), type, and additional details such as email, phone, and address, then save.
+
+---
+
+## In-App Purchases (IAP)
+
+**In-app purchases (IAP)** are optional, credit-based services that extend Odoo's functionality without requiring additional software installations. Services include SMS messaging, document digitization with OCR, and partner data enrichment.
+
+IAP services do not need to be configured before first use — simply trigger the service from within the relevant app. Each service draws from a prepaid credit balance. When credits run out, new credits must be purchased to continue using the service.
+
+<Note>
+  Enterprise Odoo users with a valid subscription receive free IAP credits to trial features before purchasing additional credits. This includes demo, training, and one-app-free databases.
+</Note>
+
+The following IAP services are offered by Odoo:
+- **Documents Digitization** — digitizes vendor bills, expenses, and resumes using OCR and AI.
+- **Partner Autocomplete** — automatically populates contact records with corporate data.
+- **SMS** — sends SMS text messages to contacts directly from the database.
+
+A full list of available services is available on the [Odoo IAP Catalog](https://iap.odoo.com/iap/all-in-app-services).
+
+---
+
+## Additional Essentials Topics
+
+The following cross-application features are also covered in the Odoo Essentials documentation:
+
+- **Property Fields** — custom fields that can be added to any record model without developer mode, allowing teams to capture additional structured data.
+- **Keyboard Shortcuts** — global and view-specific keyboard shortcuts that speed up navigation and data entry throughout the platform.
+- **Product Catalog** — a shared catalog view available in Sales, Purchase, and related apps for quickly browsing and adding products to orders.
+- **HTML Editor** — a rich-text editor used across notes, website pages, email templates, and product descriptions, supporting inline formatting, tables, and embedded media.

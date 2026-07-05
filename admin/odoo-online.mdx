@@ -1,7 +1,7 @@
 ---
-title: "Get Started with Odoo Online (SaaS)"
+title: "Manage Your Odoo Online Databases in the Cloud (SaaS)"
 sidebarTitle: "Odoo Online"
-description: "Learn how to create, manage, upgrade, duplicate, and rename Odoo Online databases from the cloud database manager portal."
+description: "Learn how to create, manage, upgrade, duplicate, rename, and delete your Odoo Online databases using the cloud database manager portal."
 ---
 
 [Odoo Online](https://www.odoo.com/trial) provides private databases that are fully hosted and managed by Odoo. Databases are accessible from any web browser without a local installation, making it the easiest way to run Odoo in production or conduct thorough testing — including customizations that don't require custom code.
@@ -78,7 +78,7 @@ Select a database and click the **Manage** (gears) icon to access all advanced d
     Permanently delete the database and close its related subscription by clicking **Delete**.
 
     <Warning>
-      All database data will be deleted **instantly** for all users and **cannot be restored**. Always [download a backup](#download-a-backup) before deleting. After deletion, the database name becomes available to anyone.
+      All database data will be deleted **instantly** for all users and **cannot be restored**. Always download a backup before deleting. After deletion, the database name becomes available to anyone.
     </Warning>
   </Accordion>
 </AccordionGroup>
@@ -101,16 +101,3 @@ requests.post(
     json={},
 )
 ```
-
-## Upgrade Policy for Odoo Online
-
-Odoo Online databases follow a rolling release process with mandatory upgrade deadlines:
-
-- **Major version databases** (e.g., 16.0, 17.0, 18.0): upgrade is mandatory every two years.
-- **Minor version databases** (e.g., 17.1, 17.2, 17.4): upgrade is mandatory a few weeks after the next minor version is released. Minor versions are typically released every two months.
-
-You will receive an in-database notification a few weeks before a mandatory upgrade is automatically applied. Odoo's Upgrade Team runs a silent test upgrade first; if it succeeds and takes less than 20 minutes, you can trigger the upgrade directly from the database. If the test fails, you can initiate a manual test upgrade from the database manager.
-
-<Tip>
-  It is strongly recommended to [request an upgraded test database](/admin/upgrade#obtaining-a-test-upgrade) and test it thoroughly before the production upgrade is applied.
-</Tip>

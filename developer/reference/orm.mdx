@@ -1,5 +1,5 @@
 ---
-title: 'Odoo ORM API: Models, Fields, and Recordsets'
+title: 'Odoo ORM API: Models, Fields, Recordsets, and CRUD'
 sidebarTitle: 'ORM API'
 description: 'Complete reference for the Odoo ORM: model attributes, all field types with options, CRUD methods, environment, computed fields, and API decorators.'
 ---
@@ -270,11 +270,11 @@ order = self.env['sale.order'].browse(42)
 # read() — returns a list of dicts (bypasses the ORM active record interface)
 data = orders.read(['name', 'partner_id', 'amount_total'])
 
-# read_group() — aggregate data (like SQL GROUP BY)
-groups = self.env['sale.order'].read_group(
+# _read_group() — aggregate data (like SQL GROUP BY)
+groups = self.env['sale.order']._read_group(
     domain=[('state', '=', 'done')],
-    fields=['partner_id', 'amount_total:sum'],
     groupby=['partner_id'],
+    aggregates=['amount_total:sum'],
 )
 ```
 
@@ -302,6 +302,39 @@ old_orders.unlink()
 new_record = record.copy({'name': 'Copy of ' + record.name})
 ```
 
+### Introspecting Fields
+
+```python
+# fields_get() — return metadata for all (or listed) fields on the model
+meta = self.env['sale.order'].fields_get(
+    allfields=['name', 'state', 'partner_id'],
+    attributes=['string', 'type', 'required'],
+)
+# Returns a dict keyed by field name, e.g.:
+# {'name': {'string': 'Order Reference', 'type': 'char', 'required': True}, ...}
+```
+
+---
+
+## Automatic Fields
+
+The ORM automatically creates and maintains the following fields on every model (unless `_log_access = False`):
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `Integer` | Unique database identifier for each record. |
+| `create_date` | `Datetime` | When the record was created. |
+| `create_uid` | `Many2one` (`res.users`) | Who created the record. |
+| `write_date` | `Datetime` | When the record was last updated. |
+| `write_uid` | `Many2one` (`res.users`) | Who last updated the record. |
+
+Additionally, two conventional fields trigger special ORM behavior when present:
+
+| Field | Type | Description |
+|---|---|---|
+| `active` | `Boolean` | When `False`, the record is hidden from most searches and listings. Use `action_archive()` / `action_unarchive()` to toggle. |
+| `name` | `Char` | Default value for `_rec_name`; used wherever a human-readable label for the record is needed. |
+
 ---
 
 ## Environment
@@ -313,6 +346,8 @@ The environment (`self.env`) is the gateway to models, context, and the current 
 self.env                       # the Environment object
 self.env.uid                   # current user's database ID
 self.env.user                  # current user as a res.users recordset
+self.env.company               # current company as a res.company recordset
+self.env.companies             # all companies accessible to the current user
 self.env.lang                  # current language code (e.g. 'en_US')
 self.env.context               # dict of context values
 self.env.cr                    # database cursor (use sparingly)

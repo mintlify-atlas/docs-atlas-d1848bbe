@@ -1,7 +1,7 @@
 ---
-title: 'Build and Customize Odoo Website Themes'
+title: 'Build and Customize an Odoo Website Theme from Scratch'
 sidebarTitle: 'Website Themes'
-description: 'Create an Odoo website theme module: inherit from the default theme, override SCSS variables, define color palettes, custom fonts, and build snippet blocks.'
+description: 'Create an Odoo website theme module: override SCSS variables, define color palettes, add custom fonts, and build reusable snippet blocks.'
 ---
 
 An Odoo website theme is a standard Odoo module that extends the default website theme. Rather than modifying core files, themes override SCSS variables, add custom layouts, and define reusable snippet blocks — all while preserving the Website Builder's editing capabilities. This guide walks through setting up a theme module from scratch.
@@ -16,13 +16,13 @@ All examples use a fictional theme named **Airproof** (`website_airproof`). Repl
 
 Theme modules must be prefixed with `website_` and use only lowercase ASCII alphanumeric characters and underscores:
 
-```
+```text
 website_airproof/
 ```
 
 ### File Structure
 
-```
+```text
 website_airproof/
 ├── data/               # XML presets, menus, pages, shapes (*.xml)
 ├── i18n/               # Translations (*.po, *.pot)
@@ -209,7 +209,7 @@ Snippets are the drag-and-drop blocks users place on pages. Structure blocks use
 
 ### Snippet Structure
 
-```
+```text
 views/snippets/
 ├── snippets.xml          # Snippet registration
 └── s_airproof_banner.xml # Individual snippet template

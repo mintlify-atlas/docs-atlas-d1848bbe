@@ -1,7 +1,7 @@
 ---
-title: "Manage Employee Expenses in Odoo"
+title: "Track and Reimburse Employee Expenses with Odoo Expenses"
 sidebarTitle: "Expenses"
-description: "Track, submit, approve, and reimburse employee expenses in Odoo — from logging individual receipts through manager approval to accounting journal entries and payroll."
+description: "Track, submit, approve, and reimburse employee expenses in Odoo, from logging receipts to accounting entries and payroll integration."
 ---
 
 Odoo **Expenses** provides a complete end-to-end workflow for employee expense management. Employees log individual expenses — manually, by uploading a receipt, or by emailing a photo of a receipt — and then group them into expense reports for submission. Managers review and approve or refuse those reports, accountants post the approved expenses to the correct accounting journals, and finally employees are reimbursed through direct payment or via their next payslip. Every step is tracked and auditable, and approved expenses flow directly into Odoo Accounting without manual re-entry.
@@ -195,6 +195,43 @@ Once an expense report is posted, the final step is to reimburse the employee. O
 ## Reinvoicing Expenses to Customers
 
 If an expense was incurred on behalf of a customer (for example, travel costs for an on-site project), Odoo can bill the expense back to the customer through an existing **Sales Order**. Set the **Customer to Reinvoice** field on the expense record to the relevant Sales Order. After approval and posting, the expense is automatically added to the sales order and can be invoiced to the customer in the usual way.
+
+---
+
+## Expense Cards
+
+Odoo offers physical and virtual **expense cards** that allow for real-time expense tracking. When an employee makes a purchase with an expense card, a new expense record is created automatically — eliminating the need to manually log individual expenses after the fact.
+
+<Note>
+  Expense cards require both the **Accounting** and **Invoicing** apps to be installed. They operate as pre-paid debit cards connected to a company Stripe account; funds must be added to the Stripe account before employees can make purchases.
+</Note>
+
+### Availability
+
+Expense cards are currently available for companies located in the following countries:
+
+Austria, Belgium, Croatia, Cyprus, Estonia, Finland, France, Germany, Greece, Ireland, Italy, Latvia, Lithuania, Luxembourg, Malta, Netherlands, Portugal, Slovakia, Slovenia, and Spain.
+
+### Fees
+
+Odoo covers all fees associated with creating virtual and physical expense cards.
+
+### Setup Overview
+
+<Steps>
+  <Step title="Configure and activate the card">
+    Navigate to **Expenses app → Configuration → Settings** to configure the expense card feature and activate cards for your company.
+  </Step>
+  <Step title="Create a Stripe account">
+    A Stripe account must be created and connected to Odoo before cards can be funded.
+  </Step>
+  <Step title="Add funds">
+    Add funds to the company's connected Stripe account. Note that transfers typically take 2–3 business days to become available.
+  </Step>
+  <Step title="Issue cards to employees">
+    Once funds are available, employees can be issued physical or virtual cards. Employees must have a user profile in Odoo to access confidential card details (card number, CVV, or PIN).
+  </Step>
+</Steps>
 
 ---
 

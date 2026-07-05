@@ -1,5 +1,5 @@
 ---
-title: 'Odoo Web Framework Tutorial: OWL and Custom Views'
+title: 'Odoo Web Framework Tutorial: OWL Components and Custom Views'
 sidebarTitle: 'Web Tutorial'
 description: 'Discover how to build custom Odoo frontend features using OWL components, services, the action manager, and view registries with hands-on examples.'
 ---
@@ -47,8 +47,7 @@ Every piece of Odoo's UI is an OWL component. A component is a JavaScript class 
 ```javascript
 /** @odoo-module **/
 
-import { Component, useState, onWillStart } from "@odoo/owl";
-import { useService } from "@web/core/utils/hooks";
+import { Component, useState } from "@odoo/owl";
 
 export class Counter extends Component {
     static template = "my_module.Counter";
@@ -206,40 +205,46 @@ export class PropertyList extends Component {
 ```javascript
 /** @odoo-module **/
 
+import { Component, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
-setup() {
-    this.orm = useService("orm");
-}
+export class RecordLoader extends Component {
+    static template = "my_module.RecordLoader";
 
-async loadRecords() {
-    // search — returns list of ids
-    const ids = await this.orm.search("res.partner", [["is_company", "=", true]]);
+    setup() {
+        this.orm = useService("orm");
+        onWillStart(() => this.loadRecords());
+    }
 
-    // searchRead — returns records with specified fields
-    const partners = await this.orm.searchRead(
-        "res.partner",
-        [["customer_rank", ">", 0]],
-        ["name", "email", "phone"],
-        { limit: 10, order: "name asc" }
-    );
+    async loadRecords() {
+        // search — returns list of ids
+        const ids = await this.orm.search("res.partner", [["is_company", "=", true]]);
 
-    // create — returns new record id
-    const newId = await this.orm.create("estate.property", [{
-        name: "New Property",
-        expected_price: 250000,
-    }]);
+        // searchRead — returns records with specified fields
+        const partners = await this.orm.searchRead(
+            "res.partner",
+            [["customer_rank", ">", 0]],
+            ["name", "email", "phone"],
+            { limit: 10, order: "name asc" }
+        );
 
-    // write — update existing records
-    await this.orm.write("estate.property", [newId], { state: "offer_received" });
+        // create — returns new record id
+        const newId = await this.orm.create("estate.property", [{
+            name: "New Property",
+            expected_price: 250000,
+        }]);
 
-    // call — call a Python method
-    const result = await this.orm.call(
-        "estate.property",
-        "action_sold",
-        [[newId]],
-        {}
-    );
+        // write — update existing records
+        await this.orm.write("estate.property", [newId], { state: "offer_received" });
+
+        // call — call a Python method
+        const result = await this.orm.call(
+            "estate.property",
+            "action_sold",
+            [[newId]],
+            {}
+        );
+    }
 }
 ```
 
@@ -279,8 +284,8 @@ The `views` registry maps a view type string to its implementation:
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
-import { MapView } from "./map_view";
 import { MapController } from "./map_controller";
+import { MapModel } from "./map_model";
 import { MapRenderer } from "./map_renderer";
 
 registry.category("views").add("map", {
@@ -302,10 +307,9 @@ Override or extend how a field type is displayed in forms and lists:
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
-import { CharField } from "@web/views/fields/char/char_field";
 import { PriceField } from "./price_field";
 
-// Replace the standard char field with a custom one for a specific widget name
+// Register a custom field widget under the "price_display" widget name
 registry.category("fields").add("price_display", PriceField);
 ```
 
@@ -426,6 +430,21 @@ export class GalleryController extends Component {
 }
 ```
 
+**`gallery_controller.xml`** — Controller template:
+
+```xml
+<templates xml:space="preserve">
+    <t t-name="estate.GalleryController">
+        <div class="o_gallery_controller">
+            <GalleryRenderer
+                records="state.records"
+                onRecordClick.bind="openRecord"
+            />
+        </div>
+    </t>
+</templates>
+```
+
 **Register the view:**
 
 ```javascript
@@ -451,10 +470,11 @@ registry.category("views").add("gallery", {
 ```python
 'assets': {
     'web.assets_backend': [
-        'estate/static/src/views/gallery_controller.js',
+        'estate/static/src/views/gallery_model.js',
         'estate/static/src/views/gallery_renderer.js',
         'estate/static/src/views/gallery_renderer.xml',
-        'estate/static/src/views/gallery_model.js',
+        'estate/static/src/views/gallery_controller.js',
+        'estate/static/src/views/gallery_controller.xml',
         'estate/static/src/views/gallery_view.js',
     ],
 },

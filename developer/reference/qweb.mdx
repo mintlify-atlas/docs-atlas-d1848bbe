@@ -1,5 +1,5 @@
 ---
-title: 'QWeb Templating Engine Reference'
+title: 'QWeb Templating Engine: Directives and Syntax Reference'
 sidebarTitle: 'QWeb'
 description: 'Complete reference for QWeb directives: t-if, t-foreach, t-att, t-out, t-call, t-set, t-field, and template inheritance for both Python and JavaScript.'
 ---
@@ -77,6 +77,8 @@ Inside the loop body, QWeb provides automatic helper variables. Replace `$as` wi
 | `$as_last` | `true` on the last iteration (requires `$as_size`) |
 | `$as_all` | The entire collection *(JS only, deprecated)* |
 | `$as_parity` | `"even"` or `"odd"` *(deprecated)* |
+| `$as_even` | Boolean flag for even index *(deprecated)* |
+| `$as_odd` | Boolean flag for odd index *(deprecated)* |
 
 <Note>
 Variables created inside a `t-foreach` scope are **local** to that loop, except for variables that already existed in the outer scope — those are updated in the outer scope after the loop ends.
@@ -125,11 +127,11 @@ Three forms of dynamic attribute generation:
     <!-- → <div a="1" b="2"></div> -->
     ```
 
-    A 2-element pair sets one attribute:
+    A 2-element pair sets one attribute (first element is the name, second is the value):
 
     ```xml
-    <div t-att="['href', url]"/>
-    <!-- → <div href="<url value>"></div> -->
+    <div t-att="['a', 'b']"/>
+    <!-- → <div a="b"></div> -->
     ```
   </Tab>
 </Tabs>

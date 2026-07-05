@@ -14,7 +14,7 @@ Access to the External API requires an Odoo **Custom** pricing plan. It is not a
 
 ### URL
 
-```
+```text
 POST /json/2/<model>/<method>
 ```
 
@@ -28,7 +28,7 @@ POST /json/2/<model>/<method>
 | `Host` | Yes (HTTP/1.1) | Hostname of the Odoo server |
 | `Authorization` | Yes | `bearer <api_key>` |
 | `Content-Type` | Yes | `application/json` (charset recommended) |
-| `X-Odoo-Database` | When needed | Database name (required on multi-database servers) |
+| `X-Odoo-Database` | Optional | Database name (required when a single server hosts multiple databases) |
 | `User-Agent` | Recommended | Name of your client software |
 
 ### Request Body (JSON)
@@ -180,16 +180,39 @@ curl https://mycompany.example.com/json/2/res.users.apikeys/generate \
 
 ### Key Revocation
 
-```python
-requests.post(
+API keys can be revoked with `res.users.apikeys/revoke`. Pass the key to be revoked in the request body; authenticate with a valid key in the `Authorization` header (the key being revoked and the one in the header do not need to match):
+
+<CodeGroup>
+```python Python
+import requests
+
+API_KEY = "..."  # from secure storage
+
+res = requests.post(
     "https://mycompany.example.com/json/2/res.users.apikeys/revoke",
-    headers={"Authorization": f"bearer {new_api_key}"},
-    json={"key": old_api_key},  # revoke old key after successful rotation
+    headers={"Authorization": f"bearer {API_KEY}"},
+    json={"key": API_KEY},
 )
+res.raise_for_status()
 ```
 
+```bash bash
+set -eu
+API_KEY=""
+
+curl https://mycompany.example.com/json/2/res.users.apikeys/revoke \
+  -X POST \
+  --oauth2-bearer "$API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"key\": \"$API_KEY\"}" \
+  --silent --fail
+```
+</CodeGroup>
+
+If the key is valid it is revoked immediately. If not, the request fails with HTTP `403 Forbidden`.
+
 <Tip>
-**Key rotation best practice:** Generate the new key first, verify all services use it, then revoke the old key. Use separate API keys per service to simplify auditing and revocation.
+**Key rotation best practice:** Generate the new key first. Store it securely and verify all services are using it. Then use the new key to revoke the previous one. Use separate API keys per service or integration to simplify auditing and revocation.
 </Tip>
 
 ---
@@ -198,7 +221,7 @@ requests.post(
 
 Each `/json/2` call runs in its own SQL transaction — committed on success, rolled back on error. It is **not** possible to chain multiple calls in a single transaction. To ensure atomicity across multiple ORM operations, call a single model method that performs all operations internally.
 
-```
+```text
 # ✅ Atomic — both search and read happen in one transaction
 POST /json/2/res.partner/search_read
 
