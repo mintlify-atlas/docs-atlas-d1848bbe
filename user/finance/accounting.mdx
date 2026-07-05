@@ -1,0 +1,204 @@
+---
+title: "Odoo Accounting: Double-Entry Bookkeeping & Invoicing"
+sidebarTitle: "Accounting"
+description: "Odoo Accounting provides double-entry bookkeeping, customer invoicing, vendor bills, bank reconciliation, multi-currency support, and real-time financial reporting."
+---
+
+Odoo Accounting is a full-featured accounting solution built around the double-entry bookkeeping standard. Every financial transaction — customer invoices, vendor bills, point-of-sale orders, expense reports, inventory valuations — automatically generates the underlying journal entries, keeping your books accurate without manual data entry. A lighter **Odoo Invoicing** app is also available for businesses that only need to create invoices, manage payments, and handle vendor bills, without the full accounting feature set.
+
+<CardGroup cols={2}>
+  <Card title="Get Started" icon="play" href="/user/finance/accounting">
+    Basic concepts of accounting and initial setup of your chart of accounts, fiscal year, and opening balances.
+  </Card>
+  <Card title="Taxes" icon="percent" href="/user/finance/accounting">
+    Configure taxes, fiscal positions, and country-specific tax integrations.
+  </Card>
+  <Card title="Customer Invoices" icon="file-invoice-dollar" href="/user/finance/accounting">
+    Create and send customer invoices, configure payment terms, and set up electronic invoicing.
+  </Card>
+  <Card title="Vendor Bills" icon="receipt" href="/user/finance/accounting">
+    Manage vendor bills, fixed assets, and invoice digitization via OCR.
+  </Card>
+  <Card title="Payments" icon="credit-card" href="/user/finance/accounting">
+    Process payments online, by check, or in batches, and follow up on outstanding invoices.
+  </Card>
+  <Card title="Bank & Cash" icon="building-columns" href="/user/finance/accounting">
+    Bank synchronization, reconciliation rules, and cash register management.
+  </Card>
+  <Card title="Reporting" icon="chart-bar" href="/user/finance/accounting">
+    Financial statements, tax returns, analytic accounting, and budget reports.
+  </Card>
+</CardGroup>
+
+---
+
+## Core Accounting Concepts
+
+### Double-Entry Bookkeeping
+
+Odoo uses the double-entry bookkeeping system for all accounting transactions. Every entry requires a corresponding and opposite counterpart in a different account — one account is debited and another is credited — so the accounts always balance. Odoo creates these journal entries automatically for every transaction type in the system.
+
+<Tip>
+  Every accounting entry in Odoo follows the double-entry principle: each transaction debits one account and credits another for the same amount, keeping the books balanced.
+</Tip>
+
+### Accrual and Cash Basis
+
+Both **accrual basis** and **cash basis** accounting are supported. Accrual basis records income and expense when the transaction occurs; cash basis records them when the payment is actually received or made. You can configure the default accounting method and define specific cash basis tax rules per tax.
+
+### Chart of Accounts
+
+Every company has its own **chart of accounts**. When operating multiple companies or branches in the same database, accounts can be shared between entities for consolidation reporting purposes. Odoo ships with localized chart-of-accounts templates for over 100 countries, which can be applied when installing the relevant fiscal localization package.
+
+---
+
+## Multi-Company and Branch Management
+
+Multiple companies can be managed within a single Odoo database. Each company has its own chart of accounts, while accounts can be shared for consolidation reporting. Users can view records and reports from multiple companies simultaneously, but can only post accounting entries in one company at a time.
+
+Parent companies and their **branches** operate under shared accounting and reporting rules:
+
+- The parent company's chart of accounts, main currency, and taxes apply to all branches.
+- Each branch can maintain its own dedicated journals and related records.
+- The parent company controls the fiscal period; its lock and closing dates apply across all branches (though branches may set *earlier* lock dates).
+- The parent company can view all reports, invoices, and bills from its branches; each branch can only view its own data.
+
+<Note>
+  The Fiscal Localization package is set on the parent company and applies to all its branches. Adding a branch enables multi-company functions — see [Odoo's pricing page](https://www.odoo.com/pricing-plan) for licensing implications.
+</Note>
+
+---
+
+## Multi-Currency Environment
+
+Odoo supports a **multi-currency** environment with automated exchange rates to simplify international transactions. Every transaction is recorded in the company's default currency. For foreign-currency transactions, Odoo stores both the company-currency value and the transaction-currency value, and automatically generates **currency gain and loss** journal entries after reconciliation.
+
+---
+
+## Customer Invoices and Vendor Bills
+
+### Accounts Receivable and Payable
+
+By default, Odoo designates one account for **accounts receivable** (customer invoices) and another for **accounts payable** (vendor bills). Because transactions are linked to contacts, you can generate per-customer or per-vendor reports at any time.
+
+The **Partner Ledger** report — available at **Accounting → Reporting → Partner Ledger** — shows the running balance for each customer and supplier.
+
+### Sharing Invoices with External Accountants
+
+Odoo provides three ways to give an external accountant access to your invoices and bills:
+
+<Accordion title="Grant database access rights">
+  Add the accountant as a new user in your database and assign the **Administrator** role in the **Accounting** section of their access rights. Also enable **Bank account validation** as needed.
+
+  Adding an accountant user to an Odoo Online database is free if they have an Odoo account registered under the same email address as the company user record.
+</Accordion>
+
+<Accordion title="Auto-send copies of a journal's documents">
+  Navigate to **Accounting → Configuration → Journals**, open the relevant journal, and enter one or more email addresses in the **Send Copy To** field on the **Advanced Settings** tab. Separate multiple addresses with `;` (no spaces). Records are sent automatically in XML format.
+</Accordion>
+
+<Accordion title="Export a ZIP archive">
+  Navigate to **Accounting → Customers → Invoices** (or **Vendors → Bills**), select the records to include, then click the **Print** menu and choose **Export ZIP**. The archive can be sent directly to your accountant.
+</Accordion>
+
+---
+
+## Bank Synchronization and Reconciliation
+
+The **bank synchronization** system connects directly with banking institutions to automatically import all transactions into Odoo — no manual statement uploads required. Once transactions are imported, Odoo's reconciliation engine matches bank lines against outstanding invoices, bills, and payments using configurable matching rules.
+
+<Note>
+  Payment providers (such as Stripe or PayPal) can also be added as bank accounts, but this is a separate process from configuring them as online payment providers. Bank accounts are reconciled in Accounting; payment providers handle customer-facing checkout flows.
+</Note>
+
+---
+
+## Inventory Valuation
+
+Odoo supports both **periodic (manual)** and **perpetual (automated)** inventory valuation, integrated directly with the Accounting app. The available costing methods are:
+
+- **Standard Price** — a fixed cost defined on the product.
+- **Average Cost (AVCO)** — the running weighted average of all stock-in costs.
+- **First In First Out (FIFO)** — the cost of the oldest stock-in lots is used first.
+
+---
+
+## Retained Earnings
+
+Odoo calculates **current year earnings** in real time. No year-end journal entry or profit-and-loss rollover is required — the profit and loss balance is automatically reflected on the balance sheet report at all times.
+
+---
+
+## Accounting Firms Mode
+
+For accounting practices managing multiple clients, the **Accounting Firms** mode can be enabled at **Accounting → Configuration → Settings**. When active:
+
+- Document sequences become editable on all records.
+- A **Total (tax incl.)** field appears on invoice encoding forms to speed up data entry.
+- **Invoice Date** and **Bill Date** are pre-filled when encoding a new transaction.
+- A **Quick encoding** shortcut is available for customer invoices and vendor bills.
+
+---
+
+## Financial Reports
+
+Odoo provides a comprehensive set of real-time financial reports, updated automatically as transactions are posted. All reports are accessible from the **Accounting → Reporting** menu.
+
+<Tabs>
+  <Tab title="Statement Reports">
+    | Report | Description |
+    |---|---|
+    | Balance Sheet | Assets, liabilities, and equity at a point in time |
+    | Profit and Loss | Revenue and expenses over a period |
+    | Cash Flow Statement | Cash inflows and outflows |
+    | Executive Summary | Key performance indicators at a glance |
+    | Tax Return | Computed tax obligation for a fiscal period |
+    | EC Sales List | EU cross-border sales listing |
+  </Tab>
+  <Tab title="Audit Reports">
+    | Report | Description |
+    |---|---|
+    | General Ledger | Every journal entry for all accounts |
+    | Trial Balance | Debit and credit totals per account |
+    | Journal Audit | All moves grouped by journal |
+    | Intrastat Report | EU intra-community trade statistics |
+    | Check Register | Issued checks and their status |
+  </Tab>
+  <Tab title="Partner Reports">
+    | Report | Description |
+    |---|---|
+    | Partner Ledger | Balance per customer or vendor |
+    | Aged Receivable | Outstanding customer balances by aging bucket |
+    | Aged Payable | Outstanding vendor balances by aging bucket |
+  </Tab>
+  <Tab title="Management Reports">
+    | Report | Description |
+    |---|---|
+    | Invoice Analysis | Volume and value analysis of invoices |
+    | Analytic Report | Costs and revenues by analytic account |
+    | Audit Trail | Record of all accounting changes |
+    | Budget Report | Actual vs. budgeted amounts |
+    | Unrealized Currency Gains/Losses | Open foreign-currency positions |
+    | Deferred Revenue | Revenue recognition schedule |
+    | Deferred Expense | Prepaid expense amortization schedule |
+    | Depreciation Schedule | Fixed asset depreciation over time |
+    | Disallowed Expenses | Non-deductible expenses |
+    | Loans Analysis | Loan repayment and interest breakdown |
+    | Product Margins | Gross margin per product |
+    | 1099 Report | US contractor payment reporting |
+  </Tab>
+</Tabs>
+
+### Tax Return
+
+The **Tax Return** report (available at **Accounting → Reporting → Tax Return**) aggregates all accounting transactions for a selected tax period and calculates the tax obligation automatically. Depending on the active fiscal localization, an XML version of the tax report can be generated and uploaded directly to the relevant tax authority's platform.
+
+<Tip>
+  Use Odoo's report engine to create and customize your own reports. Navigate to **Accounting → Reporting** and click **Customize** on any existing report to get started.
+</Tip>
+
+---
+
+## International Standards and Localization
+
+Odoo Accounting supports over **100 countries** through standardized features and country-specific **fiscal localization** packages. Each localization package provides a pre-configured chart of accounts, taxes, and other legally required configurations for that jurisdiction. Install the localization package for your country during initial setup to comply with local accounting regulations.

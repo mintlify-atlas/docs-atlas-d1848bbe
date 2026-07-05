@@ -1,0 +1,343 @@
+---
+title: 'Build UI with Odoo OWL Components'
+sidebarTitle: 'OWL Components'
+description: 'Learn how to build Odoo web UI with OWL: class-based components, lifecycle hooks, QWeb templates, slots, and Odoo-specific hooks like useBus and useService.'
+---
+
+OWL (Odoo Web Library) is the declarative component system used throughout the Odoo web client. Loosely inspired by Vue and React, OWL components are JavaScript classes with QWeb XML templates that re-render reactively when observed state changes. All new Odoo UI development should use OWL; the legacy widget system is being phased out.
+
+<Important>
+Although OWL ships inside the `web` module, it is maintained in a separate GitHub repository at [github.com/odoo/owl](https://github.com/odoo/owl). Contributions to OWL itself should target that repository, not the Odoo monorepo.
+</Important>
+
+## Writing an OWL Component
+
+The minimal component imports `Component` and `useState` from `@odoo/owl`. Always use `setup()` instead of the constructor — constructors cannot be overridden in Odoo's inheritance chain.
+
+```javascript
+import { Component, useState } from "@odoo/owl";
+
+class MyComponent extends Component {
+  static template = "myaddon.MyComponent";
+
+  setup() {
+    this.state = useState({ value: 1 });
+  }
+
+  increment() {
+    this.state.value++;
+  }
+}
+```
+
+The corresponding XML template (in `my_component.xml`, registered in an asset bundle):
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+  <t t-name="myaddon.MyComponent">
+    <div t-on-click="increment">
+      <t t-esc="state.value"/>
+    </div>
+  </t>
+</templates>
+```
+
+<Tip>
+Template names must follow the convention `addon_name.ComponentName` to avoid collisions between addons.
+</Tip>
+
+## File Layout
+
+For a production component, create three co-located files and add them to the appropriate asset bundle:
+
+```
+myaddon/static/src/
+  my_component/
+    my_component.js
+    my_component.xml
+    my_component.scss   (optional)
+```
+
+## Best Practices
+
+<Warning>
+Never override the JavaScript `constructor()` in an OWL component. Use `setup()` instead — it is the designated lifecycle entry point and supports Odoo's patching mechanism.
+</Warning>
+
+```javascript
+// ✅ Correct
+class MyComponent extends Component {
+  setup() {
+    // initialization here
+  }
+}
+
+// ❌ Incorrect — do not do this
+class WrongComponent extends Component {
+  constructor(parent, props) {
+    // this will break patching and inheritance
+  }
+}
+```
+
+## Odoo-Provided Generic Components
+
+The Odoo web framework ships a suite of reusable OWL components for common UI patterns.
+
+<CardGroup cols={2}>
+  <Card title="ActionSwiper" icon="hand-pointer">
+    Wraps any element to add swipe-left/swipe-right actions (e.g. mark as read on mobile).
+  </Card>
+  <Card title="CheckBox" icon="check-square">
+    Simple checkbox with a clickable label. Linked via `t-on-change`.
+  </Card>
+  <Card title="Dropdown / DropdownItem" icon="chevron-down">
+    Full-featured dropdown with keyboard navigation, RTL support, and nested dropdowns.
+  </Card>
+  <Card title="Notebook" icon="book-open">
+    Tabbed interface with horizontal or vertical tab orientation.
+  </Card>
+  <Card title="Pager" icon="arrow-right">
+    Pagination control displaying `offset`/`limit`/`total`. Use `usePager` hook for control panel integration.
+  </Card>
+  <Card title="SelectMenu" icon="list">
+    Enhanced `<select>` with search, option grouping, multi-select, and custom templates.
+  </Card>
+  <Card title="TagsList" icon="tag">
+    Renders tags as rounded pills with optional delete callbacks.
+  </Card>
+  <Card title="ColorList" icon="palette">
+    Color picker from a predefined palette, with togglable expansion.
+  </Card>
+</CardGroup>
+
+### Dropdown Example
+
+```xml
+<Dropdown>
+  <!-- default slot = toggle element -->
+  <button class="my-btn" type="button">Open Menu</button>
+
+  <!-- content slot = menu items -->
+  <t t-set-slot="content">
+    <DropdownItem onSelected="selectItem1">Menu Item 1</DropdownItem>
+    <DropdownItem onSelected="selectItem2">Menu Item 2</DropdownItem>
+  </t>
+</Dropdown>
+```
+
+**Controlled Dropdown** — open/close programmatically using `useDropdownState`:
+
+```javascript
+import { Component, onMounted } from "@odoo/owl";
+import { Dropdown } from "@web/core/dropdown/dropdown";
+import { useDropdownState } from "@web/core/dropdown/dropdown_hooks";
+
+class MyComponent extends Component {
+  static components = { Dropdown };
+  static template = "myaddon.MyComponent";
+
+  setup() {
+    this.dropdown = useDropdownState();
+    onMounted(() => this.dropdown.open());
+  }
+}
+```
+
+### Notebook Example
+
+```xml
+<Notebook orientation="'vertical'">
+  <t t-set-slot="page_1" title="'Page 1'" isVisible="true">
+    <h1>My First Page</h1>
+  </t>
+  <t t-set-slot="page_2" title="'2nd page'" isVisible="true">
+    <p>Content here</p>
+  </t>
+</Notebook>
+```
+
+### Pager Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `offset` | `number` | Index of the first element (0-based, displayed as `offset + 1`) |
+| `limit` | `number` | Page size |
+| `total` | `number` | Total record count |
+| `onUpdate` | `function` | Called when the page changes (may be async) |
+| `isEditable` | `boolean` | Allow clicking the page indicator to edit it (default: `true`) |
+
+---
+
+## Odoo-Specific Hooks
+
+Hooks wrap lifecycle-dependent logic into composable functions. Import all standard hooks from `@web/core/utils/hooks`.
+
+### `useService`
+
+The primary way to access a service inside a component:
+
+```javascript
+import { useService } from "@web/core/utils/hooks";
+
+class MyComponent extends Component {
+  setup() {
+    this.orm = useService("orm");
+    this.notification = useService("notification");
+  }
+}
+```
+
+### `useAutofocus`
+
+Focuses an element referenced by `t-ref="autofocus"` when it first appears in the DOM:
+
+```javascript
+import { useAutofocus } from "@web/core/utils/hooks";
+
+class Comp extends Component {
+  setup() {
+    this.inputRef = useAutofocus();
+  }
+  static template = "Comp";
+}
+```
+
+```xml
+<t t-name="Comp">
+  <input t-ref="autofocus" type="text"/>
+</t>
+```
+
+### `useBus`
+
+Subscribes to a global bus event and automatically unsubscribes on component unmount:
+
+```javascript
+import { useBus } from "@web/core/utils/hooks";
+
+class MyComponent extends Component {
+  setup() {
+    useBus(this.env.bus, "CLEAR-CACHES", (event) => {
+      console.log("caches cleared", event);
+    });
+  }
+}
+```
+
+**API:** `useBus(bus, eventName, callback)` — no return value.
+
+### `usePager`
+
+Connects a component's pagination state to the control panel's `Pager` component:
+
+```javascript
+import { usePager } from "@web/search/pager_hook";
+
+class CustomView extends Component {
+  setup() {
+    const state = useState({ offset: 0, limit: 80, total: 50 });
+    usePager(() => ({
+      offset: state.offset,
+      limit: state.limit,
+      total: state.total,
+      onUpdate: (newState) => Object.assign(state, newState),
+    }));
+  }
+}
+```
+
+### `usePosition`
+
+Positions a *popper* element relative to a *reference* element, updating on scroll and resize:
+
+```javascript
+import { usePosition } from "@web/core/position_hook";
+import { Component, xml, useRef } from "@odoo/owl";
+
+class DropMenu extends Component {
+  static template = xml`
+    <button t-ref="toggler">Toggle</button>
+    <div t-ref="menu">
+      <t t-slot="default">Menu content</t>
+    </div>
+  `;
+
+  setup() {
+    const toggler = useRef("toggler");
+    usePosition(
+      () => toggler.el,
+      {
+        popper: "menu",
+        position: "right-start",
+        onPositioned: (el, { direction, variant }) => {
+          el.classList.add(`dm-${direction}`);
+        },
+      }
+    );
+  }
+}
+```
+
+**Position options:** `top`, `bottom`, `right`, `left` combined with variants `start`, `middle`, `end`, `fit`.
+
+### `useSpellCheck`
+
+Activates spellcheck on focused `input`, `textarea`, or `contenteditable` elements:
+
+```javascript
+import { useSpellCheck } from "@web/core/utils/hooks";
+
+class Comp extends Component {
+  setup() {
+    this.simpleRef = useSpellCheck();              // uses t-ref="spellcheck"
+    this.customRef = useSpellCheck({ refName: "custom" });
+  }
+  static template = "Comp";
+}
+```
+
+```xml
+<t t-name="Comp">
+  <input t-ref="spellcheck" type="text"/>
+  <textarea t-ref="custom"/>
+</t>
+```
+
+---
+
+## Registries for Components
+
+Register your component in one of these registries depending on its purpose:
+
+<Tabs>
+  <Tab title="fields registry">
+    ```javascript
+    registry.category("fields").add("my_field_type", MyFieldComponent);
+    ```
+    Used in form/list/kanban views via `widget="my_field_type"`.
+  </Tab>
+  <Tab title="views registry">
+    ```javascript
+    registry.category("views").add("my_view_type", myViewDescriptor);
+    ```
+    Makes the view available via `js_class="my_view_type"` on a view arch.
+  </Tab>
+  <Tab title="main_components registry">
+    ```javascript
+    registry.category("main_components").add("MyGlobalWidget", {
+      Component: MyGlobalWidget,
+    });
+    ```
+    Mounts the component at the top-level web client, next to the navbar.
+  </Tab>
+  <Tab title="systray registry">
+    ```javascript
+    registry.category("systray").add("myaddon.myItem", {
+      Component: MySystrayItem,
+    }, { sequence: 43 });
+    ```
+    Adds an icon/widget to the navbar systray area (lower sequence = further right).
+  </Tab>
+</Tabs>

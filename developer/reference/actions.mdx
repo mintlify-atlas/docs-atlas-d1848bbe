@@ -1,0 +1,318 @@
+---
+title: 'Odoo Actions: Window, Server, Report and URL Actions'
+sidebarTitle: 'Actions'
+description: 'Reference for all Odoo action types: ir.actions.act_window for views, ir.actions.server for automation, ir.actions.report for PDFs, and ir.actions.act_url.'
+---
+
+Actions define how the Odoo system responds to user interactions — clicking a menu item, pressing a button, selecting a record, or running a scheduled job. An action tells the client what to do next: open a view, run server-side code, generate a report, redirect to a URL, or trigger a client-side component. Actions can be stored as database records (referenced by ID or external ID) or returned directly as dictionaries from Python methods.
+
+---
+
+## Action Basics
+
+All actions share two mandatory attributes:
+
+| Attribute | Description |
+|---|---|
+| `type` | The action category, e.g. `ir.actions.act_window`. Determines which other fields are valid. |
+| `name` | Short human-readable description. May appear in breadcrumbs or button labels. |
+
+A client can receive an action in four forms:
+- `False` — close any open dialog.
+- A string — treated as a client action tag.
+- An integer — load the action record from the database by ID.
+- A dictionary — execute directly as an inline action descriptor.
+
+---
+
+## Bindings
+
+Any action can be **bound** to a model so it appears in the model's contextual **Action** or **Print** drop-down menu on list and form views:
+
+| Attribute | Description |
+|---|---|
+| `binding_model_id` | The model to bind the action to (use `model_id` for server actions instead). |
+| `binding_type` | `action` (appears in the Action menu, default) or `report` (appears in the Print menu). |
+| `binding_view_types` | Comma-separated view types: `list`, `form`. Defaults to `list,form`. |
+
+```xml
+<record id="action_estate_property_sold" model="ir.actions.server">
+    <field name="name">Mark as Sold</field>
+    <field name="model_id" ref="model_estate_property"/>
+    <field name="binding_model_id" ref="model_estate_property"/>
+    <field name="binding_type">action</field>
+    <field name="binding_view_types">list,form</field>
+    <field name="state">code</field>
+    <field name="code">records.action_sold()</field>
+</record>
+```
+
+---
+
+## Window Actions (`ir.actions.act_window`)
+
+The most common action type. Opens a model through one or more views (list, form, kanban, graph, pivot, etc.).
+
+### Fields
+
+| Field | Description |
+|---|---|
+| `res_model` | (required) The model to display. |
+| `view_mode` | Comma-separated list of view types, e.g. `list,form,kanban`. |
+| `views` | List of `(view_id, view_type)` pairs; auto-built from `view_mode` if not set. |
+| `res_id` | When `view_mode` starts with `form`, opens this specific record ID. |
+| `search_view_id` | `(id, name)` pair specifying a custom search view. |
+| `target` | Where to open the action: `current` (default), `new` (dialog), `fullscreen`, `main` (clear breadcrumbs). |
+| `context` | Additional context dict passed to all views. |
+| `domain` | Domain filter applied to all searches in the action. |
+| `limit` | Default number of records in list views. Defaults to 80. |
+
+### Example
+
+```xml
+<record id="action_estate_property" model="ir.actions.act_window">
+    <field name="name">Properties</field>
+    <field name="res_model">estate.property</field>
+    <field name="view_mode">list,form,kanban</field>
+    <field name="domain">[('active', '=', True)]</field>
+    <field name="context">{'search_default_available': 1}</field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+            Create your first property listing!
+        </p>
+    </field>
+</record>
+```
+
+### Opening a Specific Record in a Dialog
+
+```xml
+<record id="action_view_property_form" model="ir.actions.act_window">
+    <field name="name">Property Details</field>
+    <field name="res_model">estate.property</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+</record>
+```
+
+### Returning an Action from Python
+
+```python
+def action_view_offers(self):
+    return {
+        'type': 'ir.actions.act_window',
+        'name': 'Offers',
+        'res_model': 'estate.property.offer',
+        'view_mode': 'list,form',
+        'domain': [('property_id', '=', self.id)],
+        'context': {'default_property_id': self.id},
+        'target': 'current',
+    }
+```
+
+---
+
+## Server Actions (`ir.actions.server`)
+
+Server actions execute Python code or predefined operations on the server when triggered by a user, a button, or an automation rule.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| `model_id` | The model the action operates on. |
+| `state` | What the action does: `code`, `object_create`, `object_write`, `multi`, `client_action`. |
+| `code` | Python code to execute (when `state='code'`). Exposes `env`, `model`, `record`, `records`. |
+| `child_ids` | List of sub-actions to run sequentially (when `state='multi'`). |
+| `crud_model_id` | Model to create/update in (when `state='object_create'` or `object_write`). |
+
+### Code Action
+
+```xml
+<record id="action_send_welcome_email" model="ir.actions.server">
+    <field name="name">Send Welcome Email</field>
+    <field name="model_id" ref="base.model_res_partner"/>
+    <field name="binding_model_id" ref="base.model_res_partner"/>
+    <field name="state">code</field>
+    <field name="code">
+for partner in records:
+    template = env.ref('my_module.email_template_welcome')
+    template.send_mail(partner.id, force_send=True)
+    </field>
+</record>
+```
+
+<Note>
+In server action code, the following names are available: `env` (the ORM environment), `model` (the model class), `record` (single record, may be empty), `records` (all selected records), `time`, `datetime`, `dateutil`, `timezone`, `uid`, `user`, and `Warning` (alias for `odoo.exceptions.Warning`).
+</Note>
+
+### Code Action That Returns a Next Action
+
+A server action code block can define a variable called `action`, which is then returned to the client as the next action to execute:
+
+```xml
+<record id="action_open_property_wizard" model="ir.actions.server">
+    <field name="name">Open Offer Wizard</field>
+    <field name="model_id" ref="model_estate_property"/>
+    <field name="state">code</field>
+    <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'res_model': 'estate.property.offer.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+    'context': {'default_property_id': record.id},
+}
+    </field>
+</record>
+```
+
+### Multi-Action
+
+```xml
+<record id="action_estate_multi" model="ir.actions.server">
+    <field name="name">Validate and Notify</field>
+    <field name="model_id" ref="model_estate_property"/>
+    <field name="state">multi</field>
+    <field name="child_ids" eval="[
+        (4, ref('action_mark_sold')),
+        (4, ref('action_send_confirmation_email')),
+    ]"/>
+</record>
+```
+
+---
+
+## Report Actions (`ir.actions.report`)
+
+Report actions generate PDF or HTML documents from QWeb templates.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| `name` | Report name; used as filename if `print_report_name` is not set. |
+| `model` | The model the report is about. |
+| `report_name` | External ID of the QWeb template (e.g. `estate.report_property_template`). |
+| `report_type` | `qweb-pdf` (default) or `qweb-html`. |
+| `print_report_name` | Python expression returning the filename, e.g. `"'Property - %s' % object.name"`. |
+| `binding_model_id` | Bind to a model so the report appears in the Print menu. |
+| `paperformat_id` | Many2one to `report.paperformat`; defaults to company format. |
+| `attachment_use` | If `True`, store the generated PDF as an attachment and reuse it on re-print. |
+
+### Example
+
+```xml
+<record id="action_report_estate_property" model="ir.actions.report">
+    <field name="name">Property Report</field>
+    <field name="model">estate.property</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">estate.report_property_template</field>
+    <field name="print_report_name">'Property - %s' % object.name</field>
+    <field name="binding_model_id" ref="model_estate_property"/>
+    <field name="paperformat_id" ref="base.paperformat_euro"/>
+</record>
+```
+
+### QWeb Report Template
+
+```xml
+<template id="report_property_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="doc">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2 t-field="doc.name"/>
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Expected Price:</strong>
+                            <span t-field="doc.expected_price"/>
+                        </div>
+                        <div class="col-6">
+                            <strong>Postcode:</strong>
+                            <span t-field="doc.postcode"/>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+```
+
+---
+
+## URL Actions (`ir.actions.act_url`)
+
+URL actions redirect the user to an internal or external URL.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| `url` | The address to open. |
+| `target` | `new` (new tab/window, default), `self` (current window), `download` (trigger browser download). |
+
+### Examples
+
+```xml
+<!-- Open Odoo website in a new tab -->
+<record id="action_visit_website" model="ir.actions.act_url">
+    <field name="name">Visit Our Website</field>
+    <field name="url">https://www.example.com</field>
+    <field name="target">new</field>
+</record>
+
+<!-- Force-download a file from a controller -->
+<record id="action_download_export" model="ir.actions.act_url">
+    <field name="name">Download Export</field>
+    <field name="url">/estate/export/properties</field>
+    <field name="target">download</field>
+</record>
+```
+
+### From Python
+
+```python
+def action_open_external(self):
+    return {
+        'type': 'ir.actions.act_url',
+        'url': 'https://www.example.com/property/%d' % self.id,
+        'target': 'new',
+    }
+```
+
+---
+
+## Client Actions (`ir.actions.client`)
+
+Client actions trigger a handler implemented entirely in JavaScript — the server has no knowledge of what happens after dispatching the action.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| `tag` | Client-side identifier registered in the `actions` registry. |
+| `params` | Optional Python dict passed to the client handler. |
+| `target` | `current` (default), `new`, `fullscreen`, or `main`. |
+
+### Example
+
+```xml
+<record id="action_estate_dashboard" model="ir.actions.client">
+    <field name="name">Estate Dashboard</field>
+    <field name="tag">estate.dashboard</field>
+    <field name="target">main</field>
+</record>
+```
+
+**Register the handler in JavaScript:**
+
+```javascript
+/** @odoo-module **/
+
+import { registry } from "@web/core/registry";
+import { EstateDashboard } from "./estate_dashboard";
+
+registry.category("actions").add("estate.dashboard", EstateDashboard);
+```

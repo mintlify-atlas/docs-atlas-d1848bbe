@@ -1,0 +1,249 @@
+---
+title: 'Odoo Frontend Framework: JavaScript Architecture Overview'
+sidebarTitle: 'Frontend Overview'
+description: 'Explore the Odoo JavaScript frontend architecture: ES modules, OWL components, services, registries, asset bundles, and the environment system.'
+---
+
+The Odoo JavaScript framework is the set of building blocks provided by the `web/` addon to power all browser-side Odoo applications. At its heart, the web client is a single-page application (SPA) available at `/web` that manages routing, actions, and views without requiring full page reloads. All new development should use **OWL** (Odoo Web Library) components and native ES modules.
+
+<Note>
+In Odoo terminology, *frontend* often refers to the public website and *backend* to the web client (`/web`). This reference focuses on the web client (backend). The word **component** always refers to OWL components; **widget** refers to the older legacy system.
+</Note>
+
+## Code Structure
+
+The `web/static/src` folder is the root of all JavaScript, SCSS, and template source. Key subdirectories:
+
+<CardGroup cols={2}>
+  <Card title="core/" icon="layer-group">
+    Low-level utilities, registries, services, hooks, and the OWL environment setup.
+  </Card>
+  <Card title="fields/" icon="input-text">
+    All field components used in form, list, and other views.
+  </Card>
+  <Card title="views/" icon="table">
+    View components: `form`, `list`, `kanban`, `pivot`, `graph`, and more.
+  </Card>
+  <Card title="webclient/" icon="browser">
+    The web client shell: navbar, user menu, action service, and breadcrumb management.
+  </Card>
+</CardGroup>
+
+Every file under `web/static/src` can be imported using the `@web` prefix:
+
+```javascript
+import { memoize } from "@web/core/utils/functions";
+```
+
+Files in other addons follow the same pattern using their addon name:
+
+```javascript
+// File: some_addon/static/src/path/to/file.js
+import { someHelper } from "@some_addon/path/to/file";
+```
+
+## WebClient Architecture
+
+The web client is an OWL application. Its root template is:
+
+```xml
+<t t-name="web.WebClient">
+  <body class="o_web_client">
+    <NavBar/>
+    <ActionContainer/>
+    <MainComponentsContainer/>
+  </body>
+</t>
+```
+
+- **NavBar** — top navigation bar with app switcher and user menu.
+- **ActionContainer** — renders the current action (a client action or a view from `act_window`).
+- **MainComponentsContainer** — displays all components registered in the `main_components` registry, allowing addons to inject top-level UI.
+
+## Environment
+
+Every OWL component in the web client shares a common `env` object. Odoo extends the standard OWL environment with:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `qweb` | object | All loaded QWeb templates |
+| `bus` | EventBus | Global event bus for coordinating system events |
+| `services` | object | All active services (use `useService` to access) |
+| `debug` | string | Non-empty when debug mode is active |
+| `_t` | function | Translation function |
+| `isSmall` | boolean | `true` when screen width ≤ 767px (mobile mode) |
+
+To translate a string inside a component method:
+
+```javascript
+const someString = this.env._t('some text');
+```
+
+## Building Blocks
+
+### Registries
+
+Registries are ordered key/value maps that serve as the main extension point of the web client. To add a custom field component:
+
+```javascript
+import { Component } from "@odoo/owl";
+import { registry } from "@web/core/registry";
+
+class MyFieldChar extends Component {
+  // component implementation
+}
+
+registry.category("fields").add("my_field_char", MyFieldChar);
+```
+
+<Tip>
+The `registry` exported from `@web/core/registry` is the root registry. Use `.category(name)` to get a sub-registry. Common categories: `fields`, `views`, `services`, `main_components`, `systray`, `user_menuitems`.
+</Tip>
+
+### Services
+
+Services are long-lived singletons that provide framework features. They declare dependencies and are accessed in components via `useService`:
+
+```javascript
+import { registry } from "@web/core/registry";
+
+const myService = {
+  dependencies: ["notification"],
+  start(env, { notification }) {
+    let counter = 1;
+    setInterval(() => {
+      notification.add(`Tick Tock ${counter++}`);
+    }, 5000);
+  }
+};
+
+registry.category("services").add("myService", myService);
+```
+
+Built-in services include `orm`, `rpc`, `notification`, `action`, `dialog`, `user`, and `router`.
+
+### Components and Hooks
+
+Components are OWL class-based components. Hooks factorize lifecycle-dependent logic:
+
+```javascript
+function useCurrentTime() {
+  const state = useState({ now: new Date() });
+  const update = () => (state.now = new Date());
+  let timer;
+  onWillStart(() => (timer = setInterval(update, 1000)));
+  onWillUnmount(() => clearInterval(timer));
+  return state;
+}
+```
+
+## Context
+
+Two types of context exist in the web client:
+
+<Accordion title="User Context">
+Available via the `user` service, the user context contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `allowed_company_ids` | `number[]` | Active company IDs (first is the main company) |
+| `lang` | `string` | User language code, e.g. `"en_US"` |
+| `tz` | `string` | User timezone, e.g. `"Europe/Brussels"` |
+
+```javascript
+class MyComponent extends Component {
+  setup() {
+    const user = useService("user");
+    console.log(user.context);
+  }
+}
+```
+</Accordion>
+
+<Accordion title="Action Context">
+Set via `ir.actions.act_window`'s `context` field. To extend it programmatically:
+
+```javascript
+// in setup()
+const actionService = useService("action");
+
+// in an event handler
+actionService.doAction("addon_name.something", {
+  additional_context: {
+    default_period_id: defaultPeriodId
+  }
+});
+```
+</Accordion>
+
+## Python Expression Interpreter
+
+The framework ships a built-in Python expression evaluator for evaluating view modifiers (domain filters, `attrs`, etc.) in the browser:
+
+```javascript
+import { evaluateExpr } from "@web/core/py_js/py";
+
+evaluateExpr("1 + 2*{'a': 1}.get('b', 54) + v", { v: 33 }); // returns 142
+```
+
+The `@web/core/py_js/py` module exports `tokenize`, `parse`, `parseExpr`, `evaluate`, and `evaluateExpr`.
+
+## Domains
+
+Use the `Domain` class to work with Odoo record filter conditions in JavaScript:
+
+```javascript
+new Domain([["a", "=", 3]]).contains({ a: 3 }); // true
+
+const domain = new Domain(["&", "&", ["a", "=", 1], ["b", "=", 2], ["c", "=", 3]]);
+domain.contains({ a: 1, b: 2, c: 3 }); // true
+
+// Combine domains
+Domain.or([[[" a", "=", 1]], "[('b', '<=', 3)]"]).toString();
+// → ["│", ("a", "=", 1), ("b", "<=", 3)]
+```
+
+Static combination methods: `Domain.and(domains)`, `Domain.or(domains)`, `Domain.not(domain)`, `Domain.combine(domains, operator)`.
+
+## Global Event Bus
+
+The `env.bus` is an OWL `EventBus` for broadcasting system-level events:
+
+```javascript
+// Subscribe to an event in a service
+env.bus.on("WEB_CLIENT_READY", null, doSomething);
+```
+
+Key bus events:
+
+| Event | Payload | When |
+|-------|---------|------|
+| `WEB_CLIENT_READY` | — | Web client has been mounted |
+| `ACTION_MANAGER:UI-UPDATED` | update mode | Current action rendering complete |
+| `ROUTE_CHANGE` | — | URL hash changed |
+| `RPC:REQUEST` | rpc id | RPC request started |
+| `RPC:RESPONSE` | rpc id | RPC request completed |
+| `CLEAR-CACHES` | — | All internal caches should be cleared |
+
+## Browser Object
+
+Use the `browser` object instead of calling browser APIs directly, enabling easy test mocking:
+
+```javascript
+import { browser } from "@web/core/browser/browser";
+
+browser.setTimeout(someFunction, 1000);
+browser.localStorage.setItem("key", "value");
+```
+
+## Debug Mode
+
+Debug mode (`env.debug`) activates developer tools and extra UI information:
+
+- `debug=assets` — disables minification and generates source maps for JavaScript debugging.
+- `debug=tests` — loads `web.assets_tests` bundle containing test tours.
+
+```xml
+<!-- Show a field only in debug mode -->
+<field name="fname" groups="base.group_no_one"/>
+```

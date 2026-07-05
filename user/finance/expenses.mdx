@@ -1,0 +1,203 @@
+---
+title: "Manage Employee Expenses in Odoo"
+sidebarTitle: "Expenses"
+description: "Track, submit, approve, and reimburse employee expenses in Odoo — from logging individual receipts through manager approval to accounting journal entries and payroll."
+---
+
+Odoo **Expenses** provides a complete end-to-end workflow for employee expense management. Employees log individual expenses — manually, by uploading a receipt, or by emailing a photo of a receipt — and then group them into expense reports for submission. Managers review and approve or refuse those reports, accountants post the approved expenses to the correct accounting journals, and finally employees are reimbursed through direct payment or via their next payslip. Every step is tracked and auditable, and approved expenses flow directly into Odoo Accounting without manual re-entry.
+
+---
+
+## Expense Categories
+
+Before employees can log expenses, the types of reimbursable expenses must be configured as **expense categories** (managed as products in Odoo). Default categories cover common business expenses including communication costs, meals, gifts, mileage, and general travel.
+
+### Viewing Expense Categories
+
+Navigate to **Expenses app → Configuration → Expense Categories** to see all available categories. The general-purpose category **EXP_GEN** is available for expenses that do not fit any specific category.
+
+### Creating a New Expense Category
+
+<Steps>
+  <Step title="Open the new category form">
+    Navigate to **Expenses app → Configuration → Expense Categories**, then click **New**.
+  </Step>
+  <Step title="Enter the product name">
+    Enter a short, descriptive **Product Name** (for example, `TOOLS` or `CONF_TRAVEL`).
+  </Step>
+  <Step title="Set the cost">
+    - **Leave Cost at `0.00`** if employees should report the actual amount they paid. The employee enters the real expense total when logging the expense, and is reimbursed that amount.
+    - **Enter a fixed Cost** if the expense should always be reimbursed at a set rate. For example, set `1.00` per mile for mileage reimbursements, or `125.00` per day for a per-diem category.
+  </Step>
+  <Step title="Configure taxes, account, and other settings">
+    Assign an expense **Account**, applicable **Taxes**, and optionally configure re-invoicing rules if expenses in this category can be billed back to a customer.
+  </Step>
+  <Step title="Save the category">
+    Click **Save** (or navigate away — Odoo auto-saves).
+  </Step>
+</Steps>
+
+<Tip>
+  Expense categories behave like standard Odoo products. Any configuration available on a product form — units of measure, vendor details, accounting accounts — is also available on an expense category.
+</Tip>
+
+---
+
+## Logging Expenses
+
+Before a reimbursement can be processed, each individual expense must be recorded in the database. Odoo supports four methods for creating expense records.
+
+<Tabs>
+  <Tab title="Manual Entry">
+    Open the **Expenses** app (which displays the **My Expenses** page by default), then click **New**. Fill in the following fields:
+
+    | Field | Description |
+    |---|---|
+    | **Description** | A concise label such as `Lunch with client` or `Hotel for trade show`. |
+    | **Category** | The expense category that most closely matches the expenditure. |
+    | **Total / Quantity** | For single-item expenses, enter the total paid. For fixed-rate categories (like mileage), enter the **Quantity** and the unit price is applied automatically. |
+    | **Included Taxes** | Auto-populated from the category's tax configuration. |
+    | **Employee** | The employee to be reimbursed. |
+    | **Paid By** | Select **Employee (to reimburse)** or **Company**. |
+    | **Expense Date** | The date the expense was incurred. |
+    | **Account** | Defaults to the category's linked account, or `600000 Expenses` if none is set. |
+    | **Customer to Reinvoice** | If a customer agreed to pay for this expense, select the related Sales Order. |
+    | **Analytic Distribution** | Assign the cost to one or more projects or departments for analytic reporting. |
+    | **Notes** | Any supporting context or justification. |
+
+    After saving, click **Attach Receipt** to upload the supporting document.
+  </Tab>
+  <Tab title="Upload a Receipt (OCR)">
+    Enable **Expense Digitization (OCR)** in **Expenses app → Configuration → Settings**. Once enabled, click **Upload** on the **My Expenses** page and select a PDF or image receipt. Odoo uses OCR to extract the vendor, date, and amount and pre-fills a new expense record automatically. In-app purchase (IAP) credits are required for this feature.
+  </Tab>
+  <Tab title="Drag and Drop">
+    Drag a receipt file (PDF or image) directly onto the **Expenses** app dashboard. Odoo creates a new expense record and attaches the file.
+  </Tab>
+  <Tab title="Email a Receipt">
+    Send a photo or scan of a receipt to the preconfigured expense email address for your Odoo instance. Odoo creates a draft expense record linked to the sending employee's account and attaches the email content as the receipt.
+  </Tab>
+</Tabs>
+
+<Note>
+  Multiple receipts can be attached to a single expense record. Each attachment is logged in the record's chatter, and the paperclip icon shows a count of attached files.
+</Note>
+
+---
+
+## Submitting an Expense Report
+
+Once individual expenses have been logged, they must be grouped into an **expense report** and submitted for manager approval.
+
+### The My Expenses Dashboard
+
+Open the **Expenses** app to view the **My Expenses** dashboard. Expenses are color-coded by status:
+
+- **Blue text** — *Draft* (created but not yet submitted).
+- **Black text** — *Submitted*, *Approved*, or *Refused*.
+
+A summary banner above the list shows:
+- **To Submit** — total value of Draft expenses.
+- **Waiting Approval** — total value of Submitted expenses.
+- **Waiting Reimbursement** — total value of Approved expenses.
+
+### Submitting Expenses
+
+<Steps>
+  <Step title="Select expenses to submit">
+    On the **My Expenses** dashboard, tick the checkbox next to each **Draft** expense you want to include in the report. Only Draft expenses show the **Submit** button.
+  </Step>
+  <Step title="Click Submit">
+    Click the **Submit** button. Odoo groups the selected expenses into an expense report and changes their status to **Submitted**.
+  </Step>
+</Steps>
+
+<Tip>
+  To quickly select all Draft expenses, click into the search bar, choose **To Submit** under **Filters**, then tick the **Employee** checkbox to select all results.
+</Tip>
+
+---
+
+## Manager Approval Workflow
+
+Only users with at least **Team Approver** rights in the Expenses app can process submitted expense reports. Managers access the approval queue at **Expenses app → My Expenses → Expenses to Process**.
+
+The **Expenses to Process** dashboard lists all reports with a status of **Submitted**. Reports in other statuses (Draft, Approved, Posted, In Payment, Paid, or Refused) are hidden by default; use the **Status** panel on the left to filter them in.
+
+### Approving Expenses
+
+<Tabs>
+  <Tab title="Approve Individually">
+    Click on any submitted expense report to open the detail view. The available action buttons are:
+
+    - **Approve** — advances the report to *Approved* status.
+    - **Refuse** — opens a dialog to enter a refusal reason, which is sent to the employee.
+    - **Reset** — returns the report to *Draft*.
+    - **Post Journal Entries** — posts directly to accounting (requires Accounting access rights).
+    - **Report in Next Payslip** — queues the expense for reimbursement in payroll.
+    - **Split Expense** — splits the report into separate line items.
+    - **Attach Receipt** — adds a supporting document.
+
+    Click **Approve** to approve the report.
+  </Tab>
+  <Tab title="Approve in Bulk">
+    On the **Expenses to Process** dashboard, tick the checkbox next to each report to approve (or tick the **Employee** header checkbox to select all). Then click the **Approve** button that appears in the action bar.
+  </Tab>
+</Tabs>
+
+<Tip>
+  Team managers can filter the list to show only their direct reports' expenses. Click the **▾** dropdown in the search bar and select **My Team** under **Filters**.
+</Tip>
+
+### Refusing an Expense
+
+Expenses can only be refused individually, not in bulk. Open the individual report from **Expenses to Process**, then click **Refuse**. Enter a reason in the popup — the reason is communicated back to the employee via the chatter.
+
+---
+
+## Posting Expenses to Accounting
+
+Once a report is **Approved**, an accountant (with *Accountant* or *Adviser* role in Accounting **and** *Manager* role in Expenses) must post the journal entries.
+
+<Steps>
+  <Step title="Filter for Approved expenses">
+    Navigate to **Expenses app → My Expenses → Expenses to Process**. On the left panel, tick only the **Approved** checkbox to show reports ready to post.
+  </Step>
+  <Step title="Post individually or in bulk">
+    - **Individually**: Click an approved report, then click **Post Journal Entries**. Verify the **Journal** (defaults to *Purchases*) and **Accounting Date**, then click **Post Expenses**.
+    - **In bulk**: Select multiple approved reports and click **Post Journal Entries** in the action bar.
+  </Step>
+  <Step title="Verify the posted entries">
+    After posting, the report status changes to **Posted** and the journal entry is visible in the **Accounting** app.
+  </Step>
+</Steps>
+
+---
+
+## Reimbursing Employees
+
+Once an expense report is posted, the final step is to reimburse the employee. Odoo supports two reimbursement methods.
+
+<Tabs>
+  <Tab title="Direct Payment (Cash, Check, or Bank Transfer)">
+    Navigate to the posted expense report and click the **Register Payment** button. Select the payment method — **Manual Payment (Bank)**, **Batch Deposit (Bank)**, **Checks (Bank)**, or any other method configured in **Expenses app → Configuration → Settings** under the **Payment Methods** section. Confirm the payment to mark the expense as **Paid**.
+  </Tab>
+  <Tab title="Reimburse in Payslip">
+    If the **Reimburse in Payslip** option is enabled at **Expenses app → Configuration → Settings**, click **Report in Next Payslip** on an Approved or Posted expense report. A chatter note confirms that the expense will be included in the employee's next payslip. The status updates to **Paid** when the payslip is processed.
+  </Tab>
+</Tabs>
+
+<Note>
+  Only expenses with **Approved** or **Posted** status can be added to a payslip. Attempting to reimburse a Draft or Submitted expense via payslip will trigger a warning.
+</Note>
+
+---
+
+## Reinvoicing Expenses to Customers
+
+If an expense was incurred on behalf of a customer (for example, travel costs for an on-site project), Odoo can bill the expense back to the customer through an existing **Sales Order**. Set the **Customer to Reinvoice** field on the expense record to the relevant Sales Order. After approval and posting, the expense is automatically added to the sales order and can be invoiced to the customer in the usual way.
+
+---
+
+## Expense Analysis
+
+Navigate to **Expenses app → Reporting → Expenses Analysis** to view pivot and graph reports of expense data across employees, categories, departments, and time periods. Use the standard **Filters**, **Group By**, and **Measures** tools to build custom analyses and save them as favorites.

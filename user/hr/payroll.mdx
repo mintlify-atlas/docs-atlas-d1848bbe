@@ -1,0 +1,155 @@
+---
+title: "Process Payroll and Pay Slips in Odoo"
+sidebarTitle: "Payroll"
+description: "Configure salary structures and schedules, generate individual or batch pay slips, resolve work entry conflicts, and post payroll journal entries in Odoo."
+---
+
+Odoo **Payroll** calculates employees' compensation by combining work entry data (hours worked, time off taken, overtime) with the salary rules defined in their contract. Every pay cycle follows the same sequence: verify work entries, generate payslips, review calculations, and pay employees—either by bank transfer or printed check. Because Payroll integrates with **Employees**, **Attendances**, **Time Off**, and **Planning**, the underlying data is always accurate before a payslip is ever generated.
+
+<Warning>
+  Install the correct country-specific **payroll localization** before processing any payslips. Localizations pre-configure tax tables, social contribution rules, and statutory deductions for your country. Changing the localization after payslips have been processed can cause accounting discrepancies.
+</Warning>
+
+---
+
+## Salary Structures
+
+Salary structures define how each employee's pay is calculated. They are organized in a two-level hierarchy: **Structure Types** group related structures, and each **Structure** contains the individual salary **Rules** that compute the amounts.
+
+<CardGroup cols={2}>
+  <Card title="Structure Types" icon="layers">
+    A structure type groups structures that apply to a similar employment category. The two default types are **Employee** (for salaried workers on a fixed wage) and **Worker** (for hourly employees). The structure type also sets the default pay frequency and working hours template.
+  </Card>
+  <Card title="Salary Structures" icon="list">
+    Each structure contains an ordered list of rules executed sequentially. A typical structure includes a **Gross Wage** rule, **Social Contributions** deductions, **Tax** rules, and a **Net Wage** computation. Structures can also cover one-off payments like end-of-year bonuses.
+  </Card>
+  <Card title="Salary Rules" icon="calculator">
+    Rules define individual line items on a payslip—basic salary, meal allowances, overtime pay, pension contributions, income tax. Each rule references a Python-based formula or a fixed amount, and posts to a specific accounting account.
+  </Card>
+  <Card title="Other Input Types" icon="plus-circle">
+    Add extra payslip inputs—bonuses, expense reimbursements, or manual deductions—that are not automatically derived from work entries. These are applied per payslip when the payroll officer processes the batch.
+  </Card>
+</CardGroup>
+
+---
+
+## Working Schedules
+
+A working schedule defines the employee's expected hours per day and week. Payroll uses working schedules to calculate the number of expected working days within any pay period.
+
+<Steps>
+  <Step title="Create a working schedule">
+    Go to **Payroll → Configuration → Working Schedules** and click **New**. Name the schedule (e.g., "Standard 40 hrs/week", "Part-Time 20 hrs", "Flexible") and define the work time lines for each day of the week.
+  </Step>
+  <Step title="Assign to a contract">
+    On the employee's contract, select the appropriate working schedule. The schedule determines how many days are counted as worked for a given pay period and how overtime is calculated.
+  </Step>
+  <Step title="Handle flexible or shift schedules">
+    For shift workers, create a schedule that reflects rotating patterns. Odoo's scheduler uses the assigned schedule to generate accurate work entries and account for any deviations recorded in Attendances or Planning.
+  </Step>
+</Steps>
+
+---
+
+## Work Entries
+
+**Work entries** are the daily records of how an employee spent their time during a pay period—regular work, paid leave, sick days, overtime, and public holidays. Payslips cannot be finalized until all work entry conflicts for the period are resolved.
+
+<CardGroup cols={2}>
+  <Card title="Automatic Generation" icon="zap">
+    When payroll is run, Odoo generates work entries from the employee's contract schedule, cross-referenced with approved time off requests, attendance records, and planning entries.
+  </Card>
+  <Card title="Conflict Resolution" icon="alert-triangle">
+    Conflicts occur when two entries overlap (e.g., an attendance record and a time off day on the same date). Navigate to **Payroll → Work Entries** and filter by **Conflicts** to review and resolve each one before processing payslips.
+  </Card>
+  <Card title="Manual Entries" icon="edit">
+    Payroll officers can manually add or edit work entries to account for exceptional situations—unanticipated overtime, missed attendance punches, or retrospective corrections.
+  </Card>
+  <Card title="Deferred Time Off" icon="calendar">
+    If time off is approved after payslips are validated, enable **Deferred Time Off** in Payroll settings to apply the absence to the next pay period instead of canceling and reprocessing the current payslips.
+  </Card>
+</CardGroup>
+
+---
+
+## Creating Pay Slips
+
+Payslips can be created individually for one employee, or generated in bulk via a **Pay Run** for the entire workforce.
+
+### Individual Payslip
+
+<Steps>
+  <Step title="Open a new payslip">
+    Go to **Payroll → Payslips → To Pay** and click **New**. Select the employee—Odoo auto-populates the contract, salary structure, and period based on the employee's active contract.
+  </Step>
+  <Step title="Review worked days and inputs">
+    The **Worked Days & Inputs** tab shows the number of days and hours for the period, broken down by work entry type. Add any additional inputs (bonuses, deductions) manually if required.
+  </Step>
+  <Step title="Compute the payslip">
+    Click **Compute Sheet** to run all salary rules. The **Salary Computation** tab displays every rule line with its computed amount, making it straightforward to verify the calculation before finalizing.
+  </Step>
+  <Step title="Validate and pay">
+    Click **Validate** to confirm the payslip. Then click **Register Payment** to initiate a bank transfer, or print the payslip PDF to process payment manually. Validated payslips post their journal entries to the Accounting app.
+  </Step>
+</Steps>
+
+---
+
+## Pay Runs (Batch Processing)
+
+Pay runs generate and process payslips for multiple employees at once, organized by salary structure and pay period.
+
+<Steps>
+  <Step title="Generate a pay run">
+    From the **Work Entries** dashboard, click **Generate Pay Run** after confirming all conflicts are resolved. Odoo creates one pay run covering all employees whose work entries fall in the selected period.
+
+    Alternatively, go to **Payroll → Payslips → Pay Runs** and click **New** to create a pay run manually, then add payslips to it.
+  </Step>
+  <Step title="Add and review payslips">
+    Click **Add Payslips** inside the pay run to include employees not automatically added. Review each payslip, resolve any remaining discrepancies, and click **Generate Payslips** to compute all at once.
+  </Step>
+  <Step title="Validate the batch">
+    Once satisfied with all calculations, click **Validate** on the pay run. All payslips within the batch are validated simultaneously and their accounting entries are posted.
+  </Step>
+  <Step title="Pay employees">
+    Click **Pay** to generate a SEPA credit transfer file (for European banks) or a payment batch. Send the file to your bank or process individual payments as appropriate for your region.
+  </Step>
+</Steps>
+
+<Tip>
+  Organize pay runs by department or salary structure type when your workforce has different pay schedules—for example, a weekly run for hourly workers and a monthly run for salaried employees.
+</Tip>
+
+---
+
+## Salary Attachments
+
+Salary attachments handle recurring deductions or additions that are not part of the base salary structure—child support garnishments, loan repayments, court-ordered deductions, or supplemental allowances.
+
+<CardGroup cols={2}>
+  <Card title="Create an Attachment" icon="paperclip">
+    Go to **Payroll → Employees → Salary Attachments** and click **New**. Select the employee, the attachment type, the amount (fixed or percentage), and the date range over which it applies.
+  </Card>
+  <Card title="Automatic Application" icon="zap">
+    Once created, salary attachments are applied automatically to every payslip generated within the specified date range. No manual entry is required each pay period.
+  </Card>
+</CardGroup>
+
+---
+
+## Payroll Reporting
+
+<CardGroup cols={2}>
+  <Card title="Payroll Analysis" icon="chart-bar">
+    Analyze payroll costs across employees, departments, structure types, and time periods. Filter by gross wage, net wage, employer cost, or any individual rule to understand your total compensation spend.
+  </Card>
+  <Card title="Headcount Report" icon="users">
+    Track active headcount by department and contract type over time. Identify periods of rapid growth or unexpected attrition.
+  </Card>
+  <Card title="Work Entry Analysis" icon="clock">
+    Review the distribution of work entry types (regular work, overtime, sick leave, etc.) across the workforce to spot absence trends or compliance issues.
+  </Card>
+  <Card title="Payroll Localizations" icon="globe">
+    Country-specific payroll modules add region-appropriate reports—such as tax declarations, social security filings, or statutory year-end certificates—directly to the Payroll reporting menu.
+  </Card>
+</CardGroup>

@@ -1,0 +1,500 @@
+---
+title: "RST Formatting Guidelines for Odoo Docs"
+sidebarTitle: "RST Guidelines"
+description: "Complete RST syntax reference for Odoo documentation: headings, code blocks, hyperlinks, cross-references, admonitions, toctrees, tables, and document metadata."
+---
+
+The Odoo documentation is written in **reStructuredText (RST)**, a lightweight plaintext markup language processed by [Sphinx](https://www.sphinx-doc.org/). RST is straightforward once you know a handful of conventions. This page is both a style guide and a cheat sheet — keep it open while writing.
+
+<Note>
+  Read the [Content Guidelines](/contributing/documentation/content-guidelines) alongside this page. Content and RST guidelines work as a pair; following both maximises the chance of your PR being merged without major revision requests.
+</Note>
+
+## General rules
+
+Three formatting principles apply to every RST file in the Odoo docs:
+
+1. **Use semantic formatting.** Apply `:menuselection:`, `:guilabel:`, `.. note::`, `.. code-block::`, etc. instead of plain bold or italic text whenever a semantic role exists.
+2. **Use spaces, never tabs.** Indent with spaces aligned to the first character of the markup on the line above — usually three spaces, two for bulleted list continuations.
+3. **Keep lines under 100 characters.** RST lets you wrap long lines without inserting a visible line break in the rendered HTML. Use this to stay within the 100-character limit.
+
+<Tip>
+  You can safely break a line mid-markup (e.g. inside `:menuselection:` or `:doc:`). Some external URLs exceed 100 characters — leaving those on a single line is acceptable.
+
+  ```rst
+  To register your seller account, go to :menuselection:`Sales --> Configuration -->
+  Settings --> Amazon Connector --> Amazon Accounts` and click :guilabel:`Create`.
+  ```
+</Tip>
+
+## Headings
+
+Every document must have **exactly one H1**. Use these underline (and overline for H1) characters:
+
+| Level | Markup | Example |
+|---|---|---|
+| H1 | `=` above and below | `=======` / `Heading` / `=======` |
+| H2 | `=` below only | `Heading` / `=======` |
+| H3 | `-` below | `Heading` / `-------` |
+| H4 | `~` below | `Heading` / `~~~~~~~` |
+| H5 | `*` below | `Heading` / `*******` |
+| H6 | `^` below | `Heading` / `^^^^^^^` |
+
+The underline must be **at least as long as the heading text**.
+
+```rst
+===========
+Page title
+===========
+
+Section title
+=============
+
+Subsection title
+----------------
+
+Sub-subsection
+~~~~~~~~~~~~~~
+```
+
+## Inline markup
+
+### Emphasis and bold
+
+```rst
+Fill out the information *before* saving the form.         ← italic
+A **subdomain** is a domain that is part of another domain. ← bold
+```
+
+### Literal / technical term
+
+Use backticks for technical values or inline code:
+
+```rst
+Insert the IP address of your printer, for example, `192.168.1.25`.
+```
+
+### Definitions and abbreviations
+
+```rst
+The documentation needs to be built (:dfn:`converted to HTML`) to display nicely.
+
+Odoo uses :abbr:`OCR (optical character recognition)` and AI technologies.
+```
+
+### UI elements
+
+```rst
+Update your credentials, then click :guilabel:`Save`.
+
+Go to :menuselection:`Sales --> Reporting --> Dashboard`.
+
+Create redirections using the :file:`redirects.txt` file.
+
+Run :command:`make clean html` to rebuild.
+```
+
+<Warning>
+  Do not use `:guilabel:` for general concepts or model names — only for interactive interface elements.
+
+  ```rst
+  ✅  To create a credit note, open the invoice and click :guilabel:`Credit Note`.
+  ❌  To create a :guilabel:`Credit Note`, open the :guilabel:`Invoice`.
+  ```
+</Warning>
+
+### Icons
+
+Use the `:icon:` role with the CSS class name, followed by a descriptor in `:guilabel:` brackets:
+
+```rst
+Access developer tools by clicking the :icon:`fa-bug` (:guilabel:`bug`) icon.
+The pivot view is represented by the :icon:`oi-view-pivot` (:guilabel:`pivot table`) icon.
+```
+
+Odoo uses three icon sets:
+- **FontAwesome 4** — prefix `fa-*`
+- **Odoo UI** — prefix `oi-*`
+- **Odoo Spreadsheet** — prefix `os-*`
+
+## Lists
+
+### Bulleted and numbered lists
+
+```rst
+- This is a bulleted list.
+- It has two items, the second
+  item uses two lines.
+
+#. This is a numbered list.
+#. Numbering is automatic.
+
+6. Start at a number other than one.
+#. Automatic from here.
+```
+
+<Tip>
+  Prefer `#.` over explicit numbers (`1.`, `2.`…) for better resilience when items are reordered.
+</Tip>
+
+### Nested lists
+
+Add a blank line before nested elements and align sub-items under their parent:
+
+```rst
+- This is the first item of a bulleted list.
+
+  #. It has a nested numbered list
+  #. with two items.
+```
+
+## Hyperlinks
+
+### External hyperlinks
+
+Use the `` `label <URL>`_ `` syntax:
+
+```rst
+For instance, `this is an external hyperlink to Odoo's website <https://www.odoo.com>`_.
+```
+
+**Aliases** allow you to define a URL once and reference it multiple times:
+
+```rst
+.. _proof-of-concept: https://en.wikipedia.org/wiki/Proof_of_concept
+
+A proof-of-concept_ is a simplified version. `PoC <proof-of-concept_>`_ is a common abbreviation.
+```
+
+### Documentation page links (`:doc:`)
+
+Use `:doc:` with a relative path to link between documentation pages:
+
+```rst
+Please refer to the :doc:`Accounting documentation <../../../applications/finance/accounting>`.
+```
+
+Without a custom label, the page title is used automatically:
+
+```rst
+See :doc:`../../../applications/finance/accounting/customer_invoices` for more details.
+```
+
+<Warning>
+  Always use **relative paths** (e.g. `../prices`) rather than absolute paths from the repository root. This keeps links valid across version updates and directory restructuring.
+</Warning>
+
+### Custom anchors and `:ref:` links
+
+Define an anchor with `.. _target:` immediately before a heading, then reference it from anywhere with `:ref:`:
+
+```rst
+.. _contributing/rst/external-hyperlinks:
+
+External hyperlinks
+-------------------
+
+Please refer to the :ref:`contributing/rst/external-hyperlinks` section.
+```
+
+With a custom label:
+
+```rst
+See :ref:`aliases <contributing/rst/external-hyperlink-aliases>` for shortcuts.
+```
+
+<Note>
+  Anchor names are **global** across the entire documentation. Prefix them with the app/section name and filename, separated by slashes:
+
+  ```
+  accounting/taxes/configuration
+  contributing/rst/headings
+  ```
+</Note>
+
+### File downloads
+
+```rst
+Download this :download:`module structure template <rst_guidelines/my_module.zip>`.
+```
+
+## Images
+
+```rst
+.. image:: rst_guidelines/create-invoice.png
+   :alt: Create an invoice.
+```
+
+Optional parameters:
+
+```rst
+.. image:: media/example.png
+   :alt: Activating the developer mode in the Settings app
+   :align: center
+   :scale: 75%
+```
+
+<Tip>
+  Images default to left-aligned. Use `:align: center` or `:align: right` only when the layout specifically calls for it.
+</Tip>
+
+## Code blocks
+
+Use the `.. code-block::` directive with the correct language identifier:
+
+```rst
+.. code-block:: python
+
+   def main():
+       print("Hello world!")
+```
+
+```rst
+.. code-block:: xml
+
+   <record id="view_id" model="ir.ui.view">
+       <field name="name">view.name</field>
+   </record>
+```
+
+```rst
+.. code-block:: console
+
+   $ git clone git@github.com:odoo/documentation.git
+   $ cd documentation
+```
+
+Common language tags: `python`, `xml`, `javascript`, `scss`, `html`, `bash`, `console`, `text`, `rst`.
+
+## Alert blocks (admonitions)
+
+<CodeGroup>
+  ```rst Note
+  .. note::
+     Use this to draw attention to important additional information.
+  ```
+
+  ```rst Tip
+  .. tip::
+     Use this to inform the reader about a useful trick that requires an action.
+  ```
+
+  ```rst Important
+  .. important::
+     Use this to notify the reader about information they must not overlook.
+  ```
+
+  ```rst Warning
+  .. warning::
+     Use this to require the reader to proceed with caution.
+  ```
+
+  ```rst Danger
+  .. danger::
+     Use this to bring attention to a serious threat.
+  ```
+
+  ```rst Example
+  .. example::
+     Use this to show a concrete example.
+  ```
+
+  ```rst See also
+  .. seealso::
+     - :doc:`Accounting documentation <../../../applications/finance/accounting>`
+     - `Google Analytics setup <https://support.google.com/analytics/answer/1008015>`_
+  ```
+
+  ```rst Custom
+  .. admonition:: Custom Title
+
+     Customise this block with a **Title** of your choice.
+  ```
+</CodeGroup>
+
+## Tables
+
+### List tables (recommended)
+
+```rst
+.. list-table::
+   :header-rows: 1
+   :stub-columns: 1
+   :widths: 25 25 50
+
+   * - Name
+     - Country
+     - Favorite color
+   * - Raúl
+     - Montenegro
+     - Purple
+   * - Mélanie
+     - France
+     - Red
+```
+
+<Tip>
+  Useful `:class:` options for list tables:
+
+  - `table-striped` — alternating row colours
+  - `table-sticky-header` — fixed header row when scrolling
+
+  Use `:widths:` to set column proportions (e.g. `:widths: 25 25 50`). Avoid `:widths: auto`.
+</Tip>
+
+### Grid tables
+
+Grid tables are more visual but harder to maintain:
+
+```rst
++-----------------------+--------------+---------------+
+|                       | Shirts       | T-shirts      |
++=======================+==============+===============+
+| **Available colours** | Purple       | Green         |
+|                       +--------------+---------------+
+|                       | Turquoise    | Orange        |
++-----------------------+--------------+---------------+
+| **Sleeves length**    | Long sleeves | Short sleeves |
++-----------------------+--------------+---------------+
+```
+
+Use `=` instead of `-` to define the header row. Remove `-` and `|` separators to merge cells.
+
+## Content tabs
+
+Use `.. tabs::` to split content across options. Each tab is defined with `.. tab::`:
+
+```rst
+.. tabs::
+
+   .. tab:: Odoo Online
+
+      Content dedicated to Odoo Online users.
+
+   .. tab:: Odoo.sh
+
+      Alternative for Odoo.sh users.
+
+   .. tab:: On-premise
+
+      Third version for on-premise users.
+```
+
+**Group tabs** synchronise across the page based on a shared label — ideal for OS-specific instructions:
+
+```rst
+.. tabs::
+
+   .. group-tab:: Linux and macOS
+
+      .. code-block:: console
+
+         $ git config --global core.autocrlf input
+
+   .. group-tab:: Windows
+
+      .. code-block:: console
+
+         $ git config --global core.autocrlf true
+```
+
+**Code tabs** combine group tabs with syntax highlighting:
+
+```rst
+.. tabs::
+
+   .. code-tab:: python Hello Python
+
+      print("Hello World")
+
+   .. code-tab:: javascript Hello JavaScript
+
+      console.log("Hello World");
+```
+
+<Warning>
+  Tab limitations to be aware of:
+
+  - Tab headers cannot be translated.
+  - A tab cannot contain headings.
+  - An alert block cannot contain tabs.
+  - A tab cannot contain custom anchors.
+</Warning>
+
+## Sub-pages (toctree)
+
+The `toctree` directive builds the navigation hierarchy and the table of contents on parent pages. Every RST file must appear in exactly one `toctree` (or carry the `:orphan:` metadata).
+
+```rst
+.. toctree::
+   :titlesonly:
+
+   website/web_design
+   website/pages
+   website/configuration
+   website/reporting
+```
+
+<Tip>
+  Use `:titlesonly:` to show only each sub-page's H1 heading in the TOC, keeping the sidebar clean.
+
+  Always use **relative paths** in `toctree` entries.
+</Tip>
+
+## Document metadata
+
+Place metadata directives between colons at the very top of an RST file (before the H1 heading):
+
+```rst
+:show-content:
+:hide-page-toc:
+
+==========
+Page title
+==========
+```
+
+| Metadata | Purpose |
+|---|---|
+| `:show-content:` | Makes a TOC page's content visible in the navigation |
+| `:show-toc:` | Displays the page's toctree when `:show-content:` is set |
+| `:hide-page-toc:` | Hides the "On this page" sidebar; uses full width |
+| `:nosearch:` | Excludes the page from search results |
+| `:orphan:` | Suppresses the requirement to include the file in a toctree |
+| `:custom-css:` | Links one or more CSS files (comma-separated) to the page |
+| `:custom-js:` | Links one or more JS files (comma-separated) to the page |
+| `:classes:` | Assigns CSS classes to the `<main>` element |
+
+## Spoilers (collapsed sections)
+
+```rst
+.. spoiler:: Answer to the Ultimate Question of Life, the Universe, and Everything
+
+   **42**
+```
+
+## Formatting tips
+
+### Break a line without a paragraph break
+
+Prefix lines with `|` to render them on separate lines within the same paragraph:
+
+```rst
+| A first long line that you break in two
+  -> here <- is rendered as a single line.
+| A second line that follows a line break.
+```
+
+### Escape markup symbols
+
+Prefix a markup character with `\` to render it literally:
+
+```rst
+this \*\*line of text\*\* with \*markup\* symbols
+```
+
+For backticks, use double backticks:
+
+```rst
+``this formatting``
+```

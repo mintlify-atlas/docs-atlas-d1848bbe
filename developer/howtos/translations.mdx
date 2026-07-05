@@ -1,0 +1,294 @@
+---
+title: 'Add Translations to Your Odoo Module'
+sidebarTitle: 'Translations'
+description: 'Mark Python and JavaScript strings for translation, export .pot files, create .po language files, handle lazy translations, and avoid common translation pitfalls.'
+---
+
+Odoo has built-in internationalization support for both server-side Python code and client-side JavaScript. This guide covers how to mark strings for translation in your module, export the translation template, create language files, and follow best practices for robust i18n.
+
+## How Odoo Translates Content
+
+Odoo automatically extracts translatable strings from XML view definitions. For imperative code (Python functions, JavaScript), you must explicitly mark strings for translation using wrapper functions. Translations are stored in `.po` files inside `<module>/i18n/` and are loaded automatically when the corresponding language is installed.
+
+---
+
+## Implicit Exports (Automatic)
+
+Odoo automatically marks the following content as translatable without any code changes:
+
+- **XML views (non-QWeb):** All text nodes and the `string`, `help`, `sum`, `confirm`, `placeholder` attributes.
+- **QWeb templates (server and client):** All text nodes outside `t-translation="off"` blocks; `title`, `alt`, `label`, and `placeholder` attributes.
+- **Model fields** (when the model has `_translate = True`, which is the default):
+  - `string` and `help` attributes
+  - `selection` values (when defined as a list or tuple)
+  - Field values where `translate=True` is set
+
+---
+
+## Explicit Exports (Python)
+
+For strings in Python code, wrap them with the translation function:
+
+```python
+# Modern API (recommended)
+title = self.env._("Bank Accounts")
+
+# Legacy API (still supported for backward compatibility)
+from odoo.tools import _
+title = _("Bank Accounts")
+```
+
+### Lazy Translation in Python
+
+Use `LazyTranslate` for module-level constants or class attributes — the lookup is deferred until the string is actually rendered:
+
+```python
+from odoo.tools import LazyTranslate
+_lt = LazyTranslate(__name__)
+
+# Evaluated at module load time — safe because the lookup is lazy
+ERROR_MESSAGES = {
+    "access_error": _lt("Access Error"),
+    "missing_error": _lt("Missing Record"),
+}
+
+class MyModel(models.Model):
+    def _raise_error(self, code):
+        # Translation lookup happens here at runtime
+        raise UserError(ERROR_MESSAGES[code])
+```
+
+---
+
+## Explicit Exports (JavaScript)
+
+In JavaScript, import and use `_t` from the OWL environment or from `web.core`:
+
+```javascript
+import { _t } from "@web/core/l10n/translation";
+
+// Inside a component or service
+const title = _t("Bank Accounts");
+```
+
+### Lazy Translation in JavaScript
+
+Use `_lt` for strings initialized at file-read time (e.g., static maps):
+
+```javascript
+import { _lt } from "@web/core/l10n/translation";
+
+// ✅ Safe — evaluated lazily at use time
+const MAP_TITLES = {
+    access_error: _lt("Access Error"),
+    missing_error: _lt("Missing Record"),
+};
+```
+
+### Exposing Translations to the Frontend
+
+Module translations are **not** exposed to JavaScript by default. To make them available, either:
+
+1. **Name your module with a `website_` prefix** (e.g., `website_sale`, `website_event`) — these are automatically exposed.
+2. **Register explicitly** by overriding `_get_translation_frontend_modules_name` on `ir.http`:
+
+```python
+from odoo import models
+
+class IrHttp(models.AbstractModel):
+    _inherit = ["ir.http"]
+
+    @classmethod
+    def _get_translation_frontend_modules_name(cls):
+        modules = super()._get_translation_frontend_modules_name()
+        return modules + ["your_module"]
+```
+
+---
+
+## Common Pitfalls
+
+<Warning>
+Only **literal strings** can be marked for translation. Variables and expressions will be extracted but **not** correctly translated at runtime.
+</Warning>
+
+### Variables — Don't Interpolate Before Translating
+
+<Tabs>
+  <Tab title="❌ Wrong">
+    ```python
+    # The variable is substituted before translation — wrong language context
+    _("Scheduled meeting with %s" % invitee.name)
+    ```
+  </Tab>
+  <Tab title="✅ Correct">
+    ```python
+    # Pass the variable as a parameter — translators can reorder it
+    _("Scheduled meeting with %s", invitee.name)
+    ```
+  </Tab>
+</Tabs>
+
+### Blocks — Keep Sentences Together
+
+<Tabs>
+  <Tab title="❌ Wrong">
+    ```python
+    # Fragments lose their context and translators can't make a complete sentence
+    _("You have ") + str(len(invoices)) + _(" invoices waiting")
+    ```
+  </Tab>
+  <Tab title="✅ Correct">
+    ```python
+    # Full sentence — allows position change in translated languages
+    _("You have %s invoices waiting") % len(invoices)
+    ```
+  </Tab>
+</Tabs>
+
+### Plurals — Account for All Languages
+
+<Tabs>
+  <Tab title="❌ Wrong">
+    ```python
+    # English-only plural — many languages have more than two forms
+    msg = _("You have %(count)s invoice", count=invoice_count)
+    if invoice_count > 1:
+        msg += _("s")
+    ```
+  </Tab>
+  <Tab title="✅ Correct">
+    ```python
+    if invoice_count > 1:
+        msg = _("You have %(count)s invoices", count=invoice_count)
+    else:
+        msg = _("You have one invoice")
+    ```
+  </Tab>
+</Tabs>
+
+### Read vs. Run Time — Don't Translate at Import Time
+
+<Tabs>
+  <Tab title="❌ Wrong">
+    ```python
+    # Evaluated at server startup — no user language context
+    ERROR_MESSAGE = {
+        "access_error": _("Access Error"),  # wrong!
+    }
+    ```
+
+    ```javascript
+    // Evaluated when the JS file is read — too early
+    const map_title = {
+        access_error: _t("Access Error"),  // wrong!
+    };
+    ```
+  </Tab>
+  <Tab title="✅ Correct">
+    ```python
+    # Use lazy translation for module-level constants
+    from odoo.tools import LazyTranslate
+    _lt = LazyTranslate(__name__)
+
+    ERROR_MESSAGE = {
+        "access_error": _lt("Access Error"),  # lazy — evaluated at render time
+    }
+    ```
+
+    ```javascript
+    // Use _lt for file-read-time initialization
+    import { _lt } from "@web/core/l10n/translation";
+
+    const map_title = {
+        access_error: _lt("Access Error"),  // lazy — safe
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Exporting the Translation Template
+
+Export all translatable strings from your module as a `.pot` file (PO Template):
+
+<Steps>
+  <Step title="Open the export dialog">
+    Log in to the Odoo backend and navigate to **Settings → Translations → Import / Export → Export Translations**.
+  </Step>
+  <Step title="Select your module and format">
+    - Language: leave empty (new language/empty template)
+    - Format: **PO File**
+    - Module: your module name
+  </Step>
+  <Step title="Download and place the file">
+    Click **Export** and save the downloaded file as:
+
+    ```
+    <yourmodule>/i18n/<yourmodule>.pot
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Creating Language Files
+
+From the `.pot` template, create per-language `.po` files:
+
+<Tabs>
+  <Tab title="Using msginit">
+    ```bash
+    cd <yourmodule>/i18n/
+    msginit --input=yourmodule.pot --locale=fr_FR --output=fr.po
+    ```
+  </Tab>
+  <Tab title="Using POEdit">
+    Open the `.pot` file in [POEdit](https://poedit.net/) and save it as a new `.po` file for the target language.
+  </Tab>
+  <Tab title="Manual copy">
+    ```bash
+    cp yourmodule/i18n/yourmodule.pot yourmodule/i18n/fr.po
+    # Then edit fr.po and fill in msgstr values
+    ```
+  </Tab>
+</Tabs>
+
+Place finished `.po` files in `<yourmodule>/i18n/`:
+
+```
+myaddon/
+└── i18n/
+    ├── myaddon.pot      # template
+    ├── fr.po            # French
+    ├── de.po            # German
+    └── es.po            # Spanish
+```
+
+Translations are loaded automatically when the corresponding language is installed via **Settings → Translations → Languages**.
+
+<Note>
+Translations for all loaded languages are reinstalled/updated whenever you install or update the module.
+</Note>
+
+---
+
+## Translation Context and Variables
+
+When using `odoo.tools.translate._`, the language and module are resolved by inspecting the caller's local variables for `self.env` or a `context` dict. This works inside model methods but not inside regular functions or comprehensions. Use `Environment._()` for more reliable context:
+
+```python
+# Most reliable — language from environment
+title = self.env._("Bank Accounts")
+
+# Also accepts lazy translations
+lazy_text = _lt("Some text")
+title = self.env._(lazy_text)
+```
+
+To pass the module name explicitly:
+
+```python
+title = self.env._("Bank Accounts", module="myaddon")
+```

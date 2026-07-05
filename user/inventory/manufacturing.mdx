@@ -1,0 +1,185 @@
+---
+title: "Odoo Manufacturing: MRP, BoMs & Production Orders"
+sidebarTitle: "Manufacturing"
+description: "Plan and execute production with Odoo MRP—configure bills of materials, schedule manufacturing orders, manage work centers, run routings, and handle repairs."
+---
+
+Odoo **Manufacturing** helps manufacturers schedule, plan, and process manufacturing orders. With the work center control panel, you can put tablets on the shop floor to control work orders in real time and allow workers to trigger maintenance operations, record quality issues, and provide feedback without leaving their workstation. The app integrates with Inventory, Purchase, Sales, and Quality to keep production synchronized with the rest of the business.
+
+---
+
+## Bills of Materials
+
+A **Bill of Materials (BoM)** documents the specific components—and their quantities—required to produce or repair a product. In Odoo, BoMs also define production operations, step-by-step work instructions, and by-products generated during manufacturing.
+
+<Steps>
+  <Step title="Create a BoM">
+    Go to **Manufacturing → Products → Bills of Materials** and click **New**. Select the finished product and set the **BoM Type** to **Manufacture this Product**. You can also open a BoM quickly from the **Bill of Materials** smart button on any product form.
+  </Step>
+  <Step title="Add components">
+    In the **Components** tab, click **Add a line** and select each raw material or sub-assembly. Set the quantity required per production unit. Apply optional filters so certain components are only consumed under specific conditions (e.g., different components for different product variants).
+  </Step>
+  <Step title="Define operations (optional)">
+    In the **Operations** tab, add work orders linked to work centers. Each operation has a duration estimate used by the scheduler to calculate capacity requirements and expected completion times.
+  </Step>
+  <Step title="Add work instructions">
+    Attach PDF documents, images, or step-by-step instructions to each operation. Workers see these instructions on their tablet in the Shop Floor view during production.
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card title="BoM Variants" icon="git-branch">
+    One BoM can cover all variants of a product. Assign components or operations to specific attribute values so the correct materials are consumed when a particular variant is manufactured.
+  </Card>
+  <Card title="Kit BoMs" icon="package">
+    Set the BoM type to **Kit** to group products that are sold together but shipped as separate components. Kits are assembled at the time of delivery rather than in a manufacturing order.
+  </Card>
+  <Card title="Sub-Assemblies" icon="layers">
+    Reference another manufactured product as a component to model multi-level production. Odoo can automatically trigger child manufacturing orders for sub-assemblies when the parent order is confirmed.
+  </Card>
+  <Card title="By-Products" icon="recycle">
+    Record secondary outputs generated alongside the main product. By-products are received into stock automatically when the manufacturing order is completed and can be valued independently.
+  </Card>
+</CardGroup>
+
+---
+
+## Manufacturing Orders
+
+A **Manufacturing Order (MO)** is the instruction to produce a specific quantity of a product by a target date. MOs can be created manually, generated from a confirmed sales order (via the MTO route), or triggered automatically by a reordering rule.
+
+### Processing a Manufacturing Order
+
+<Steps>
+  <Step title="Create or confirm the MO">
+    Go to **Manufacturing → Operations → Manufacturing Orders** and click **New**, or let Odoo generate the MO automatically. Select the product, quantity, and scheduled date. The BoM is linked automatically.
+  </Step>
+  <Step title="Check component availability">
+    Click **Check Availability** to reserve components from stock. Odoo highlights any components that are unavailable so you can trigger replenishment before starting production.
+  </Step>
+  <Step title="Produce">
+    Click **Produce** to open the production wizard. Enter the quantity produced, assign lot or serial numbers if required, and record any component adjustments (scrap or extra consumption).
+  </Step>
+  <Step title="Validate and receive">
+    Validate the MO to move the finished product into stock. Odoo records the manufacturing cost entry in the Accounting app and updates inventory levels immediately.
+  </Step>
+</Steps>
+
+<Tip>
+  Enable **Backorders** in manufacturing settings so that when only part of an MO quantity is completed, Odoo offers to create a backorder for the remaining quantity rather than losing the production record.
+</Tip>
+
+---
+
+## Work Centers
+
+Work centers are physical locations or machines where production work orders are performed. They are the foundation for shop floor scheduling, capacity planning, and OEE (Overall Equipment Effectiveness) tracking.
+
+<CardGroup cols={2}>
+  <Card title="Work Center Configuration" icon="settings">
+    Define each work center with its name, working hours schedule, capacity (number of simultaneous orders), and alternative work centers to use when the primary one is at capacity.
+  </Card>
+  <Card title="Working Hours" icon="clock">
+    Attach a working hours schedule (e.g., Standard 40 hrs/week, 3-shift, or weekend schedule) to each work center. The scheduler uses these hours to calculate realistic production lead times.
+  </Card>
+  <Card title="OEE Tracking" icon="gauge">
+    Odoo calculates availability, performance, and quality ratios for each work center based on work order durations vs. expected durations and reported downtime events.
+  </Card>
+  <Card title="Equipment & Maintenance" icon="wrench">
+    Link equipment to a work center. Workers can request maintenance directly from a work order if they encounter a fault, creating a maintenance request automatically in the Maintenance app.
+  </Card>
+</CardGroup>
+
+---
+
+## Routings and Work Orders
+
+When the **Work Orders** setting is enabled, each BoM operation becomes a **Work Order** within the manufacturing order. Work orders are processed sequentially (or in parallel if no dependency is set) across the assigned work centers.
+
+<Tabs>
+  <Tab title="Routing Setup">
+    Define operations in the **Operations** tab of a BoM: operation name, work center, duration, and work instructions. Set **Work Order Dependencies** to enforce a sequence—e.g., cutting must be completed before welding begins.
+  </Tab>
+  <Tab title="Shop Floor View">
+    The **Shop Floor** module provides a tablet-optimized interface for workers. From their tablet, workers can see their assigned work orders, mark operations as started or completed, record scrap, and trigger quality checks.
+  </Tab>
+  <Tab title="Work Order Reporting">
+    The **Work Orders** report shows planned vs. actual duration per operation and per work center, making it straightforward to identify bottlenecks and inefficient operations.
+  </Tab>
+</Tabs>
+
+---
+
+## MRP Scheduling
+
+Odoo's **Material Requirements Planning (MRP)** engine calculates what needs to be made, bought, or moved—and when—based on confirmed sales orders, reordering rules, and the Master Production Schedule.
+
+<CardGroup cols={2}>
+  <Card title="Demand-Driven MRP" icon="arrow-down-to-line">
+    When a sales order or reordering rule triggers a manufacturing need, MRP explodes the BoM to identify all required components, checks current stock, and generates purchase orders or child MOs for shortages.
+  </Card>
+  <Card title="Master Production Schedule (MPS)" icon="calendar">
+    The MPS dashboard provides a rolling-horizon view of forecasted demand and planned supply. Planners can manually adjust planned quantities before MRP translates them into actual orders.
+  </Card>
+  <Card title="Lead Time Calculation" icon="hourglass">
+    Odoo combines manufacturing lead times, component procurement lead times, and work center working hours to compute the latest start date for each MO that still meets the customer delivery date.
+  </Card>
+  <Card title="Work Center Time Off" icon="calendar-off">
+    Record work center closures (maintenance windows, holidays) so the scheduler does not book work orders on days when that center is unavailable.
+  </Card>
+</CardGroup>
+
+---
+
+## Subcontracting
+
+Send components to an external manufacturer and receive finished goods back into stock—all tracked within Odoo.
+
+<Steps>
+  <Step title="Create a subcontracting BoM">
+    Set the BoM type to **Subcontracting** and select the subcontractor as the vendor. Add the components the subcontractor needs to receive.
+  </Step>
+  <Step title="Generate a purchase order">
+    Confirming the purchase order for a subcontracted product triggers a subcontracting receipt. Odoo tracks which components were sent and when the finished goods are expected back.
+  </Step>
+  <Step title="Receive finished goods">
+    Validate the receipt to move finished products into stock. Odoo automatically records component consumption at the subcontractor level.
+  </Step>
+</Steps>
+
+---
+
+## Repairs
+
+The **Repairs** module manages repair orders for customer products or internal assets.
+
+<CardGroup cols={2}>
+  <Card title="Repair Orders" icon="screwdriver">
+    Create a repair order for any serialized product. Add parts to consume from stock and operations to perform. When complete, validate the repair and invoice the customer directly from the repair record.
+  </Card>
+  <Card title="Under-Warranty Tracking" icon="shield">
+    Link a repair to a serial number to check warranty status automatically. Warranty repairs can be processed at zero cost, while out-of-warranty repairs generate a chargeable invoice.
+  </Card>
+</CardGroup>
+
+---
+
+## Product Lifecycle Management (PLM)
+
+Odoo **PLM** manages engineering change orders (ECOs) so product designs and BoMs evolve through a controlled review and approval process rather than being edited directly in production.
+
+<Steps>
+  <Step title="Create an ECO">
+    Initiate an Engineering Change Order in **Manufacturing → PLM → Engineering Change Orders**. Describe the change, attach design documents, and assign it to a reviewer.
+  </Step>
+  <Step title="Revise the BoM">
+    Within the ECO, modify the draft BoM or routing. Changes are staged and do not affect current production orders until the ECO is approved and applied.
+  </Step>
+  <Step title="Approve and apply">
+    Route the ECO through approval stages (e.g., Engineering, Quality, Management). Once all approvals are received, apply the ECO to increment the product version and activate the new BoM.
+  </Step>
+</Steps>
+
+<Note>
+  PLM maintains a full version history for every BoM. You can compare any two versions side-by-side and roll back to a previous revision if a change causes production issues.
+</Note>

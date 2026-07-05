@@ -1,0 +1,286 @@
+---
+title: 'Odoo CLI Reference: odoo-bin Commands and Options'
+sidebarTitle: 'CLI'
+description: 'Complete odoo-bin CLI reference: server options, database config, multiprocessing, testing, scaffold, shell, populate, cloc, and deploy commands.'
+---
+
+The `odoo-bin` command-line interface is the primary way to run and manage an Odoo instance from the terminal. It provides commands to start the server, open an interactive Python shell, scaffold new modules, seed test data, and count lines of code.
+
+<Note>
+The exact command to use depends on your installation method. For source installs, use `./odoo-bin` from the Odoo Community root directory. For package installs, the `odoo` executable is on your PATH. For Docker, refer to the [official Docker image docs](https://hub.docker.com/_/odoo/).
+</Note>
+
+## Global Options
+
+```bash
+odoo-bin --help       # show all commands and options
+odoo-bin --version    # print Odoo version, e.g. "Odoo Server 17.0"
+```
+
+Enable shell auto-completion:
+
+```bash
+COMMANDS=$(odoo-bin --help | sed -e "s/^    \([^ ]\+\).*$/ \1/gp;d" | xargs)
+echo "complete -W '$COMMANDS' odoo-bin" >> ~/.bash_completion
+```
+
+---
+
+## `server` — Run the Server
+
+This is the **default** command (can be omitted). Starts the Odoo HTTP server.
+
+### Basic Options
+
+| Option | Description |
+|--------|-------------|
+| `-d <db>`, `--database <db>` | Database(s) to use (comma-separated restricts access) |
+| `-i <modules>`, `--init <modules>` | Comma-separated modules to install before starting (requires `-d`) |
+| `-u <modules>`, `--update <modules>` | Comma-separated modules to update before starting; use `all` for everything (requires `-d`) |
+| `--addons-path <dirs>` | Comma-separated directories scanned for modules |
+| `-c <file>`, `--config <file>` | Path to config file (default: `$ODOO_RC` or `~/.odoorc`) |
+| `-D <path>`, `--data-dir <path>` | Directory for filestore and sessions |
+| `-s`, `--save` | Save current CLI options to the config file |
+| `--stop-after-init` | Stop the server after initialization (useful in CI) |
+| `--without-demo` | Skip demo data installation (default behaviour) |
+| `--with-demo` | Install demo data in new databases |
+| `--pidfile <file>` | Write server PID to this file |
+
+### HTTP Options
+
+| Option | Description |
+|--------|-------------|
+| `-p <port>`, `--http-port <port>` | HTTP server port (default: `8069`) |
+| `--http-interface <addr>` | TCP/IP address to listen on (default: `0.0.0.0`) |
+| `--gevent-port <port>` | WebSocket port for gevent/multiprocessing mode (default: `8072`) |
+| `--no-http` | Do not start the HTTP server (cron workers may still start) |
+| `--proxy-mode` | Enable `X-Forwarded-*` header support for reverse proxies |
+| `--x-sendfile` | Delegate attachment serving to the web server (nginx/Apache) |
+
+<Warning>
+`--proxy-mode` must only be used behind a reverse proxy. Enabling it on a direct internet-facing server is a security risk.
+</Warning>
+
+### Database Connection
+
+| Option | Description |
+|--------|-------------|
+| `-r <user>`, `--db_user <user>` | PostgreSQL username |
+| `-w <password>`, `--db_password <pass>` | PostgreSQL password |
+| `--db_host <hostname>` | PostgreSQL server host (UNIX socket by default on Linux) |
+| `--db_port <port>` | PostgreSQL port (default: `5432`) |
+| `--db-filter <regex>` | Restrict visible databases by regex; `%h` = hostname, `%d` = subdomain |
+| `--db_replica_host <hostname>` | Optional read replica host |
+
+Database filter example:
+
+```bash
+# Only expose databases whose names start with "11"
+$ odoo-bin --db-filter "^11.*$"
+
+# Restrict access to exactly two databases
+$ odoo-bin --database 11firstdatabase,11seconddatabase
+```
+
+### Logging
+
+| Option | Description |
+|--------|-------------|
+| `--logfile <file>` | Write logs to a file instead of stderr |
+| `--syslog` | Write logs to syslog / Windows Event Log |
+| `--log-level <level>` | `critical`, `error`, `warn`, `debug`, `debug_sql`, `debug_rpc` |
+| `--log-handler <LOGGER:LEVEL>` | Per-logger level, e.g. `odoo.models:DEBUG` |
+| `--log-web` | Enable DEBUG for HTTP requests/responses |
+| `--log-sql` | Enable DEBUG for SQL queries |
+
+```bash
+$ odoo-bin --log-handler :DEBUG \
+           --log-handler werkzeug:CRITICAL \
+           --log-handler odoo.fields:WARNING
+```
+
+### Multiprocessing
+
+<Note>
+Multiprocessing mode is only available on Unix-based systems.
+</Note>
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--workers <count>` | `0` (threaded) | Number of HTTP worker processes (0 = threaded mode) |
+| `--max-cron-threads <count>` | `2` | Dedicated cron job workers/threads |
+| `--limit-request <n>` | `8196` | Requests per worker before recycling |
+| `--limit-memory-soft <bytes>` | `2048 MiB` | Soft virtual memory limit per worker |
+| `--limit-memory-hard <bytes>` | `2560 MiB` | Hard virtual memory limit (worker killed immediately) |
+| `--limit-time-cpu <secs>` | `60` | Max CPU seconds per request |
+| `--limit-time-real <secs>` | `120` | Max wall-clock seconds per request |
+
+### Testing
+
+| Option | Description |
+|--------|-------------|
+| `--test-enable` | Run tests after module installation |
+| `--test-file <file>` | Run a specific Python test file |
+| `--test-tags <spec>` | Filter tests; format: `[-][tag][/module][:class][.method]` |
+| `--screenshots <dir>` | Directory for browser test failure screenshots |
+| `--screencasts <dir>` | Directory for screencast recordings (requires `ffmpeg`) |
+
+Test tag examples:
+
+```bash
+$ odoo-bin --test-tags :TestClass.test_func,/test_module,external
+$ odoo-bin --test-tags standard          # run all standard tests
+$ odoo-bin --test-tags -external         # exclude external tests
+```
+
+---
+
+## `shell` — Interactive Python Shell
+
+Opens an IPython (or configured REPL) session with `env` pre-initialized for ORM access:
+
+```bash
+$ odoo-bin shell -d mydb
+```
+
+```python
+In [1]: records = env["res.partner"].search([])
+In [2]: records
+Out[2]: res.partner(14, 26, 33, 21, 10)
+
+In [3]: for partner in records:
+   ...:     partner.name = "%s !" % partner.name
+
+In [4]: env.cr.commit()  # changes are in a transaction — commit explicitly
+```
+
+<Warning>
+The shell runs in transaction mode. Changes are rolled back on exit unless you explicitly call `env.cr.commit()`.
+</Warning>
+
+| Option | Description |
+|--------|-------------|
+| `--shell-file <script.py>` | Python script to run on shell startup |
+| `--shell-interface <repl>` | Preferred REPL: `ipython`, `ptpython`, `bpython`, or `python` |
+
+---
+
+## `scaffold` — Create a New Module
+
+Generates a skeleton module directory with the standard file structure:
+
+```bash
+$ odoo-bin scaffold my_module /addons/
+```
+
+This creates `/addons/my_module/` with `__init__.py`, `__manifest__.py`, a `models/` folder, and a `views/` folder.
+
+| Argument | Description |
+|----------|-------------|
+| `name` (required) | Module name (used to generate directory name, model names, etc.) |
+| `destination` | Target directory (default: current directory) |
+| `-t <template>` | Custom Jinja2 template directory for scaffold files |
+
+---
+
+## `populate` — Seed a Database
+
+Duplicates existing records with variations to create large test datasets. Follows `x2Many` relationships and respects `UNIQUE` constraints.
+
+```bash
+$ odoo-bin populate -d my_database --models res.partner,account.move --factors 1000
+```
+
+| Option | Description |
+|--------|-------------|
+| `-d <database>` | Database to populate |
+| `--models <models>` | Comma-separated list of models to populate |
+| `--factors <factors>` | Comma-separated list of factor sizes; last factor applies to remaining models |
+
+---
+
+## `cloc` — Count Lines of Code
+
+Counts lines of custom Python, JavaScript, CSS/SCSS, and XML code in modules. Used to estimate maintenance service costs.
+
+```bash
+# Count lines in modules installed in a database
+$ odoo-bin cloc -c config.conf -d my_database
+
+# Count lines in specific addon directories
+$ odoo-bin cloc -p addons/account -p addons/sale
+```
+
+| Option | Description |
+|--------|-------------|
+| `-d <database>` | Count lines in all extra modules installed in this database |
+| `-p <path>` | Count lines in a specific path |
+| `--addons-path <dirs>` | Required when using `--database` |
+| `-c <config>` | Use a config file in place of `--addons-path` |
+| `-v`, `--verbose` | Show per-file line counts |
+
+**Files excluded by default:**
+- `__manifest__.py` / `__openerp__.py`
+- `static/lib/` (external libraries)
+- `tests/` and `static/tests/`
+- `migrations/` and `upgrades/`
+- XML files in `demo` / `demo_xml` sections
+
+Exclude specific files via `cloc_exclude` in your manifest:
+
+```python
+"cloc_exclude": [
+    "lib/common.py",       # single file
+    "data/*.xml",          # all XML in a folder
+    "example/**/*",        # entire folder hierarchy
+    "**/*.scss",           # all SCSS files
+]
+```
+
+---
+
+## `deploy` — Upload a Module Remotely
+
+Uploads and installs a module to a remote Odoo server without direct server access:
+
+```bash
+$ odoo-bin deploy <path> <url> --db <dbname> --login <login> --password <password>
+```
+
+<Note>
+The target server must have `base_import_module` installed. The login user must have admin rights.
+</Note>
+
+| Option | Description |
+|--------|-------------|
+| `path` | Local path to the module directory |
+| `url` | Server URL (default: `http://localhost:8069`) |
+| `--db <dbname>` | Database name |
+| `--login <username>` | Admin username (default: `admin`) |
+| `--password <password>` | Admin password (default: `admin`) |
+| `--verify-ssl` | Verify the server's SSL certificate |
+| `--force` | Re-initialize if already installed; updates `noupdate="1"` records |
+
+---
+
+## `db` — Database Management
+
+Manage databases from the CLI. Common sub-commands include creating, duplicating, dropping, and backing up databases. All options available for the `server` command also apply here.
+
+---
+
+## `upgrade_code` — Rewrite Source Code
+
+Applies automated migration scripts when upgrading between Odoo major versions:
+
+```bash
+$ odoo-bin upgrade_code --from 18.0 --to 19.0 --dry-run
+```
+
+| Option | Description |
+|--------|-------------|
+| `--from <version>` | Starting version (inclusive) |
+| `--to <version>` | Ending version (inclusive, default: current) |
+| `--dry-run` | List files that would be changed without modifying them |
+| `--glob <pattern>` | Restrict to matching files (default: `**/*`) |
+| `--script <path>` | Run a single migration script |

@@ -1,0 +1,239 @@
+---
+title: 'Odoo Security: Access Rights, Record Rules and Groups'
+sidebarTitle: 'Security'
+description: 'Configure Odoo security with res.groups user groups, ir.model.access CSV rules for CRUD permissions, and ir.rule domain-based record-level access control.'
+---
+
+Odoo's security model operates through two complementary mechanisms: **Access Rights** (ACLs) and **Record Rules**. Access rights control which CRUD operations a user can perform on an entire model. Record rules further refine access by filtering which individual records within that model are accessible. Both mechanisms are linked to **groups** — a user gains access by belonging to the appropriate group.
+
+---
+
+## Groups (`res.groups`)
+
+Groups serve as the fundamental unit of permission assignment. A user belongs to zero or more groups, and each group can grant access rights and be the target of record rules.
+
+### Defining a Group in XML
+
+```xml
+<record id="group_estate_user" model="res.groups">
+    <field name="name">User</field>
+    <field name="category_id" ref="base.module_category_real_estate"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+</record>
+
+<record id="group_estate_manager" model="res.groups">
+    <field name="name">Manager</field>
+    <field name="category_id" ref="base.module_category_real_estate"/>
+    <field name="implied_ids" eval="[(4, ref('estate.group_estate_user'))]"/>
+</record>
+```
+
+### Group Attributes
+
+| Attribute | Description |
+|---|---|
+| `name` | Human-readable group name (the role). Appears in the user form's permission matrix. |
+| `category_id` | Associates the group with an app category. Groups in the same category form an exclusive selection in the user form. |
+| `implied_ids` | Other groups automatically granted alongside this one. A Manager who implies User means all Managers also have User-level rights. |
+| `comment` | Additional notes about the group's purpose. |
+
+---
+
+## Access Rights (`ir.model.access`)
+
+Access rights grant or deny CRUD permissions on an entire model for a given group. They are evaluated **before** record rules.
+
+Access rights are **additive**: if a user belongs to Group A (read only) and Group B (write only), they have both read and write access.
+
+### CSV Format
+
+The `ir.model.access.csv` file is the standard way to define access rights. The filename must be referenced in `__manifest__.py` under the `data` key — and it should be loaded before any views.
+
+```csv
+id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
+access_estate_property_user,estate property user,model_estate_property,estate.group_estate_user,1,1,1,0
+access_estate_property_manager,estate property manager,model_estate_property,estate.group_estate_manager,1,1,1,1
+access_estate_offer_user,estate offer user,model_estate_property_offer,estate.group_estate_user,1,1,1,0
+access_estate_offer_manager,estate offer manager,model_estate_property_offer,estate.group_estate_manager,1,1,1,1
+```
+
+**Column reference:**
+
+| Column | Description |
+|---|---|
+| `id` | Unique external ID within your module (no dots). |
+| `name` | Human-readable description of the rule. |
+| `model_id/id` | External ID of the model: `model_` + the model `_name` with `.` → `_`. |
+| `group_id/id` | External ID of the group that receives the rights. Leave empty to apply to **all users** (including portal and public). |
+| `perm_read` | `1` = allow read, `0` = deny. |
+| `perm_write` | `1` = allow write (update), `0` = deny. |
+| `perm_create` | `1` = allow create, `0` = deny. |
+| `perm_unlink` | `1` = allow delete, `0` = deny. |
+
+<Warning>
+If no access rule matches a user for a given operation, the operation is **denied**. Always add at least one ACL entry for every model you create, or no one will be able to access it.
+</Warning>
+
+### XML Alternative
+
+You can also define access records in XML when you need to reference dynamic values:
+
+```xml
+<record id="access_estate_property_user" model="ir.model.access">
+    <field name="name">estate property user</field>
+    <field name="model_id" ref="model_estate_property"/>
+    <field name="group_id" ref="estate.group_estate_user"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_unlink" eval="False"/>
+</record>
+```
+
+---
+
+## Record Rules (`ir.rule`)
+
+Record rules are domain-based filters that restrict access to **individual records** within a model. They are evaluated after access rights pass.
+
+Record rules are **group rules** (applying to specific groups) or **global rules** (applying to everyone). Their behavior differs:
+
+- **Global rules** intersect: *all* active global rules must pass.
+- **Group rules** unify within their group: *any one* rule for the user's groups can pass.
+- The global and group rulesets then intersect.
+
+### Limiting Salespeople to Their Own Records
+
+```xml
+<record id="rule_estate_property_salesperson" model="ir.rule">
+    <field name="name">Estate Property: Salesperson sees own records</field>
+    <field name="model_id" ref="model_estate_property"/>
+    <field name="domain_force">[('salesperson_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('estate.group_estate_user'))]"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_unlink" eval="False"/>
+</record>
+
+<!-- Managers can see all records — no domain restriction needed -->
+<record id="rule_estate_property_manager" model="ir.rule">
+    <field name="name">Estate Property: Managers see all</field>
+    <field name="model_id" ref="model_estate_property"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('estate.group_estate_manager'))]"/>
+</record>
+```
+
+### Record Rule Attributes
+
+| Attribute | Description |
+|---|---|
+| `name` | Description of the rule. |
+| `model_id` | The model this rule applies to. |
+| `domain_force` | Domain expression. Available variables: `user` (current user recordset), `time` (Python time module), `company_id` (current company ID), `company_ids` (list of accessible company IDs). |
+| `groups` | Many2many to `res.groups`. If empty, the rule is **global**. |
+| `perm_read` | Apply the rule to read operations (default `True`). |
+| `perm_write` | Apply the rule to write operations (default `True`). |
+| `perm_create` | Apply the rule to create operations (default `True`). |
+| `perm_unlink` | Apply the rule to delete operations (default `True`). |
+
+<Warning>
+Creating multiple **global** record rules is risky. If two global rules have non-overlapping domains, no records will match both, and no user will be able to access any records on that model. Always test global rules thoroughly.
+</Warning>
+
+---
+
+## Field-Level Access
+
+Individual fields can be restricted to specific groups using the `groups` attribute. Users outside those groups will not see the field in views, cannot read it via RPC, and cannot write to it:
+
+```python
+from odoo import fields, models
+
+class EstateProperty(models.Model):
+    _name = 'estate.property'
+    _description = 'Real Estate Property'
+
+    # Only managers can see the internal notes field
+    internal_notes = fields.Text(
+        string='Internal Notes',
+        groups='estate.group_estate_manager',
+    )
+
+    # Multiple groups separated by commas
+    margin = fields.Float(
+        string='Margin',
+        groups='estate.group_estate_manager,base.group_system',
+    )
+```
+
+---
+
+## `sudo()` — Bypassing Security
+
+`sudo()` returns a new recordset that operates as the superuser, bypassing access rights and record rules. Use it for internal operations that legitimately need to run regardless of who triggered them.
+
+```python
+# Allow a salesperson's button to write a field they cannot normally edit
+def action_confirm_offer(self):
+    self.ensure_one()
+    # Use sudo() to update the property state even if the user lacks write permission
+    self.property_id.sudo().write({'state': 'offer_accepted'})
+```
+
+<Warning>
+Never use `sudo()` in response to user-supplied data without validating it first. `sudo()` bypasses all ORM access checks — an attacker who can trigger your method can indirectly write to any record if you apply `sudo()` unconditionally.
+</Warning>
+
+---
+
+## Menu Item Security
+
+Menu items can be restricted to specific groups so they only appear in the navigation for authorized users:
+
+```xml
+<menuitem
+    id="menu_estate_configuration"
+    name="Configuration"
+    parent="menu_estate_root"
+    groups="estate.group_estate_manager"
+    sequence="99"
+/>
+```
+
+Restricting a menu item does not restrict access to the underlying model — always combine menu restrictions with proper access rights.
+
+---
+
+## Security Pitfalls
+
+### Unsafe Public Methods
+
+Any Python method not starting with `_` can be called via the external API or an RPC call with arbitrary arguments. Validate your inputs:
+
+```python
+def action_done(self):
+    # Check state before acting — self and its values come from the client
+    if self.state == 'draft' and self.env.user.has_group('estate.group_estate_manager'):
+        self._set_state('done')
+
+def _set_state(self, new_state):
+    # Private method — cannot be called directly from the UI or API
+    self.sudo().write({'state': new_state})
+```
+
+### Bypassing the ORM
+
+Never execute raw SQL when the ORM can do the same job. Raw SQL bypasses translations, field invalidation, access rights, computed field recomputation, and audit logging:
+
+```python
+# Wrong — bypasses all ORM features
+self.env.cr.execute(
+    "UPDATE estate_property SET state = %s WHERE id = %s",
+    ('sold', self.id)
+)
+
+# Correct — use the ORM
+self.write({'state': 'sold'})
+```

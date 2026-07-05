@@ -1,0 +1,295 @@
+---
+title: "Set Up Your Odoo Development Environment"
+sidebarTitle: "Setup"
+description: "Install Git, Python 3.10+, clone odoo/odoo, create a virtual environment, install dependencies, and run odoo-bin from source for local development."
+---
+
+Odoo development is best done from a source install — running Odoo directly from a cloned Git repository rather than a packaged release. This gives you full access to the codebase, lets you easily switch branches, and integrates cleanly with the contribution workflow. This guide walks you through every step from a bare machine to a running Odoo server.
+
+<Note>
+  This guide assumes a Linux or macOS environment. Windows developers should use WSL2 (Windows Subsystem for Linux) with Ubuntu for the best experience.
+</Note>
+
+## Prerequisites
+
+Before cloning the repositories, make sure the following are installed on your system:
+
+| Tool | Minimum version | Purpose |
+|---|---|---|
+| Git | 2.x | Cloning and version control |
+| Python | 3.10+ | Running the Odoo server |
+| pip | latest | Installing Python packages |
+| PostgreSQL | 12+ | Database backend |
+| Node.js | 16+ | Asset bundling (Less/CSS) |
+| wkhtmltopdf | 0.12.5 | PDF report rendering |
+
+## Installation Steps
+
+<Steps>
+
+### Install system dependencies
+
+On Ubuntu/Debian:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git python3 python3-pip python3-venv \
+    postgresql postgresql-contrib \
+    nodejs npm wkhtmltopdf \
+    libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev \
+    libtiff5-dev libjpeg8-dev libopenjp2-7-dev zlib1g-dev \
+    libfreetype6-dev liblcms2-dev libwebp-dev libharfbuzz-dev \
+    libfribidi-dev libxcb1-dev
+```
+
+On macOS (using Homebrew):
+
+```bash
+brew install git python@3.11 postgresql node wkhtmltopdf
+```
+
+### Configure PostgreSQL
+
+Create a PostgreSQL user that matches your system username so Odoo can connect without a password:
+
+```bash
+sudo -u postgres createuser --createdb --username postgres --no-createrole --no-superuser $USER
+```
+
+Or, for a development machine where you want full superuser access:
+
+```bash
+sudo -u postgres createuser -s $USER
+```
+
+Start the PostgreSQL service:
+
+```bash
+# Ubuntu/Debian
+sudo service postgresql start
+
+# macOS
+brew services start postgresql
+```
+
+### Clone the Odoo repositories
+
+Create a source directory and clone both the community and enterprise repositories:
+
+```bash
+mkdir -p $HOME/src
+cd $HOME/src
+
+# Core Odoo (community edition)
+git clone git@github.com:odoo/odoo.git
+
+# Enterprise modules (requires Odoo partner/employee access)
+git clone git@github.com:odoo/enterprise.git
+```
+
+For tutorials and training exercises, also clone the tutorials repository:
+
+```bash
+git clone git@github.com:odoo/tutorials.git
+```
+
+### Create a Python virtual environment
+
+Always work inside a virtual environment to isolate Odoo's dependencies:
+
+```bash
+cd $HOME/src/odoo
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Add this activation to your shell profile if you want it loaded automatically:
+
+```bash
+echo 'source $HOME/src/odoo/.venv/bin/activate' >> ~/.bashrc
+```
+
+### Install Python dependencies
+
+With the virtual environment active, install all required packages:
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+<Tip>
+  If you encounter an `AttributeError: module '<MODULE_NAME>' has no attribute '<ATTRIBUTE>'` error later, try reinstalling the affected package:
+
+  ```bash
+  pip install --upgrade --force-reinstall <MODULE_NAME>
+  # or reinstall everything:
+  pip install --upgrade --force-reinstall -r requirements.txt
+  ```
+</Tip>
+
+### Launch the Odoo server
+
+With all dependencies installed, start Odoo using `odoo-bin`:
+
+```bash
+cd $HOME/src/odoo
+./odoo-bin --addons-path="addons/,../enterprise/,../tutorials" -d rd-demo
+```
+
+Odoo will create the `rd-demo` database on first run, install base modules, and start listening on port 8069.
+
+### Log in and enable developer mode
+
+Open your browser at **http://localhost:8069/**
+
+Default credentials:
+- **Email:** `admin`
+- **Password:** `admin`
+
+To enable developer mode (required for accessing technical menus and debugging), go to **Settings → General Settings → Developer Tools → Activate the developer mode**, or append `?debug=1` to any URL.
+
+</Steps>
+
+## Key `odoo-bin` Arguments
+
+| Argument | Description |
+|---|---|
+| `-d <database>` | The PostgreSQL database to use |
+| `--addons-path <dirs>` | Comma-separated list of directories scanned for modules |
+| `-i <modules>` | Install modules before starting (comma-separated) |
+| `-u <modules>` | Update modules before starting (comma-separated) |
+| `--limit-time-cpu <n>` | Max CPU seconds per request (useful when debugging) |
+| `--limit-time-real <n>` | Max wall-clock seconds per request |
+| `--test-enable` | Run tests after module installation |
+| `--test-tags <tags>` | Filter which tests to run |
+| `--log-sql` | Log every SQL query (useful for performance analysis) |
+
+### Common startup commands
+
+```bash
+# Start fresh with a specific database
+./odoo-bin -d mydb --addons-path="addons/,../enterprise/,../tutorials"
+
+# Install a module for the first time
+./odoo-bin -d mydb -i estate --addons-path="addons/,../enterprise/,../tutorials"
+
+# Update a module after code changes
+./odoo-bin -d mydb -u estate --addons-path="addons/,../enterprise/,../tutorials"
+
+# Disable CPU/time limits for debugging
+./odoo-bin -d mydb --limit-time-cpu=600 --limit-time-real=1200
+```
+
+## Setting Up the Tutorials Repository
+
+If you are following the Server Framework 101 tutorial, configure Git to push your work to your own fork:
+
+<Tabs>
+  <Tab title="Link with your fork">
+    1. Visit [github.com/odoo/tutorials](https://github.com/odoo/tutorials) and click **Fork**.
+    2. Add your fork as a remote:
+
+    ```bash
+    cd $HOME/src/tutorials
+    git remote add dev git@github.com:<your_github_account>/tutorials.git
+    ```
+  </Tab>
+  <Tab title="Odoo employees (odoo-dev)">
+    ```bash
+    cd $HOME/src/tutorials
+    git remote add dev git@github.com:odoo-dev/tutorials.git
+    git remote set-url --push origin you_should_not_push_on_this_repository
+    ```
+  </Tab>
+</Tabs>
+
+## Useful Git Commands
+
+### Switch branches (keep both repos in sync)
+
+When switching Odoo versions, both `odoo` and `enterprise` must be on the same branch:
+
+```bash
+cd $HOME/src/odoo
+git switch 17.0
+
+cd $HOME/src/enterprise
+git switch 17.0
+```
+
+### Fetch and rebase
+
+```bash
+cd $HOME/src/odoo
+git fetch --all --prune
+git rebase --autostash odoo/17.0
+
+cd $HOME/src/enterprise
+git fetch --all --prune
+git rebase --autostash enterprise/17.0
+```
+
+## Recommended Editor Setup
+
+Most Odoo developers use **VSCode**, **VSCodium**, **PyCharm**, or **Sublime Text**. Configure your linter with these Odoo-specific exceptions:
+
+**Python (PEP8 exceptions):**
+- `E501` — line too long
+- `E301` — expected 1 blank line, found 0
+- `E302` — expected 2 blank lines, found 1
+
+**JavaScript:** Use ESLint with the [Odoo configuration](https://github.com/odoo/odoo/wiki/Javascript-coding-guidelines#use-a-linter).
+
+## Python Debugger
+
+For debugging server-side Python code, use `ipdb` or the built-in `pdb`:
+
+```bash
+pip install ipdb
+```
+
+Set a breakpoint anywhere in Python code:
+
+```python
+import ipdb; ipdb.set_trace()
+```
+
+<Accordion title="ipdb / pdb command reference">
+
+| Command | Description |
+|---|---|
+| `h` | Show help |
+| `n` | Execute next line |
+| `s` | Step into function call |
+| `c` | Continue execution |
+| `u` / `d` | Move up/down the call stack |
+| `pp <expr>` | Pretty-print an expression |
+| `w` | Print the current stack trace |
+| `q` | Quit the debugger |
+
+</Accordion>
+
+## Database Administration
+
+Connect to your development database with `psql`:
+
+```bash
+psql -d rd-demo
+```
+
+For GUI tools, connect via Unix socket:
+- **Host:** `/var/run/postgresql`
+- **Port:** `5432`
+- **Username:** your system username
+
+Popular GUI clients: [pgAdmin](https://www.pgadmin.org/) and [DBeaver](https://dbeaver.io/).
+
+## Clearing Python Cache
+
+If you experience mysterious import errors after switching branches, clear the Python bytecode cache:
+
+```bash
+find $HOME/src/odoo -name '*.pyc' -type f -delete
+find $HOME/src/odoo -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+```

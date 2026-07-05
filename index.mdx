@@ -1,20 +1,74 @@
 ---
-title: "Introduction"
-description: "Welcome to your project"
+title: "Odoo: Open-Source ERP & Business Suite"
+sidebarTitle: "Home"
+description: "Odoo is a comprehensive open-source ERP platform covering finance, sales, inventory, HR, marketing, and developer tools for building custom modules."
 ---
 
-Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.
+Odoo is an all-in-one business application platform with over 50 integrated apps — from accounting and CRM to manufacturing, HR, and e-commerce. Whether you're a business user, system administrator, or developer building custom modules, this documentation covers everything you need.
 
-<Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
-</Tip>
+<CardGroup cols={2}>
+  <Card title="User Guides" icon="book-open" href="/user/introduction">
+    Explore step-by-step guides for every Odoo application, from finance and sales to HR and marketing.
+  </Card>
+  <Card title="Administration" icon="server" href="/admin/hosting">
+    Install, deploy, and manage Odoo databases — online, on Odoo.sh, or on your own infrastructure.
+  </Card>
+  <Card title="Developer Docs" icon="code" href="/developer/overview">
+    Build custom modules, extend the ORM, create frontend components, and integrate via the external API.
+  </Card>
+  <Card title="Contributing" icon="git-pull-request" href="/contributing/documentation/overview">
+    Learn how to contribute to the Odoo documentation or codebase following the official guidelines.
+  </Card>
+</CardGroup>
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+## Explore by Role
+
+<CardGroup cols={3}>
+  <Card title="Business Users" icon="user" href="/user/introduction">
+    Discover how to use Odoo's built-in apps to manage your business operations day-to-day.
+  </Card>
+  <Card title="Administrators" icon="gear" href="/admin/hosting">
+    Choose a hosting model, set up databases, manage upgrades, and configure Odoo accounts.
+  </Card>
+  <Card title="Developers" icon="terminal" href="/developer/overview">
+    Extend Odoo with custom Python modules, Owl components, and external API integrations.
+  </Card>
+</CardGroup>
+
+## Key Applications
+
+<CardGroup cols={2}>
+  <Card title="Finance & Accounting" icon="chart-line" href="/user/finance/accounting">
+    Full double-entry bookkeeping, invoicing, bank reconciliation, and multi-currency support.
+  </Card>
+  <Card title="Sales & CRM" icon="handshake" href="/user/sales/overview">
+    Manage leads, quotations, orders, and customer relationships in a unified pipeline.
+  </Card>
+  <Card title="Inventory & Manufacturing" icon="warehouse" href="/user/inventory/overview">
+    Track stock movements, manage warehouses, run MRP, and handle bills of materials.
+  </Card>
+  <Card title="Human Resources" icon="people-group" href="/user/hr/employees">
+    Manage employees, process payroll, track attendance, and run recruitment pipelines.
+  </Card>
+</CardGroup>
+
+## Get Started as a Developer
+
+<Steps>
+  <Step title="Set up your environment">
+    Install Python 3.10+, clone the Odoo source, and configure your development environment by following the [Setup Guide](/developer/setup).
+  </Step>
+  <Step title="Build your first module">
+    Follow the [Server Framework 101](/developer/tutorials/server-framework) tutorial to create a complete Odoo module from scratch — models, views, security, and logic.
+  </Step>
+  <Step title="Explore the ORM API">
+    Learn how to define models, fields, and computed values using the [ORM reference](/developer/reference/orm).
+  </Step>
+  <Step title="Integrate via the External API">
+    Connect external systems to Odoo using the [JSON-2 API](/developer/reference/external-api) or the legacy [XML-RPC API](/developer/reference/rpc-api).
+  </Step>
+</Steps>
+
+<Note>
+  Odoo is available in two editions: **Community** (free, LGPL-3) and **Enterprise** (additional features, support, and hosting). The External API is available on Custom pricing plans only.
+</Note>

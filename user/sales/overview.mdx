@@ -1,0 +1,173 @@
+---
+title: "Odoo Sales & CRM: Manage Leads, Quotes, and Orders"
+sidebarTitle: "Sales & CRM"
+description: "Manage your full revenue cycle in Odoo—capture leads, nurture opportunities, confirm orders, run subscriptions, and operate a point of sale from one platform."
+---
+
+Odoo's Sales suite unifies CRM, quoting, order management, point of sale, subscriptions, and rentals in one platform, giving every team—from inside sales to front-of-house—a single source of truth for revenue activity. Whether you are qualifying a cold lead, negotiating a renewal, or ringing up an in-store purchase, the same connected workflow drives each interaction through to invoicing.
+
+## CRM Pipeline
+
+The CRM pipeline is a visual Kanban board where every opportunity moves through configurable stages—from initial qualification to deal closed. Each opportunity card shows its expected revenue, closing probability, and next scheduled activity so sales reps always know what to do next.
+
+<CardGroup cols={2}>
+  <Card title="Organize the Pipeline" icon="chart-kanban">
+    Create and rename stages, set probability percentages, and assign stage-specific email templates that fire automatically when a card advances.
+  </Card>
+  <Card title="Sales Teams" icon="users">
+    Group salespeople into teams with individual invoicing targets, assignment rules, and a dedicated email alias that auto-creates leads.
+  </Card>
+  <Card title="Lead Scoring & Distribution" icon="star">
+    Score leads by demographic and behavioral criteria, then let Odoo distribute them to the right rep based on assignment rules.
+  </Card>
+  <Card title="Performance Reports" icon="chart-bar">
+    Track win/loss ratios, expected revenue forecasts, and cohort-level pipeline health from the CRM Reporting menu.
+  </Card>
+</CardGroup>
+
+### Acquiring and Converting Leads
+
+<Steps>
+  <Step title="Capture leads">
+    Leads enter the pipeline through website forms, inbound emails to a team alias, manual entry, or the built-in **Lead Mining** tool that generates prospects from company databases.
+  </Step>
+  <Step title="Qualify and convert">
+    Review lead details, enrich the contact with **Partner Autocomplete**, then click **Convert to Opportunity** to merge the lead into an opportunity and assign it to a salesperson.
+  </Step>
+  <Step title="Schedule activities">
+    Log calls, meetings, and to-dos directly on the opportunity. Activities appear in the salesperson's unified activity view across all apps.
+  </Step>
+  <Step title="Send a quotation">
+    Click **New Quotation** on the opportunity to generate a draft sales order pre-filled with the customer's details. The **Quotations** smart button on the opportunity keeps a running count of all linked quotes.
+  </Step>
+</Steps>
+
+<Tip>
+  Enable **Lead Enrichment** in CRM settings to automatically populate company information—industry, employee count, phone, and social profiles—when a lead email domain is recognized.
+</Tip>
+
+---
+
+## Quotations & Sales Orders
+
+A quotation is a proposal sent to a customer that outlines products, pricing, and terms. When the customer accepts it—either by clicking **Confirm** or by applying an online signature—Odoo converts it into a confirmed sales order.
+
+### Standard Sales Flow
+
+<Steps>
+  <Step title="Create the quotation">
+    Go to **Sales → Orders → Quotations** and click **New**. Select the customer, choose a **Quotation Template** if one exists, and add product lines. Set an expiration date to create urgency.
+  </Step>
+  <Step title="Add optional products">
+    Use the **Optional Products** tab to suggest complementary items. Optional products appear on the customer portal and can be added by the customer before confirming.
+  </Step>
+  <Step title="Send and confirm">
+    Click **Send by Email** to deliver the quotation. Once the customer confirms, the quotation becomes a sales order and a delivery order is automatically created if the product requires shipping.
+  </Step>
+  <Step title="Invoice and collect payment">
+    From the confirmed sales order, click **Create Invoice**. Choose to invoice based on ordered quantities or delivered quantities depending on your billing policy.
+  </Step>
+</Steps>
+
+<Note>
+  Online signatures let customers confirm orders without back-and-forth emails. Enable **Online Signature** in **Sales → Configuration → Settings** to add a signature field to the customer portal view of every quotation.
+</Note>
+
+---
+
+## Products & Pricelists
+
+<CardGroup cols={2}>
+  <Card title="Product Catalog" icon="box">
+    Configure storable, consumable, and service products with variants (size, color), units of measure, and sales descriptions. Attach documents and images that appear on quotations.
+  </Card>
+  <Card title="Pricelists" icon="tag">
+    Create multiple pricelists for different customer segments—wholesale, retail, VIP—with fixed prices, percentage discounts, or formula-based rules. Pricelists auto-apply based on the customer or sales order.
+  </Card>
+  <Card title="eWallets & Gift Cards" icon="credit-card">
+    Issue gift cards and store credit that customers can redeem at checkout, both in the Sales app and on your eCommerce store.
+  </Card>
+  <Card title="Loyalty & Discount Programs" icon="percent">
+    Configure points-based loyalty programs, coupon codes, and promotional discounts that activate automatically when order conditions are met.
+  </Card>
+</CardGroup>
+
+---
+
+## Point of Sale
+
+Odoo **Point of Sale** runs entirely in the browser, works on any device, and stays functional during network outages by caching transactions locally until connectivity is restored.
+
+<Tabs>
+  <Tab title="Shop">
+    Manage retail transactions, apply pricelists, handle ship-later orders for items not in stock on-site, and scan barcodes to add products instantly.
+  </Tab>
+  <Tab title="Restaurant">
+    Assign orders to floors and tables, split bills, record tips, and route orders to kitchen printers or preparation displays in real time.
+  </Tab>
+  <Tab title="Self-Order Kiosk">
+    Deploy a customer-facing kiosk or enable QR-code-based ordering so guests can place and pay for orders themselves, reducing wait times and freeing staff.
+  </Tab>
+</Tabs>
+
+<CardGroup cols={2}>
+  <Card title="Payment Methods" icon="wallet">
+    Accept cash, credit cards, split payments, and customer account charges. Integrate with payment terminals and configure cash-rounding rules.
+  </Card>
+  <Card title="POS Reporting" icon="chart-line">
+    Review session summaries, Z-reports, and product sales breakdowns. Compare daily sales across multiple POS locations from a single dashboard.
+  </Card>
+</CardGroup>
+
+---
+
+## Subscriptions
+
+The **Subscriptions** app manages recurring revenue through subscription-based products or services. It supports automated invoicing, renewal management, and customer lifecycle tracking.
+
+<Steps>
+  <Step title="Configure recurring plans">
+    Go to **Subscriptions → Configuration → Recurring Plans** to define billing frequencies such as Monthly, Quarterly, or Yearly.
+  </Step>
+  <Step title="Create a subscription product">
+    On any product form, set the product type and attach one or more recurring plans. Subscriptions can be sold through the Sales app or directly through your eCommerce store.
+  </Step>
+  <Step title="Manage the lifecycle">
+    From the subscription record, renew, upsell additional services, or close the subscription when a customer cancels. All subscription activity integrates with CRM and Helpdesk for unified account management.
+  </Step>
+</Steps>
+
+---
+
+## Rental
+
+The **Rental** app lets you send quotations, confirm orders, schedule pickup and return dates, and invoice customers—all from one place.
+
+<CardGroup cols={2}>
+  <Card title="Rental Pricing" icon="calendar">
+    Define time-based pricing tiers on each product: daily, weekly, and monthly rates. Odoo automatically picks the most cost-effective combination for the rental duration.
+  </Card>
+  <Card title="Deposits" icon="shield">
+    Attach a refundable deposit to any rental order. The deposit is captured at confirmation and released back to the customer upon product return.
+  </Card>
+  <Card title="Pickup & Return" icon="truck">
+    Register when a product is picked up and returned directly on the rental order. Odoo tracks availability and prevents double-booking.
+  </Card>
+  <Card title="Rental Dashboard" icon="layout-dashboard">
+    The Kanban dashboard shows every active rental with its status, customer name, and rental price. Use sidebar filters to view rentals by status or invoice state.
+  </Card>
+</CardGroup>
+
+---
+
+## Customer Portal
+
+Customers can view their quotations, confirm orders, make payments, track deliveries, and download invoices through the self-service **Customer Portal**—no login credentials to manage separately. Portal access is granted automatically when a customer is sent a document by email.
+
+<Accordion title="What can customers do in the portal?">
+  - View and accept open quotations
+  - Confirm orders with an online signature or payment
+  - Track delivery orders and download shipping labels
+  - Access all past invoices and make online payments
+  - Manage their subscription plans and renewal dates
+</Accordion>

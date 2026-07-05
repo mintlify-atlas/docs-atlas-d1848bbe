@@ -1,0 +1,201 @@
+---
+title: "Sell Online with Odoo eCommerce & Website Builder"
+sidebarTitle: "eCommerce"
+description: "Build an online store with Odoo's drag-and-drop website builder, manage a product catalog, configure checkout and shipping, and engage visitors with Live Chat."
+---
+
+Odoo eCommerce is a fully integrated online store built on top of the **Website** module, sharing the same drag-and-drop builder, SEO tools, and domain management. Because eCommerce lives inside Odoo, every order flows directly into Inventory, Invoicing, and CRM—no third-party connector or manual data entry required. From publishing your first product to fulfilling your hundredth order, the entire journey happens in one system.
+
+<Note>
+  Odoo provides a free custom domain name to all Odoo Online databases for one year. Visitors can access your store at `www.yourcompany.com` instead of the default `yourcompany.odoo.com`.
+</Note>
+
+---
+
+## Website Builder
+
+**Odoo Website** is a user-friendly platform for creating and managing your website without needing advanced technical skills. Building blocks—pre-designed content sections—let you compose pages by dragging elements onto the canvas and adjusting them in place.
+
+<CardGroup cols={2}>
+  <Card title="Web Design" icon="paint-brush">
+    Choose from a library of professional themes and customize colors, fonts, and layouts. Add building blocks for text, images, calls-to-action, testimonials, and more—all with live preview.
+  </Card>
+  <Card title="Page & Menu Structure" icon="sitemap">
+    Create, rename, and reorder pages from the Website editor. Configure multi-level menus and set pages as published or unpublished without leaving the front end.
+  </Card>
+  <Card title="SEO & Analytics" icon="chart-line">
+    Set page-level meta titles, descriptions, and keywords. Connect Google Search Console, configure a cookie consent bar, and monitor traffic with built-in website analytics or integrate Google Analytics.
+  </Card>
+  <Card title="Multiple Websites" icon="globe">
+    Run separate websites for different brands, regions, or B2B/B2C audiences from the same Odoo database, each with its own domain and product catalog.
+  </Card>
+</CardGroup>
+
+---
+
+## eCommerce Product Catalog
+
+The product catalog is the heart of your online store. Products configured in the **Sales** or **Inventory** app are published to the store with a few clicks, and their prices, variants, and stock levels stay synchronized automatically.
+
+### Configuring Products for eCommerce
+
+<Steps>
+  <Step title="Create or open a product">
+    Navigate to **Website → eCommerce → Products** and click **New**, or open an existing product. Fill in the product name, internal reference, and sales price.
+  </Step>
+  <Step title="Set variants and attributes">
+    In the **Attributes & Variants** tab, add attributes such as size or color. Each combination generates a unique variant with its own price override, image, and barcode.
+  </Step>
+  <Step title="Configure eCommerce options">
+    On the **Sales** tab, enable **Can be Sold** and optionally set a website-specific description, availability badge, or ribbon (e.g., "New", "Sale"). Choose whether the product can be purchased without stock.
+  </Step>
+  <Step title="Publish to the store">
+    Open the product page in the Website editor and toggle it from **Unpublished** to **Published**. The product immediately appears in your catalog.
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card title="Product Categories" icon="folder">
+    Organize products into hierarchical categories displayed in the shop sidebar. Customers can filter the catalog by category, price range, attribute, or availability.
+  </Card>
+  <Card title="Product Page Design" icon="layout">
+    Use the Website editor to add building blocks directly to a product page: image carousels, tabs, comparison tables, and cross-sell suggestions all configurable without code.
+  </Card>
+  <Card title="Pricing & Pricelists" icon="tag">
+    Apply pricelists to the website to offer different prices for B2B vs. B2C customers, or run promotional pricing for a defined date range. Prices update live on the storefront.
+  </Card>
+  <Card title="Customer Accounts" icon="user">
+    Require or optionally allow customers to create an account. In B2B mode, restrict purchasing to approved accounts only. Customer accounts unlock order history, saved addresses, and wishlist features.
+  </Card>
+</CardGroup>
+
+---
+
+## Online Checkout
+
+Odoo's checkout flow is designed to maximize conversions while handling the complexity of tax calculation, shipping estimation, and payment routing behind the scenes.
+
+<Steps>
+  <Step title="Cart and review">
+    Customers add products to their cart and review line items, quantities, and applied coupon codes on the cart page before proceeding.
+  </Step>
+  <Step title="Address and delivery">
+    Customers enter or select a saved delivery address. Available shipping methods are displayed with real-time carrier rates (if configured) or flat-fee options.
+  </Step>
+  <Step title="Payment">
+    Choose from all enabled payment providers—Stripe, PayPal, Mollie, Adyen, and more. Customers can also pay by wire transfer or use stored credit from a loyalty wallet.
+  </Step>
+  <Step title="Order confirmation">
+    An order confirmation email is sent automatically. The sales order, delivery order, and invoice are created in Odoo in real time.
+  </Step>
+</Steps>
+
+<Accordion title="Customizing the checkout process">
+  The checkout process can be adapted to your business model:
+  - **Guest checkout**: allow purchases without account creation for lower-friction B2C sales.
+  - **Sign-in required**: force account creation to capture customer data and enable reorder workflows.
+  - **Additional checkout steps**: add custom pages (e.g., a gift message step) by extending the checkout controller.
+  - **Abandoned cart recovery**: Odoo tracks carts that were started but not completed and can trigger automated follow-up emails via Marketing Automation.
+</Accordion>
+
+---
+
+## Shipping Methods
+
+Configuring shipping at checkout ensures customers see accurate delivery options and costs before they pay.
+
+<CardGroup cols={2}>
+  <Card title="Fixed & Rule-Based Rates" icon="truck">
+    Define flat shipping fees or create rules based on order weight, total price, or destination country. Rules stack so you can offer free shipping above a threshold.
+  </Card>
+  <Card title="Carrier Integration" icon="box">
+    Connect FedEx, UPS, DHL, USPS, and many regional carriers to display real-time rates and auto-generate shipping labels from confirmed delivery orders.
+  </Card>
+  <Card title="Pickup Locations" icon="map-pin">
+    Offer in-store or warehouse pickup as a zero-cost shipping option. Customers select a pickup point and receive a notification when their order is ready.
+  </Card>
+  <Card title="Delivery Lead Times" icon="clock">
+    Set product-specific lead times and warehouse cutoff hours so Odoo can display accurate expected delivery dates during checkout.
+  </Card>
+</CardGroup>
+
+---
+
+## Order Handling
+
+Once an order is placed, Odoo manages the complete fulfillment lifecycle without requiring manual intervention at each step.
+
+<Steps>
+  <Step title="Confirm and pick">
+    Confirmed eCommerce orders are visible in **Inventory → Operations → Transfers**. Warehouse staff pick items, and the delivery order is validated when goods leave the warehouse.
+  </Step>
+  <Step title="Invoice and collect">
+    Invoices are generated automatically based on the billing policy (ordered qty or delivered qty). Customers can pay outstanding invoices directly from their portal.
+  </Step>
+  <Step title="Handle returns">
+    Process refunds and returns from the delivery order. A reverse transfer moves stock back into the warehouse and a credit note is issued in the Accounting app.
+  </Step>
+  <Step title="Recover abandoned carts">
+    The **Abandoned Carts** report (under **Website → eCommerce → Orders**) lists sessions with unpurchased carts. Connect a Marketing Automation campaign to send re-engagement emails automatically.
+  </Step>
+</Steps>
+
+---
+
+## Live Chat
+
+Odoo **Live Chat** lets support and sales agents communicate with website visitors in real time, qualify leads, and answer questions before a visitor leaves the store.
+
+<CardGroup cols={2}>
+  <Card title="Chat Channels" icon="message-circle">
+    Create multiple live chat channels for different teams—sales, support, technical—each with its own operator roster, availability hours, and automatic greeting message.
+  </Card>
+  <Card title="Chatbots" icon="bot">
+    Deploy a chatbot to handle common questions after hours or when no operator is available. Chatbot scripts route conversations to human agents when the question requires it.
+  </Card>
+  <Card title="Lead Generation" icon="user-plus">
+    Convert a live chat conversation into a CRM lead with one click. The full chat transcript is attached to the lead record for context.
+  </Card>
+  <Card title="Customer Ratings" icon="star">
+    Collect satisfaction ratings at the end of each chat session. Ratings feed into the Live Chat report so you can track agent performance over time.
+  </Card>
+</CardGroup>
+
+---
+
+## Blog
+
+The integrated **Blog** module lets you publish articles directly on your Odoo website, improving organic search rankings and keeping visitors engaged.
+
+<CardGroup cols={2}>
+  <Card title="Rich Content Editor" icon="pen-line">
+    Write posts using the same drag-and-drop building blocks as the rest of the website. Embed images, videos, calls-to-action, and product links within posts.
+  </Card>
+  <Card title="Tags & Categories" icon="bookmark">
+    Organize posts with tags and assign them to named blogs (e.g., "Company News", "Tutorials"). Visitors can browse and filter posts by tag from the blog landing page.
+  </Card>
+  <Card title="Comments & Engagement" icon="message-square">
+    Allow readers to leave comments on posts. Moderate comments from the backend before they appear publicly.
+  </Card>
+  <Card title="SEO Optimization" icon="search">
+    Set per-post meta titles, descriptions, and keywords. Odoo auto-generates social sharing previews (Open Graph tags) so posts look great when shared on social media.
+  </Card>
+</CardGroup>
+
+---
+
+## Google Merchant Center
+
+Connect your Odoo eCommerce catalog to **Google Merchant Center** to syndicate products across Google Shopping, and optionally to TikTok, Facebook, and Instagram for multi-channel product discovery.
+
+<Steps>
+  <Step title="Link Google Merchant Center">
+    In **Website → Configuration → Settings**, enter your Google Merchant Center account ID. Odoo automatically generates and submits a product feed.
+  </Step>
+  <Step title="Map product attributes">
+    Verify that product categories, GTINs (barcodes), and condition fields are populated so Google can classify and display your products correctly.
+  </Step>
+  <Step title="Monitor feed status">
+    Check feed health and item disapprovals directly from the Google Merchant Center dashboard. Resolve any issues flagged by Google to maximize product visibility.
+  </Step>
+</Steps>

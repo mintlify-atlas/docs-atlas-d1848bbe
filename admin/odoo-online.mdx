@@ -1,0 +1,116 @@
+---
+title: "Get Started with Odoo Online (SaaS)"
+sidebarTitle: "Odoo Online"
+description: "Learn how to create, manage, upgrade, duplicate, and rename Odoo Online databases from the cloud database manager portal."
+---
+
+[Odoo Online](https://www.odoo.com/trial) provides private databases that are fully hosted and managed by Odoo. Databases are accessible from any web browser without a local installation, making it the easiest way to run Odoo in production or conduct thorough testing — including customizations that don't require custom code.
+
+<Note>
+  Odoo Online is **incompatible** with custom modules or apps from the [Odoo Apps Store](https://apps.odoo.com/apps). If you need custom module support, consider [Odoo.sh](/admin/odoo-sh) or an [on-premise](/admin/on-premise) installation.
+</Note>
+
+<Tip>
+  To quickly try Odoo without signing up, shared [demo databases](https://demo.odoo.com) are available. Each demo database is only available for a few hours.
+</Tip>
+
+## Database Manager
+
+All Odoo Online databases are managed from the [database manager](https://www.odoo.com/my/databases). Sign in as the database administrator to access all management options.
+
+### Domain Names
+
+Configure a custom domain name by selecting a database and clicking the **Domain Names** (globe) icon. You can also [register a domain name for free](https://www.odoo.com/documentation/applications/websites/website/configuration/domain_names.html).
+
+### Tags
+
+Organize your databases by adding tags. Select a database, click the **Tags** icon, enter a tag name, click the plus button, and save. Use the search bar in the top-right corner to filter by tag.
+
+### Hide a Database
+
+Permanently hide a database from the manager by selecting it and clicking **Hide**. Hidden databases are still accessible via their direct URL.
+
+## Management Actions
+
+Select a database and click the **Manage** (gears) icon to access all advanced database operations.
+
+<AccordionGroup>
+  <Accordion title="Switch Plans">
+    Change your [pricing plan](https://www.odoo.com/pricing) by clicking **Switch** under the desired plan tier.
+  </Accordion>
+
+  <Accordion title="Upgrade">
+    Launch a [database upgrade](/admin/upgrade) by clicking **Upgrade**. This option only appears when an upgrade is available for your database.
+  </Accordion>
+
+  <Accordion title="Rename">
+    Change the database name and URL by clicking **Rename**, entering a new name in the dialog, and confirming.
+  </Accordion>
+
+  <Accordion title="Duplicate">
+    Create a copy of the database by clicking **Duplicate** and entering a new name.
+
+    <Note>
+      - By default, the **For testing purposes** option is enabled, which disables all external actions (emails, payments, delivery orders, etc.) on the duplicate.
+      - Duplicates expire after **15 days**.
+      - A maximum of **five duplicates** can be created per database. Contact [Odoo Support](https://www.odoo.com/help) to extend the limit in exceptional cases.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Download a Backup">
+    Download a ZIP file containing a database backup by clicking **Download Backup**.
+
+    <Note>
+      - Databases are backed up daily per the [Odoo Cloud Hosting SLA](https://www.odoo.com/cloud-sla).
+      - If **Download Backup** is disabled, the database is too large to download this way. Contact [Odoo Support](https://www.odoo.com/help) for an alternative.
+    </Note>
+  </Accordion>
+
+  <Accordion title="View Admin Activity Logs">
+    View a log of all actions taken by Odoo employees or the database administrator by clicking **View Admin Activity Logs**. Actions by Odoo employees are typically the result of support requests, quick-start projects, or routine maintenance.
+  </Accordion>
+
+  <Accordion title="Transfer Ownership">
+    Request a database ownership transfer by clicking **Transfer Ownership**. This creates a support ticket with the Odoo team.
+  </Accordion>
+
+  <Accordion title="Delete">
+    Permanently delete the database and close its related subscription by clicking **Delete**.
+
+    <Warning>
+      All database data will be deleted **instantly** for all users and **cannot be restored**. Always [download a backup](#download-a-backup) before deleting. After deletion, the database name becomes available to anyone.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+## Web Services API
+
+To retrieve the list of databases programmatically, call the `list` method of the `odoo.database` model via the external JSON-2 API:
+
+```python
+import requests
+
+APIKEY = "your_apikey"
+
+requests.post(
+    "https://www.odoo.com/json/2/odoo.database/list",
+    headers={
+        "Authorization": f"bearer {APIKEY}",
+        "X-Odoo-Database": "openerp",
+    },
+    json={},
+)
+```
+
+## Upgrade Policy for Odoo Online
+
+Odoo Online databases follow a rolling release process with mandatory upgrade deadlines:
+
+- **Major version databases** (e.g., 16.0, 17.0, 18.0): upgrade is mandatory every two years.
+- **Minor version databases** (e.g., 17.1, 17.2, 17.4): upgrade is mandatory a few weeks after the next minor version is released. Minor versions are typically released every two months.
+
+You will receive an in-database notification a few weeks before a mandatory upgrade is automatically applied. Odoo's Upgrade Team runs a silent test upgrade first; if it succeeds and takes less than 20 minutes, you can trigger the upgrade directly from the database. If the test fails, you can initiate a manual test upgrade from the database manager.
+
+<Tip>
+  It is strongly recommended to [request an upgraded test database](/admin/upgrade#obtaining-a-test-upgrade) and test it thoroughly before the production upgrade is applied.
+</Tip>

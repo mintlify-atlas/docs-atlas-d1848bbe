@@ -1,0 +1,236 @@
+---
+title: "Install Odoo On-Premise: Packages, Source & Docker"
+sidebarTitle: "On-Premise"
+description: "Step-by-step guide to installing Odoo on-premise using distribution packages, source code, or Docker — plus how to register and manage your database."
+---
+
+On-premise installations give you full control over your Odoo environment, infrastructure, and data. Odoo supports several installation methods: official distribution packages for Linux and Windows, a source code install for maximum flexibility, and Docker images for containerized deployments. All methods support both the Community (free) and Enterprise editions.
+
+## Choosing an Installation Method
+
+<CardGroup cols={2}>
+  <Card title="Packaged Installers" icon="box-archive">
+    Official `.deb` (Debian/Ubuntu) and `.rpm` (Fedora/RHEL) packages, plus a Windows installer. The fastest way to get a working Odoo service.
+  </Card>
+  <Card title="Source Install" icon="terminal">
+    Run Odoo directly from the GitHub source. Ideal for module developers and for running multiple Odoo versions on the same machine.
+  </Card>
+  <Card title="Docker" icon="docker">
+    Use the official [Odoo Docker image](https://hub.docker.com/_/odoo/) for containerized deployments in development or production.
+  </Card>
+  <Card title="Windows" icon="windows">
+    A Windows installer is available for testing or single-user local instances. Production deployments on Windows are discouraged.
+  </Card>
+</CardGroup>
+
+## Packaged Installers
+
+Official **Community** nightly packages are available on the [nightly server](https://nightly.odoo.com). Both **Community** and **Enterprise** packages can be downloaded from the [Odoo download page](https://www.odoo.com/page/download).
+
+<Note>
+  Downloading Enterprise packages requires a paid on-premise subscription or Odoo partner account.
+</Note>
+
+### Prerequisites
+
+Odoo requires a [PostgreSQL](https://www.postgresql.org/) server.
+
+<Tabs>
+  <Tab title="Debian / Ubuntu">
+    ```bash
+    sudo apt install postgresql -y
+    ```
+
+    <Warning>
+      `wkhtmltopdf` must be installed manually at [version 0.12.6](https://github.com/wkhtmltopdf/packaging/releases/tag/0.12.6.1-3) for headers and footers in PDF reports to work correctly.
+    </Warning>
+  </Tab>
+  <Tab title="Fedora / RHEL">
+    ```bash
+    sudo dnf install -y postgresql-server
+    sudo postgresql-setup --initdb --unit postgresql
+    sudo systemctl enable postgresql
+    sudo systemctl start postgresql
+    ```
+  </Tab>
+</Tabs>
+
+### Install via Repository (Community Edition)
+
+<Tabs>
+  <Tab title="Debian / Ubuntu">
+    ```bash
+    wget -q -O - https://nightly.odoo.com/odoo.key | sudo gpg --dearmor -o /usr/share/keyrings/odoo-archive-keyring.gpg
+    echo 'deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg] https://nightly.odoo.com/18.0/nightly/deb/ ./' | sudo tee /etc/apt/sources.list.d/odoo.list
+    sudo apt-get update && sudo apt-get install odoo
+    ```
+
+    Keep the installation up-to-date with `sudo apt-get upgrade`.
+  </Tab>
+  <Tab title="Fedora">
+    ```bash
+    sudo dnf config-manager --add-repo=https://nightly.odoo.com/18.0/nightly/rpm/odoo.repo
+    sudo dnf install -y odoo
+    sudo systemctl enable odoo
+    sudo systemctl start odoo
+    ```
+  </Tab>
+</Tabs>
+
+### Install via Distribution Package
+
+Download the `.deb` or `.rpm` package from the [Odoo download page](https://www.odoo.com/page/download), then install it:
+
+<Tabs>
+  <Tab title="Ubuntu">
+    ```bash
+    sudo apt update
+    sudo apt install <path_to_installation_package>
+    ```
+  </Tab>
+  <Tab title="Fedora">
+    ```bash
+    sudo dnf localinstall odoo_18.0.latest.noarch.rpm
+    sudo systemctl enable odoo
+    sudo systemctl start odoo
+    ```
+  </Tab>
+  <Tab title="Windows">
+    1. Download the installer from the [nightly server](https://nightly.odoo.com) (Community) or the [Odoo download page](https://www.odoo.com/page/download) (any edition).
+    2. Run the downloaded file. If a **Windows protected your PC** warning appears, click **More Info** → **Run anyway**.
+    3. Accept the UAC prompt and follow the installation wizard.
+
+    <Warning>
+      Windows packaging is intended for testing or single-user local use. Production deployment on Windows is discouraged due to platform limitations.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Source Install
+
+Running Odoo from source gives you full control and is the preferred setup for developers. It requires Python 3.10 or later.
+
+<Steps>
+  <Step title="Fetch the source code">
+    Clone the Community (and optionally Enterprise) repositories from GitHub:
+
+    ```bash
+    git clone --branch 18.0 --single-branch https://github.com/odoo/odoo.git
+    git clone --branch 18.0 --single-branch https://github.com/odoo/enterprise.git
+    ```
+
+    <Note>
+      The Enterprise repository only contains extra add-ons — the core server is in the Community repository. Both repositories are required for an Enterprise installation.
+    </Note>
+  </Step>
+  <Step title="Install Python dependencies">
+    ```bash
+    cd odoo
+    pip install -r requirements.txt
+    ```
+  </Step>
+  <Step title="Set up PostgreSQL">
+    Create a PostgreSQL user for Odoo:
+
+    ```bash
+    sudo -u postgres createuser -s $USER
+    ```
+  </Step>
+  <Step title="Start Odoo">
+    For Community:
+    ```bash
+    ./odoo-bin -d mydb
+    ```
+
+    For Enterprise (point `--addons-path` to both repositories):
+    ```bash
+    ./odoo-bin -d mydb --addons-path=addons,../enterprise
+    ```
+  </Step>
+</Steps>
+
+## Docker
+
+Use the official [Odoo Docker image](https://hub.docker.com/_/odoo/) from Docker Hub. A typical `docker-compose.yml` pairs the Odoo container with a PostgreSQL container:
+
+```yaml
+version: '3.1'
+services:
+  web:
+    image: odoo:18.0
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+```
+
+## Registering Your Database
+
+After installing Odoo Enterprise, register your database by entering your subscription code in the banner displayed on the app dashboard. A successful registration turns the banner green and shows the database expiration date.
+
+<Tip>
+  The expiration date is also shown at the bottom of the **Settings** page.
+</Tip>
+
+### Common Registration Errors
+
+<AccordionGroup>
+  <Accordion title="Registration Error">
+    If you see a registration error:
+    - Verify your subscription is **In Progress** on your [Odoo Account](https://accounts.odoo.com/my/subscription).
+    - Make sure **no other database** is already linked to this subscription code (one database per subscription).
+    - Check that **no databases share the same UUID** by reviewing your [Odoo Contract](https://accounts.odoo.com/my/subscription). If duplicates exist, manually change the UUID or [open a support ticket](https://www.odoo.com/help).
+    - Ensure your firewall allows outbound connections: Odoo 18.0+ requires `services.odoo.com:80`; Odoo 17.0 and earlier requires `services.openerp.com:80`.
+  </Accordion>
+  <Accordion title="Too Many Users Error">
+    If your database has more users than your subscription allows, you have **30 days** to act before the database expires. To resolve:
+    - Click **Upgrade your subscription** in the message to pay for additional users, or
+    - [Deactivate users](/admin/odoo-accounts) and reject the upsell quotation.
+  </Accordion>
+  <Accordion title="Database Expired Error">
+    If your subscription expired before renewal, click **Renew your subscription** in the error banner. Credit card payments are processed immediately; wire transfers may take a few days.
+  </Accordion>
+</AccordionGroup>
+
+## Duplicating a Database
+
+Duplicate your database by visiting `<odoo-server>/web/database/manager`. Check the **neutralize** option when prompted to create a testing duplicate — this executes all `neutralize.sql` scripts for every installed module, disabling outgoing emails and other external actions.
+
+## Switching from Community to Enterprise
+
+<Steps>
+  <Step title="Back up your Community database">
+    Use the database manager at `/web/database/manager` to download a backup.
+  </Step>
+  <Step title="Stop the Odoo service">
+    ```bash
+    sudo service odoo stop
+    ```
+  </Step>
+  <Step title="Install the Enterprise package">
+    **Using a `.deb` package** (installs over the Community package):
+    ```bash
+    sudo dpkg -i <path_to_enterprise_deb>
+    ```
+
+    **Using source code:** Update the `--addons-path` parameter in your launch command to include the Enterprise addons directory.
+  </Step>
+  <Step title="Update the database">
+    ```bash
+    python3 /usr/bin/odoo-bin -d <database_name> -i web_enterprise --stop-after-init
+    ```
+  </Step>
+  <Step title="Restart and activate">
+    Restart the Odoo service. On the dashboard, enter your Odoo Enterprise subscription code to link the database to your subscription.
+  </Step>
+</Steps>
+
+<Note>
+  On **Windows**, uninstall Odoo Community first (PostgreSQL will remain), then run the Odoo Enterprise installer. Update the database using the command prompt from the Odoo installation directory.
+</Note>

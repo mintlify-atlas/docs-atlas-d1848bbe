@@ -1,0 +1,369 @@
+---
+title: 'Write and Run Automated Tests for Odoo Modules'
+sidebarTitle: 'Testing'
+description: 'Learn to write Python unit tests, HTTP integration tests, and browser tours for Odoo modules using TransactionCase, HttpCase, and the tagged decorator.'
+---
+
+Automated tests are the primary safeguard against regressions in Odoo module development. Odoo provides three complementary testing strategies: Python unit tests that verify model business logic, JavaScript unit tests that isolate frontend code, and browser-based tours that validate end-to-end workflows by simulating real user interactions. This reference covers all three, with a focus on the Python side where most module testing begins.
+
+---
+
+## Test File Structure
+
+Create a `tests/` sub-package inside your module directory. Odoo automatically discovers test modules whose names start with `test_`:
+
+```bash
+estate/
+├── models/
+│   └── estate_property.py
+├── tests/
+│   ├── __init__.py          # Must import all test modules
+│   ├── test_estate_property.py
+│   └── test_estate_offer.py
+└── __manifest__.py
+```
+
+**`tests/__init__.py`** must explicitly import each test file, otherwise Odoo will not run them:
+
+```python
+from . import test_estate_property
+from . import test_estate_offer
+```
+
+<Warning>
+Test modules that are **not** imported from `tests/__init__.py` will silently never run. Always check this file when a test seems to be ignored.
+</Warning>
+
+---
+
+## Python Unit Tests
+
+### `TransactionCase`
+
+`TransactionCase` is the most common base class. Each test method runs inside its own database transaction that is **rolled back** after the method completes, leaving the database in a clean state for the next test.
+
+```python
+from odoo.tests import TransactionCase
+
+class TestEstateProperty(TransactionCase):
+
+    def test_property_selling_price(self):
+        prop = self.env['estate.property'].create({
+            'name': 'Test Property',
+            'expected_price': 100000.0,
+        })
+        self.assertEqual(prop.selling_price, 0.0)
+
+    def test_total_area_computation(self):
+        prop = self.env['estate.property'].create({
+            'name': 'Garden Property',
+            'expected_price': 200000.0,
+            'living_area': 120,
+            'garden': True,
+            'garden_area': 50,
+        })
+        self.assertEqual(prop.total_area, 170)
+
+    def test_cannot_sell_cancelled_property(self):
+        from odoo.exceptions import UserError
+        prop = self.env['estate.property'].create({
+            'name': 'Cancelled Property',
+            'expected_price': 150000.0,
+            'state': 'cancelled',
+        })
+        with self.assertRaises(UserError):
+            prop.action_sold()
+```
+
+<Note>
+Test methods must start with `test_`. Any method that does not follow this convention will not be picked up by the test runner.
+</Note>
+
+### `SingleTransactionCase`
+
+All test methods in the class share a **single** transaction that is committed once at the end. Test methods run in alphabetical order and share the same environment. Use this for read-heavy tests where you want to set up fixtures once, not after every method.
+
+```python
+from odoo.tests import SingleTransactionCase
+
+class TestEstatePropertyReadOnly(SingleTransactionCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.property_a = cls.env['estate.property'].create({
+            'name': 'Property A',
+            'expected_price': 300000.0,
+        })
+
+    def test_name_is_set(self):
+        self.assertEqual(self.property_a.name, 'Property A')
+
+    def test_default_bedrooms(self):
+        self.assertEqual(self.property_a.bedrooms, 2)
+```
+
+---
+
+## The `@tagged` Decorator
+
+Tags control when tests are selected and executed. Apply `@tagged` to **test classes** (not individual methods).
+
+```python
+from odoo.tests import TransactionCase, tagged
+
+@tagged('-at_install', 'post_install')
+class TestEstatePostInstall(TransactionCase):
+    """Runs only after all modules are installed, not right after estate installs."""
+
+    def test_offer_workflow(self):
+        # This test may depend on other modules being present
+        pass
+```
+
+### Built-in Tags
+
+| Tag | Meaning |
+|---|---|
+| `standard` | Implicit on all `BaseCase` subclasses. Run by default with `--test-enable`. |
+| `at_install` | Implicit default — runs right after the module installs, before other modules load. |
+| `post_install` | Runs after all modules in the dependency chain are installed. |
+| `slow` | Not run by default; opt in explicitly with `--test-tags slow`. |
+
+### Removing Default Tags
+
+Prefix a tag with `-` to remove it:
+
+```python
+@tagged('-standard', 'nice')
+class NiceTest(TransactionCase):
+    # Will NOT run by default; must be explicitly selected with --test-tags nice
+    pass
+
+@tagged('-at_install', 'post_install')
+class PostInstallTest(TransactionCase):
+    # Runs after all modules are installed
+    pass
+```
+
+---
+
+## Running Tests
+
+Tests are run via `odoo-bin`. The `--test-enable` flag activates the test runner for module installation and updates.
+
+```bash
+# Run all standard tests after installing the estate module
+./odoo-bin --addons-path=addons,../tutorials -d my_db -i estate --test-enable
+
+# Run tests for a specific module (after it is already installed)
+./odoo-bin --addons-path=addons,../tutorials -d my_db --test-tags /estate
+
+# Run a specific test class
+./odoo-bin -d my_db --test-tags /estate:TestEstateProperty
+
+# Run a single test method
+./odoo-bin -d my_db --test-tags /estate:TestEstateProperty.test_total_area_computation
+
+# Run all tests except slow ones
+./odoo-bin -d my_db --test-tags 'standard,-slow'
+
+# Run post-install tests for the estate module
+./odoo-bin -d my_db --test-tags 'post_install,/estate'
+```
+
+The `--test-tags` format is: `[-][tag][/module][:class][.method]`
+
+---
+
+## HTTP Tests (`HttpCase`)
+
+`HttpCase` starts a real HTTP server and lets you interact with it programmatically. Use it to test controllers, website pages, or JavaScript tours.
+
+```python
+from odoo.tests import HttpCase, tagged
+
+@tagged('-at_install', 'post_install')
+class TestEstateController(HttpCase):
+
+    def test_property_list_page(self):
+        # authenticate() sets the session cookie for subsequent requests
+        self.authenticate('admin', 'admin')
+        response = self.url_open('/web#action=estate.action_estate_property')
+        self.assertEqual(response.status_code, 200)
+
+    def test_property_json_rpc(self):
+        self.authenticate('admin', 'admin')
+        # Call a JSON-RPC endpoint directly
+        result = self.url_open(
+            '/web/dataset/call_kw',
+            data=b'{"jsonrpc":"2.0","method":"call","params":{"model":"estate.property",'
+                 b'"method":"search_count","args":[[]],"kwargs":{}}}',
+            headers={'Content-Type': 'application/json'},
+        )
+        self.assertEqual(result.status_code, 200)
+```
+
+### `browser_js`
+
+`browser_js` starts a real browser (using Chrome in headless mode) and runs a JavaScript expression or a named tour:
+
+```python
+@tagged('-at_install', 'post_install')
+class TestEstateTour(HttpCase):
+
+    def test_estate_tour(self):
+        self.browser_js(
+            url_path='/web',
+            code="odoo.startTour('estate_property_tour', {debug: false})",
+            login='admin',
+        )
+```
+
+---
+
+## Browser Tours (Integration Tests)
+
+Tours simulate a real user navigating the Odoo interface. They are defined in JavaScript and registered in the tour registry.
+
+### Tour File Structure
+
+Add the tour file to your module's static assets:
+
+```bash
+estate/
+├── static/
+│   └── tests/
+│       └── tours/
+│           └── estate_property_tour.js
+└── __manifest__.py
+```
+
+In `__manifest__.py`, register the file under the test assets bundle:
+
+```python
+'assets': {
+    'web.assets_tests': [
+        'estate/static/tests/tours/estate_property_tour.js',
+    ],
+},
+```
+
+### Writing a Tour
+
+```javascript
+/** @odoo-module **/
+
+import { registry } from "@web/core/registry";
+
+registry.category("web_tour.tours").add("estate_property_tour", {
+    test: true,
+    url: "/web",
+    steps: () => [
+        // Step 1: Open the Real Estate app
+        {
+            trigger: '.o_app[data-menu-xmlid="estate.menu_estate_root"]',
+            content: "Open the Real Estate application",
+            run: "click",
+        },
+        // Step 2: Click New to create a property
+        {
+            trigger: ".o_list_button_add",
+            content: "Create a new property",
+            run: "click",
+        },
+        // Step 3: Fill in the property name
+        {
+            trigger: '.o_field_widget[name="name"] input',
+            content: "Enter the property name",
+            run: "edit Big Villa",
+        },
+        // Step 4: Set the expected price
+        {
+            trigger: '.o_field_widget[name="expected_price"] input',
+            content: "Enter the expected price",
+            run: "edit 250000",
+        },
+        // Step 5: Save the record
+        {
+            trigger: ".o_form_button_save",
+            content: "Save the property",
+            run: "click",
+        },
+        // Step 6: Verify the record was saved
+        {
+            trigger: '.o_field_widget[name="name"]:contains("Big Villa")',
+            content: "Property name is visible",
+            run: () => {},  // no action — just a check that the trigger is present
+        },
+    ],
+});
+```
+
+### Calling the Tour from Python
+
+```python
+from odoo.tests import HttpCase, tagged
+
+@tagged('-at_install', 'post_install')
+class TestEstateTour(HttpCase):
+
+    def test_estate_property_tour(self):
+        self.browser_js(
+            url_path='/odoo/real-estate',
+            code="odoo.startTour('estate_property_tour', {debug: false})",
+            login='admin',
+            timeout=60,
+        )
+```
+
+---
+
+## Form Helper (`odoo.tests.Form`)
+
+The `Form` helper lets you test form view logic (onchange handlers, domain filtering, default values) in Python without opening a browser. It simulates the form view's behavior server-side.
+
+```python
+from odoo.tests import TransactionCase, Form
+
+class TestEstatePropertyForm(TransactionCase):
+
+    def test_garden_defaults_on_toggle(self):
+        # Create the form object — triggers default_get
+        form = Form(self.env['estate.property'])
+        form.name = 'Test Garden Property'
+        form.expected_price = 300000.0
+
+        # Toggling garden should set area and orientation via onchange
+        form.garden = True
+        self.assertEqual(form.garden_area, 10)
+        self.assertEqual(form.garden_orientation, 'north')
+
+        # Turning garden off should clear those values
+        form.garden = False
+        self.assertEqual(form.garden_area, 0)
+        self.assertFalse(form.garden_orientation)
+
+        # Save the record
+        property_record = form.save()
+        self.assertEqual(property_record.name, 'Test Garden Property')
+
+    def test_offer_in_form(self):
+        property_record = self.env['estate.property'].create({
+            'name': 'Offer Test Property',
+            'expected_price': 500000.0,
+        })
+        # Edit the existing record using with_record
+        with Form(property_record) as form:
+            # Work with an One2many field using the o2m proxy
+            with form.offer_ids.new() as offer_line:
+                offer_line.price = 480000.0
+                offer_line.partner_id = self.env.ref('base.res_partner_1')
+        # The record is saved when the `with` block exits
+        self.assertEqual(len(property_record.offer_ids), 1)
+        self.assertEqual(property_record.offer_ids.price, 480000.0)
+```
+
+<Tip>
+The `Form` helper is the recommended way to test `@api.onchange` methods. Calling `write()` directly on a record does not trigger onchange handlers — those only fire in the UI or through the `Form` helper.
+</Tip>

@@ -1,0 +1,367 @@
+---
+title: 'Odoo External JSON-2 API: Authenticate and Call Models'
+sidebarTitle: 'External API'
+description: 'Document the /json/2 API: HTTP headers, bearer auth, API key management, model method calls, code examples in Python, JavaScript, and bash.'
+---
+
+The Odoo External JSON-2 API (`/json/2`) is the modern, recommended way to integrate external software with an Odoo instance. It exposes the full ORM model API over HTTP with JSON payloads, requiring only an API key for authentication. The `/json/2` endpoint was introduced in Odoo 19.0.
+
+<Note>
+Access to the External API requires an Odoo **Custom** pricing plan. It is not available on *One App Free* or *Standard* plans. Visit the [Odoo pricing page](https://www.odoo.com/pricing-plan) for details.
+</Note>
+
+## Request Format
+
+### URL
+
+```
+POST /json/2/<model>/<method>
+```
+
+- `<model>` — the technical model name, e.g. `res.partner`, `sale.order`
+- `<method>` — the ORM or business method to call, e.g. `search_read`, `create`, `write`
+
+### HTTP Headers
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Host` | Yes (HTTP/1.1) | Hostname of the Odoo server |
+| `Authorization` | Yes | `bearer <api_key>` |
+| `Content-Type` | Yes | `application/json` (charset recommended) |
+| `X-Odoo-Database` | When needed | Database name (required on multi-database servers) |
+| `User-Agent` | Recommended | Name of your client software |
+
+### Request Body (JSON)
+
+| Key | Description |
+|-----|-------------|
+| `ids` | Array of record IDs. Omit or leave empty for `@api.model` methods. |
+| `context` | Optional object with extra context, e.g. `{"lang": "en_US"}` |
+| *`param`* | Any additional named arguments the method accepts |
+
+### Example Request
+
+```http
+POST /json/2/res.partner/search_read HTTP/1.1
+Host: mycompany.example.com
+X-Odoo-Database: mycompany
+Authorization: bearer 6578616d706c65206a736f6e20617069206b6579
+Content-Type: application/json; charset=utf-8
+User-Agent: mysoftware python-requests/2.25.1
+
+{
+    "context": {"lang": "en_US"},
+    "domain": [
+        ["name", "ilike", "%deco%"],
+        ["is_company", "=", true]
+    ],
+    "fields": ["name"]
+}
+```
+
+## Response Format
+
+**Success** — HTTP `200` with the JSON-serialized return value:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+[{"id": 25, "name": "Deco Addict"}]
+```
+
+**Error** — HTTP `4xx`/`5xx` with a JSON error object:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Fully qualified Python exception class name |
+| `message` | Exception message |
+| `arguments` | All exception arguments |
+| `context` | Request context at time of error |
+| `debug` | Full Python traceback (for debugging) |
+
+```json
+{
+  "name": "werkzeug.exceptions.Unauthorized",
+  "message": "Invalid apikey",
+  "arguments": ["Invalid apikey", 401],
+  "context": {},
+  "debug": "Traceback (most recent call last):\n..."
+}
+```
+
+---
+
+## API Key Management
+
+### Manual Key Generation
+
+Navigate to **Preferences → Account Security → New API Key**. Provide a description and duration. The key value is shown only once — copy it immediately.
+
+<Warning>
+API keys cannot be retrieved after creation. If you lose a key, delete it and generate a new one. For security, keys cannot be created with durations longer than three months.
+</Warning>
+
+### Programmatic Key Generation
+
+Keys can be generated via the API itself using `res.users.apikeys/generate`:
+
+<CodeGroup>
+```python Python
+import requests
+
+API_KEY = "..."  # from secure storage
+
+res = requests.post(
+    "https://mycompany.example.com/json/2/res.users.apikeys/generate",
+    headers={"Authorization": f"bearer {API_KEY}"},
+    json={
+        "key": API_KEY,
+        "scope": None,
+        "name": "My integration service",
+        "expiration_date": "2026-05-19",
+    },
+)
+res.raise_for_status()
+new_api_key = res.json()
+# store new_api_key securely
+```
+
+```javascript JavaScript
+const API_KEY = "...";  // from secure storage
+const headers = {
+  "Content-Type": "application/json",
+  "Authorization": "bearer " + API_KEY,
+};
+
+const res = await fetch(
+  "https://mycompany.example.com/json/2/res.users.apikeys/generate",
+  {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      key: API_KEY,
+      scope: null,
+      name: "My integration service",
+      expiration_date: "2026-05-19",
+    }),
+  }
+);
+if (!res.ok) throw new Error(await res.json());
+const newApiKey = await res.json();
+```
+
+```bash bash
+set -eu
+API_KEY=""
+
+curl https://mycompany.example.com/json/2/res.users.apikeys/generate \
+  -X POST \
+  --oauth2-bearer "$API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"key\": \"$API_KEY\",
+    \"scope\": null,
+    \"name\": \"My integration service\",
+    \"expiration_date\": \"2026-05-19\"
+  }" \
+  --silent --fail
+```
+</CodeGroup>
+
+`generate` parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `key` | string | An existing valid API key used to authenticate |
+| `scope` | string \| null | Scope restriction (`"rpc"` for RPC access, `null` for unscoped) |
+| `name` | string | Human-readable label |
+| `expiration_date` | string | ISO 8601 date, e.g. `"2026-05-19"` |
+
+### Key Revocation
+
+```python
+requests.post(
+    "https://mycompany.example.com/json/2/res.users.apikeys/revoke",
+    headers={"Authorization": f"bearer {new_api_key}"},
+    json={"key": old_api_key},  # revoke old key after successful rotation
+)
+```
+
+<Tip>
+**Key rotation best practice:** Generate the new key first, verify all services use it, then revoke the old key. Use separate API keys per service to simplify auditing and revocation.
+</Tip>
+
+---
+
+## Transactions
+
+Each `/json/2` call runs in its own SQL transaction — committed on success, rolled back on error. It is **not** possible to chain multiple calls in a single transaction. To ensure atomicity across multiple ORM operations, call a single model method that performs all operations internally.
+
+```
+# ✅ Atomic — both search and read happen in one transaction
+POST /json/2/res.partner/search_read
+
+# ❌ Non-atomic — two separate transactions
+POST /json/2/res.partner/search  → ids
+POST /json/2/res.partner/read   → records  (a concurrent write could have changed records)
+```
+
+---
+
+## Code Examples
+
+The following examples search for partner companies containing "deco" in their name and read their names.
+
+<CodeGroup>
+```python Python
+import requests
+
+BASE_URL = "https://mycompany.example.com/json/2"
+API_KEY = "..."  # from secure storage
+headers = {
+    "Authorization": f"bearer {API_KEY}",
+    "X-Odoo-Database": "mycompany",
+}
+
+# Search for matching partner IDs
+res_search = requests.post(
+    f"{BASE_URL}/res.partner/search",
+    headers=headers,
+    json={
+        "context": {"lang": "en_US"},
+        "domain": [
+            ("name", "ilike", "%deco%"),
+            ("is_company", "=", True),
+        ],
+    },
+)
+res_search.raise_for_status()
+ids = res_search.json()
+
+# Read the names of those partners
+res_read = requests.post(
+    f"{BASE_URL}/res.partner/read",
+    headers=headers,
+    json={
+        "ids": ids,
+        "context": {"lang": "en_US"},
+        "fields": ["name"],
+    },
+)
+res_read.raise_for_status()
+print(res_read.json())
+```
+
+```javascript JavaScript
+const BASE_URL = "https://mycompany.example.com/json/2";
+const API_KEY = "";  // from secure storage
+const DATABASE = "mycompany";
+
+const headers = {
+  "Content-Type": "application/json",
+  "Authorization": "bearer " + API_KEY,
+  "X-Odoo-Database": DATABASE,
+};
+
+// Use search_read to do both in a single atomic call
+const res = await fetch(BASE_URL + "/res.partner/search_read", {
+  method: "POST",
+  headers,
+  body: JSON.stringify({
+    context: { lang: "en_US" },
+    domain: [
+      ["name", "ilike", "%deco%"],
+      ["is_company", "=", true],
+    ],
+    fields: ["name"],
+  }),
+});
+if (!res.ok) throw new Error(await res.text());
+const records = await res.json();
+console.log(records);
+```
+
+```bash bash
+set -eu
+
+DATABASE=mycompany
+BASE_URL="https://${DATABASE}.odoo.com/json/2"
+API_KEY=""
+
+# Atomic search_read
+curl "$BASE_URL/res.partner/search_read" \
+  -X POST \
+  --oauth2-bearer "$API_KEY" \
+  -H "X-Odoo-Database: $DATABASE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "context": {"lang": "en_US"},
+    "domain": [["name", "ilike", "%deco%"], ["is_company", "=", true]],
+    "fields": ["name"]
+  }' \
+  --silent --fail-with-body
+```
+</CodeGroup>
+
+---
+
+## Common ORM Methods
+
+| Method | `@api.model` | Description |
+|--------|:------------:|-------------|
+| `search` | ✅ | Returns IDs matching a domain filter |
+| `search_read` | ✅ | Search + read in one atomic call |
+| `read` | ❌ (needs `ids`) | Read specific fields of given record IDs |
+| `create` | ✅ | Create one or more records |
+| `write` | ❌ (needs `ids`) | Update fields on given record IDs |
+| `unlink` | ❌ (needs `ids`) | Delete records with given IDs |
+| `fields_get` | ✅ | Return field metadata for the model |
+
+### create
+
+```python
+new_id = requests.post(
+    f"{BASE_URL}/res.partner/create",
+    headers=headers,
+    json={
+        "values": {"name": "New Company", "is_company": True},
+    },
+).json()
+```
+
+### write
+
+```python
+requests.post(
+    f"{BASE_URL}/res.partner/write",
+    headers=headers,
+    json={
+        "ids": [new_id],
+        "values": {"name": "Updated Company Name"},
+    },
+)
+```
+
+### unlink
+
+```python
+requests.post(
+    f"{BASE_URL}/res.partner/unlink",
+    headers=headers,
+    json={"ids": [new_id]},
+)
+```
+
+---
+
+## Migrating from XML-RPC / JSON-RPC
+
+The legacy RPC APIs at `/xmlrpc`, `/xmlrpc/2`, and `/jsonrpc` are scheduled for removal in Odoo 22 (fall 2028). The JSON-2 API replaces the `object` service with a cleaner design:
+
+| Legacy (XML-RPC) | JSON-2 |
+|------------------|--------|
+| `uid` + `password` in every call | Bearer API key in `Authorization` header |
+| `model`, `method` as arguments | `model`, `method` in the URL path |
+| Positional args in `execute()` | Named args in the JSON body |
+| `context` only via `execute_kw` | `context` always available in the body |

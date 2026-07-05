@@ -1,0 +1,162 @@
+---
+title: "Manage Employees, Contracts & Time Off in Odoo HR"
+sidebarTitle: "Employees"
+description: "Centralize employee records, manage job positions and contracts, track time off and attendance, and visualize your organization chart—all within Odoo HR."
+---
+
+Odoo **Employees** centralizes personnel files, employment contracts, and departmental hierarchies in one system. Each employee record tracks certifications, training history, earned badges, and all assigned equipment. Customizable onboarding and offboarding programs ensure new hires are fully prepared from day one and that every required step is completed when an employee departs. Because the **Employees** app connects directly to **Payroll**, **Attendance**, **Time Off**, and **Recruitment**, data flows automatically across the entire HR suite without duplication.
+
+---
+
+## Employee Records
+
+Every person in your organization has a single employee record that serves as the central reference for all HR activity.
+
+### Creating a New Employee
+
+<Steps>
+  <Step title="Open the employee form">
+    Go to **Employees → New**. Enter the employee's name, work email, work phone, and upload a photo. These fields populate the employee's directory card and appear on internal documents.
+  </Step>
+  <Step title="Assign work information">
+    In the **Work** tab, select the employee's department, job position, and reporting manager. Set their work address and default work location (office, remote, or other). The job position field links to configured positions in the **Recruitment** app.
+  </Step>
+  <Step title="Enter private and resume details">
+    In the **Private Information** tab, record contact details, identification numbers, and marital status for payroll and legal compliance. In the **Resume** tab, add work history, education, and skills—Odoo displays a skills evolution chart over time as new skills are added.
+  </Step>
+  <Step title="Configure HR settings">
+    In the **Settings** tab, set the employee's related user account (for portal and app access), pin code for kiosk check-in, and expense and timesheet managers. Select the applicable time zone if the employee works in a different region.
+  </Step>
+</Steps>
+
+<Tip>
+  The employee form saves automatically as you type. Smart buttons at the top of the form provide quick access to the employee's documents, time off balance, payslips, contracts, appraisals, and attendance records.
+</Tip>
+
+---
+
+## Job Positions and Departments
+
+<CardGroup cols={2}>
+  <Card title="Job Positions" icon="briefcase">
+    Define job positions under **Employees → Configuration → Job Positions**. Each position tracks how many employees currently hold it vs. the target headcount. Job positions feed directly into the Recruitment pipeline when new hires are needed.
+  </Card>
+  <Card title="Departments" icon="building-2">
+    Create departments and assign a department manager. Departments control access to certain time off approvals and appear in the organizational chart. Nest departments hierarchically to mirror your company structure.
+  </Card>
+  <Card title="Organization Chart" icon="network">
+    The org chart view (accessible from any employee record via the **Org Chart** button) visualizes the full reporting hierarchy. Clicking any node navigates to that employee's record.
+  </Card>
+  <Card title="Badges" icon="award">
+    Grant badges to recognize employee achievements, performance milestones, or participation in training. Badges appear on the employee's profile and can be shared publicly within the company.
+  </Card>
+</CardGroup>
+
+---
+
+## Onboarding and Offboarding
+
+Structured onboarding and offboarding programs reduce administrative errors and ensure a consistent experience for every employee.
+
+<Tabs>
+  <Tab title="Onboarding">
+    Create onboarding plans in **Employees → Configuration → Onboarding**. Each plan contains an ordered list of activities—sign the contract, complete compliance training, set up equipment, meet the team—assigned to specific responsible parties.
+
+    When a new employee is created, attach the relevant onboarding plan. Each activity generates a task or document request automatically. Managers can track completion status from the employee's record.
+  </Tab>
+  <Tab title="Offboarding">
+    Offboarding plans work the same way in reverse. Activities might include revoking system access, returning equipment, conducting an exit interview, and issuing the final payslip.
+
+    Attach an offboarding plan when an employee's departure date is set. All activities are assigned and tracked centrally so nothing is missed during the transition.
+  </Tab>
+</Tabs>
+
+---
+
+## Contracts
+
+Every employee must have at least one active contract in order to appear in payroll calculations.
+
+<Steps>
+  <Step title="Load a contract template">
+    From the employee's **Payroll** tab, click **Load a Template** to apply a pre-configured contract template. Templates pre-fill salary structure type, working schedule, and wage—reducing setup time for common employment categories.
+  </Step>
+  <Step title="Set the contract period">
+    Enter the contract start date. If the contract has a fixed end date, enter it too. Odoo sends an expiration notice to the HR manager a configurable number of days before the contract expires.
+  </Step>
+  <Step title="Define compensation">
+    Set the employee's wage, select the salary structure type (e.g., Employee for salaried, Worker for hourly), and configure any applicable advantages—meal vouchers, company car, commission plans.
+  </Step>
+  <Step title="Sign the contract">
+    Use Odoo **Sign** to send the contract as a PDF for electronic signature. Once signed by both parties, the contract status moves to **Running** and the employee becomes eligible for payroll processing.
+  </Step>
+</Steps>
+
+<Warning>
+  Only one contract can be in the **Running** state per employee at a time. If a contract is amended (e.g., a salary increase), archive the old contract and create a new one with the updated terms effective from the change date.
+</Warning>
+
+---
+
+## Time Off
+
+The **Time Off** app provides a centralized hub for all absence management—requests, allocations, balances, approvals, and reporting.
+
+<CardGroup cols={2}>
+  <Card title="Time Off Types" icon="calendar-x">
+    Configure leave types (Paid Time Off, Sick Leave, Unpaid Leave, etc.) with approval workflows, accrual rules, and carryover limits. Each type can require one or two levels of approval.
+  </Card>
+  <Card title="Allocations" icon="gift">
+    Managers or HR officers allocate leave days to individuals, teams, or the entire company. Accrual plans automatically add days to an employee's balance based on tenure or hours worked.
+  </Card>
+  <Card title="Requests & Approvals" icon="check-circle">
+    Employees submit time off requests from the **My Time Off** menu or from the Employee app. Approvers are notified immediately and can approve or refuse requests with an optional reason.
+  </Card>
+  <Card title="Public Holidays" icon="flag">
+    Define company-wide or department-specific public holidays. Employees cannot submit leave requests on mandatory workdays, and public holidays are excluded from leave balance consumption automatically.
+  </Card>
+</CardGroup>
+
+<Note>
+  Use **Mandatory Days** to designate dates when all employees (or specific departments) must be present. Time off requests for mandatory days are automatically blocked.
+</Note>
+
+---
+
+## Attendance Tracking
+
+Odoo **Attendances** functions as a time clock that integrates directly with payroll.
+
+<CardGroup cols={2}>
+  <Card title="Check-In Methods" icon="log-in">
+    Employees can check in and out directly from any Odoo page using the attendance icon in the top-right corner, from a dedicated kiosk in the office, or through an RFID badge reader.
+  </Card>
+  <Card title="Kiosk Mode" icon="monitor">
+    Deploy a tablet in kiosk mode at building entrances. Employees identify themselves with a PIN, barcode, or badge scan. Kiosks can display a live employee photo for visual verification.
+  </Card>
+  <Card title="Overtime Tracking" icon="timer">
+    Odoo compares check-in/out times against each employee's working schedule to calculate overtime hours automatically. Managers can review and approve overtime from the Attendance report.
+  </Card>
+  <Card title="Attendance Reporting" icon="chart-bar">
+    The attendance report shows worked hours vs. expected hours per employee and per period. Export reports to Excel for payroll reconciliation or compliance audits.
+  </Card>
+</CardGroup>
+
+---
+
+## Employee Certifications and Learning
+
+<CardGroup cols={2}>
+  <Card title="Certifications" icon="graduation-cap">
+    Record professional certifications and licenses on the employee's profile. Set expiry dates so HR is alerted when a certification is approaching its renewal deadline.
+  </Card>
+  <Card title="Learning & Training" icon="book-open">
+    Create virtual and in-person training activities in **Employees → Learning**. Assign training to individuals or groups and track completion status per employee.
+  </Card>
+  <Card title="Skills Evolution" icon="trending-up">
+    As employees gain new skills or improve existing ones, update their skill levels. Odoo charts skill progression over time, making it straightforward to identify high-potential employees and skill gaps.
+  </Card>
+  <Card title="Retention Report" icon="users">
+    The **Employee Retention Report** shows headcount changes over time, categorizing departures by reason. Use this data to identify patterns and improve retention strategies.
+  </Card>
+</CardGroup>

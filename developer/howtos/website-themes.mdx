@@ -1,0 +1,394 @@
+---
+title: 'Build and Customize Odoo Website Themes'
+sidebarTitle: 'Website Themes'
+description: 'Create an Odoo website theme module: inherit from the default theme, override SCSS variables, define color palettes, custom fonts, and build snippet blocks.'
+---
+
+An Odoo website theme is a standard Odoo module that extends the default website theme. Rather than modifying core files, themes override SCSS variables, add custom layouts, and define reusable snippet blocks — all while preserving the Website Builder's editing capabilities. This guide walks through setting up a theme module from scratch.
+
+<Note>
+All examples use a fictional theme named **Airproof** (`website_airproof`). Replace it with your own theme name throughout.
+</Note>
+
+## Module Setup
+
+### Naming Convention
+
+Theme modules must be prefixed with `website_` and use only lowercase ASCII alphanumeric characters and underscores:
+
+```
+website_airproof/
+```
+
+### File Structure
+
+```
+website_airproof/
+├── data/               # XML presets, menus, pages, shapes (*.xml)
+├── i18n/               # Translations (*.po, *.pot)
+├── static/
+│   ├── description/    # App store screenshots
+│   ├── fonts/          # Custom web fonts
+│   ├── lib/            # External JS libraries
+│   ├── image_shapes/   # Shapes for images
+│   ├── shapes/         # Background shapes
+│   └── src/
+│       ├── img/
+│       │   ├── content/      # Page content images
+│       │   └── wbuilder/     # Website Builder UI images
+│       ├── js/               # Custom JavaScript
+│       ├── scss/             # Theme styles
+│       ├── snippets/         # Custom snippet blocks
+│       └── website_builder/  # Website Builder option overrides
+├── views/              # Custom views and templates (*.xml)
+├── __init__.py
+└── __manifest__.py
+```
+
+### Manifest
+
+```python
+# /website_airproof/__manifest__.py
+{
+    "name": "Airproof Theme",
+    "description": "Custom website theme for Airproof.",
+    "category": "Website/Theme",
+    "version": "17.1.0.0",
+    "author": "Your Company",
+    "license": "LGPL-3",
+    "depends": ["website"],
+    "data": [
+        # XML data files loaded in order
+    ],
+    "assets": {
+        # SCSS and JS asset registrations
+    },
+}
+```
+
+<Warning>
+Automated file inclusion using wildcard notation (e.g. `/myfolder/*.scss`) does not work on Odoo SaaS databases. Always list files individually in the manifest when targeting SaaS.
+</Warning>
+
+---
+
+## SCSS Variables
+
+Odoo's Website Builder exposes hundreds of customization variables. Override them by creating a `primary_variables.scss` file registered in the `web._assets_primary_variables` bundle.
+
+```python
+# __manifest__.py
+"assets": {
+    "web._assets_primary_variables": [
+        "website_airproof/static/src/scss/primary_variables.scss",
+    ],
+},
+```
+
+<Warning>
+`primary_variables.scss` must contain **only** SCSS variable and mixin definitions — no selectors or rules. Place actual CSS rules in a separate stylesheet.
+</Warning>
+
+### Color Palette
+
+The Website Builder uses five named semantic colors. Define them in your palette:
+
+| Variable | Role |
+|----------|------|
+| `o-color-1` | Primary |
+| `o-color-2` | Secondary |
+| `o-color-3` | Extra (Light) |
+| `o-color-4` | Whitish |
+| `o-color-5` | Blackish |
+
+```scss
+// /website_airproof/static/src/scss/primary_variables.scss
+$o-website-values-palettes: (
+  (
+    // Colors
+    "o-color-1": #3AADAA,
+    "o-color-2": #7C6576,
+    "o-color-3": #F6F6F6,
+    "o-color-4": #FFFFFF,
+    "o-color-5": #383E45,
+
+    // Typography
+    "font": "Poppins",
+    "headings-font": "Poppins",
+    "navbar-font": "Poppins",
+    "buttons-font": "Poppins",
+  ),
+);
+```
+
+### Google Fonts
+
+```scss
+$o-theme-font-configs: (
+  "Poppins": (
+    "family": ("Poppins", sans-serif),
+    "url": "Poppins:400,500",
+    "properties": (
+      "base": (
+        "font-size-base": 1rem,
+      ),
+    ),
+  ),
+);
+```
+
+### Custom Fonts
+
+Register the font file in `web.assets_frontend`, then declare it in `primary_variables.scss`:
+
+```python
+"assets": {
+    "web.assets_frontend": [
+        "website_airproof/static/src/scss/fonts.scss",
+    ],
+},
+```
+
+```scss
+// fonts.scss
+@font-face {
+  font-family: "My Custom Font";
+  font-weight: 400;
+  font-style: normal;
+  src: url("/fonts/my-custom-font.woff2") format("woff2"),
+       url("/fonts/my-custom-font.woff") format("woff");
+}
+```
+
+```scss
+// primary_variables.scss
+$o-theme-font-configs: (
+  "My Custom Font": (
+    "family": ("My Custom Font", Helvetica, sans-serif),
+    "properties": (
+      "base": (
+        "font-size-base": 1rem,
+      ),
+    ),
+  ),
+);
+```
+
+---
+
+## Custom Layouts and Views
+
+Override standard website templates using `inherit_id`:
+
+```xml
+<!-- views/layout.xml -->
+<odoo>
+  <template id="custom_header" inherit_id="website.layout" name="Custom Header">
+    <xpath expr="//header" position="replace">
+      <header class="airproof-header">
+        <!-- custom header content -->
+      </header>
+    </xpath>
+  </template>
+</odoo>
+```
+
+Register the view file in `__manifest__.py`:
+
+```python
+"data": [
+    "views/layout.xml",
+],
+```
+
+---
+
+## Building Blocks (Snippets)
+
+Snippets are the drag-and-drop blocks users place on pages. Structure blocks use `<section>`, inner content blocks use other HTML elements.
+
+### Snippet Structure
+
+```
+views/snippets/
+├── snippets.xml          # Snippet registration
+└── s_airproof_banner.xml # Individual snippet template
+
+static/src/snippets/
+└── s_airproof_banner/
+    ├── 000.scss          # Snippet styles
+    └── 000.xml           # Client-side template (if needed)
+```
+
+### Snippet Template
+
+```xml
+<!-- views/snippets/s_airproof_banner.xml -->
+<odoo>
+  <template id="s_airproof_banner" name="Airproof Banner">
+    <section class="s_airproof_banner pt80 pb80"
+             data-name="Airproof Banner"
+             data-snippet="s_airproof_banner">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-6">
+            <h1>Your Headline Here</h1>
+            <p>Supporting text goes here.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </template>
+</odoo>
+```
+
+Key `section` attributes:
+
+| Attribute | Description |
+|-----------|-------------|
+| `class` | Unique CSS class for this snippet (must match `data-snippet`) |
+| `data-name` | Label shown in the Website Builder right panel |
+| `data-snippet` | Used by the system to identify the snippet type |
+
+### Register the Snippet
+
+Add it to the snippet panel in `views/snippets/snippets.xml`:
+
+```xml
+<odoo>
+  <template id="snippets" inherit_id="website.snippets" name="Airproof Snippets">
+    <xpath expr="//div[@id='snippet_structure']" position="before">
+      <div id="snippet_airproof" class="o_panel">
+        <div class="o_panel_header">Airproof</div>
+        <div class="o_panel_body">
+          <t t-snippet="website_airproof.s_airproof_banner"
+             t-thumbnail="/website_airproof/static/src/img/wbuilder/s_airproof_banner.svg"/>
+        </div>
+      </div>
+    </xpath>
+  </template>
+</odoo>
+```
+
+### Layout CSS Helpers
+
+The Website Builder recognizes specific CSS classes to enable editing features:
+
+<Accordion title="Sizing and Columns">
+```xml
+<!-- Enable column resizing for Bootstrap lg columns -->
+<div class="row">
+  <div class="col-lg-6">...</div>  <!-- resizable -->
+</div>
+
+<!-- Allow column count selector -->
+<div class="container s_allow_columns">
+
+<!-- Lock column count -->
+<div class="row s_nb_column_fixed">
+
+<!-- Disable resize on all children -->
+<div class="row s_col_no_resize">
+
+<!-- Padding utilities (multiples of 8, up to 256) -->
+<section class="pt80 pb80">
+```
+</Accordion>
+
+<Accordion title="Background Colors">
+```xml
+<!-- Apply color palette class -->
+<section class="o_cc o_cc1">  <!-- o_cc1 through o_cc5 -->
+
+<!-- Disable background color for a row -->
+<div class="row s_col_no_bgcolor">
+
+<!-- Color filter overlays -->
+<section>
+  <div class="o_we_bg_filter bg-black-50"/>  <!-- 50% black overlay -->
+  <div class="container">...</div>
+</section>
+
+<!-- Custom gradient filter -->
+<section>
+  <div class="o_we_bg_filter"
+       style="background-image: linear-gradient(135deg,
+              rgba(255,204,51,0.5) 0%, rgba(226,51,255,0.5) 100%) !important;"/>
+  <div class="container">...</div>
+</section>
+```
+</Accordion>
+
+<Accordion title="Non-Editable Areas">
+```xml
+<!-- Make element non-editable in the builder -->
+<div class="o_not_editable">
+
+<!-- Prevent removal by the user -->
+<div class="oe_unremovable">
+```
+</Accordion>
+
+<Accordion title="Background Images">
+```xml
+<!-- Centered background image -->
+<div class="oe_img_bg o_bg_img_center"
+     style="background-image: url('/path/to/image.jpg')">
+
+<!-- Parallax effect -->
+<section class="parallax s_parallax_is_fixed s_parallax_no_overflow_hidden"
+         data-scroll-background-ratio="1">
+  <span class="s_parallax_bg oe_img_bg o_bg_img_center"
+        style="background-image: url('/path/to/image.jpg');
+               background-position: 50% 75%;"/>
+  <div class="container">...</div>
+</section>
+```
+</Accordion>
+
+---
+
+## Adding Custom SCSS
+
+Add custom styles by registering a stylesheet in `web.assets_frontend`:
+
+```python
+"assets": {
+    "web.assets_frontend": [
+        "website_airproof/static/src/scss/theme.scss",
+    ],
+},
+```
+
+```scss
+// theme.scss — custom CSS rules (not variables)
+.airproof-header {
+  background-color: var(--o-color-1);
+  padding: 1rem 2rem;
+}
+
+.s_airproof_banner {
+  background-color: var(--o-color-3);
+
+  h1 {
+    color: var(--o-color-1);
+    font-size: 3rem;
+  }
+}
+```
+
+---
+
+## Tips and Best Practices
+
+<Tip>
+Always build on top of Odoo's default options before writing custom CSS. If a Website Builder option already provides the behavior you need (e.g., footer border), enable it rather than rewriting it — this preserves user editing capabilities.
+</Tip>
+
+<Tip>
+Use four spaces for indentation in all SCSS and XML files. Never mix tabs and spaces.
+</Tip>
+
+<Tip>
+Pre-build static pages using the Website Builder drag-and-drop interface, then copy the generated HTML into your template files. This ensures your markup is compatible with all Website Builder features.
+</Tip>

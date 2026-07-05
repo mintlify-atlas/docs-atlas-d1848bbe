@@ -1,0 +1,334 @@
+---
+title: 'Odoo XML-RPC & Legacy JSON-RPC API Reference'
+sidebarTitle: 'RPC API'
+description: 'Reference for the legacy XML-RPC API: /xmlrpc/2/common for authentication, /xmlrpc/2/object for execute_kw, with Python, PHP, Ruby, and Java examples.'
+---
+
+The Odoo XML-RPC API provides programmatic access to most ORM model methods over HTTP using the XML-RPC protocol. It exposes two main endpoints: `/xmlrpc/2/common` for unauthenticated operations (version check, login), and `/xmlrpc/2/object` for authenticated model method calls.
+
+<Warning>
+**Deprecated since Odoo 19.0.** The XML-RPC and JSON-RPC APIs at `/xmlrpc`, `/xmlrpc/2`, and `/jsonrpc` are scheduled for removal in **Odoo 22** (fall 2028) and **Online 21.1** (winter 2027). Migrate new integrations to the [External JSON-2 API](/developer/reference/external-api).
+
+Note: internal `@route(type='jsonrpc')` controllers are **not** deprecated.
+</Warning>
+
+## Configuration
+
+For Odoo Online instances (`<domain>.odoo.com`), users need a local password set before XML-RPC access is possible: go to **Settings → Users & Companies → Users**, select the user, click **Action → Change Password**.
+
+<CodeGroup>
+```python Python
+url = "<insert server URL>"
+db = "<insert database name>"
+username = "admin"
+password = "<insert password>"
+```
+
+```ruby Ruby
+url = "<insert server URL>"
+db = "<insert database name>"
+username = "admin"
+password = "<insert password>"
+```
+
+```php PHP
+$url = "<insert server URL>";
+$db = "<insert database name>";
+$username = "admin";
+$password = "<insert password>";
+```
+
+```java Java
+final String url = "<insert server URL>",
+              db = "<insert database name>",
+        username = "admin",
+        password = "<insert password>";
+```
+</CodeGroup>
+
+### Using API Keys
+
+From Odoo 14, API keys can replace the password in all XML-RPC calls. Generate one via **Preferences → Account Security → New API Key**, then substitute it wherever the password argument appears.
+
+### Test Database
+
+For exploration, request a temporary test database from [demo.odoo.com](https://demo.odoo.com):
+
+```python
+import xmlrpc.client
+info = xmlrpc.client.ServerProxy("https://demo.odoo.com/start").start()
+url, db, username, password = info["host"], info["database"], info["user"], info["password"]
+```
+
+---
+
+## Authentication
+
+### Check Server Version (No Auth Required)
+
+```python
+import xmlrpc.client
+common = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/common")
+common.version()
+```
+
+Result:
+```json
+{
+    "server_version": "13.0",
+    "server_version_info": [13, 0, 0, "final", 0],
+    "server_serie": "13.0",
+    "protocol_version": 1
+}
+```
+
+### Authenticate
+
+Call `authenticate` to get the user's integer ID (`uid`), required for all object service calls:
+
+<CodeGroup>
+```python Python
+uid = common.authenticate(db, username, password, {})
+```
+
+```ruby Ruby
+uid = common.call("authenticate", db, username, password, {})
+```
+
+```php PHP
+$uid = $common->authenticate($db, $username, $password, array());
+```
+
+```java Java
+final XmlRpcClientConfigImpl common_config = new XmlRpcClientConfigImpl();
+common_config.setServerURL(new URL(String.format("%s/xmlrpc/2/common", url)));
+Integer uid = (Integer) client.execute(common_config, "authenticate",
+    asList(db, username, password, emptyMap()));
+```
+</CodeGroup>
+
+---
+
+## Calling Model Methods
+
+All model access goes through `execute_kw` on `/xmlrpc/2/object`:
+
+```
+execute_kw(db, uid, password, model, method, args, kwargs={})
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `db` | Database name |
+| `uid` | User ID from `authenticate` |
+| `password` | User password or API key |
+| `model` | Model technical name, e.g. `res.partner` |
+| `method` | Method name, e.g. `search`, `read`, `create` |
+| `args` | List of positional arguments |
+| `kwargs` | Dict of keyword arguments (optional) |
+
+---
+
+## CRUD Operations
+
+### Search Records
+
+```python
+models = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/object")
+
+# Returns list of matching record IDs
+ids = models.execute_kw(db, uid, password,
+    "res.partner", "search",
+    [[["is_company", "=", True]]],
+    {"limit": 10}
+)
+```
+
+```php
+$models = ripcord::client("$url/xmlrpc/2/object");
+$ids = $models->execute_kw($db, $uid, $password,
+    "res.partner", "search",
+    array(array(array("is_company", "=", true))),
+    array("limit" => 10)
+);
+```
+
+### Read Records
+
+```python
+records = models.execute_kw(db, uid, password,
+    "res.partner", "read",
+    [ids],
+    {"fields": ["name", "country_id", "comment"]}
+)
+```
+
+### search_read (Combined)
+
+```python
+records = models.execute_kw(db, uid, password,
+    "res.partner", "search_read",
+    [[["is_company", "=", True]]],
+    {"fields": ["name", "country_id"], "limit": 5}
+)
+```
+
+### Create Records
+
+```python
+new_id = models.execute_kw(db, uid, password,
+    "res.partner", "create",
+    [{"name": "New Company", "is_company": True}]
+)
+```
+
+<CodeGroup>
+```ruby Ruby
+new_id = models.execute_kw(db, uid, password,
+    "res.partner", "create",
+    [{ name: "New Company", is_company: true }]
+)
+```
+
+```php PHP
+$new_id = $models->execute_kw($db, $uid, $password,
+    "res.partner", "create",
+    array(array("name" => "New Company", "is_company" => true))
+);
+```
+
+```java Java
+final Integer new_id = (Integer) models.execute("execute_kw", asList(
+    db, uid, password,
+    "res.partner", "create",
+    asList(new HashMap<String, Object>() {{
+        put("name", "New Company");
+        put("is_company", true);
+    }})
+));
+```
+</CodeGroup>
+
+### Write (Update) Records
+
+```python
+models.execute_kw(db, uid, password,
+    "res.partner", "write",
+    [[new_id], {"name": "Updated Name"}]
+)
+```
+
+### Delete Records
+
+```python
+models.execute_kw(db, uid, password,
+    "res.partner", "unlink",
+    [[new_id]]
+)
+
+# Verify deletion
+remaining = models.execute_kw(db, uid, password,
+    "res.partner", "search",
+    [[["id", "=", new_id]]]
+)
+# → []
+```
+
+---
+
+## Inspection and Introspection
+
+### `ir.model` — Querying Models
+
+```python
+# List all models with "partner" in their name
+models.execute_kw(db, uid, password,
+    "ir.model", "search_read",
+    [[["name", "ilike", "partner"]]],
+    {"fields": ["name", "model"]}
+)
+```
+
+Create a dynamic custom model (name must start with `x_`):
+
+```python
+model_id = models.execute_kw(db, uid, password,
+    "ir.model", "create",
+    [{"name": "Custom Model", "model": "x_custom_model", "state": "manual"}]
+)
+```
+
+<Warning>
+Custom model names **must** start with `x_`. The `state` field must be set to `"manual"`. It is not possible to add new Python methods via the RPC API — only fields.
+</Warning>
+
+### `ir.model.fields` — Adding Custom Fields
+
+```python
+field_id = models.execute_kw(db, uid, password,
+    "ir.model.fields", "create",
+    [{
+        "model_id": model_id,
+        "name": "x_name",
+        "ttype": "char",
+        "state": "manual",
+        "required": True,
+    }]
+)
+
+# Use the new custom model and field
+record_id = models.execute_kw(db, uid, password,
+    "x_custom", "create",
+    [{"x_name": "test record"}]
+)
+result = models.execute_kw(db, uid, password,
+    "x_custom", "read",
+    [[record_id]]
+)
+```
+
+### `fields_get` — Field Metadata
+
+```python
+fields = models.execute_kw(db, uid, password,
+    "res.partner", "fields_get",
+    [],
+    {"attributes": ["string", "help", "type"]}
+)
+```
+
+---
+
+## Migration Guide to JSON-2
+
+When migrating from XML-RPC to the JSON-2 API:
+
+<Steps>
+  <Step title="Generate an API key">
+    Create a bearer API key via **Preferences → Account Security → New API Key**. The key replaces the `uid`+`password` pair.
+  </Step>
+  <Step title="Update the URL">
+    Change `https://host/xmlrpc/2/object` to `https://host/json/2/<model>/<method>`.
+  </Step>
+  <Step title="Move args to the JSON body">
+    XML-RPC positional `args` become named JSON keys in the request body. `context` is always available.
+  </Step>
+  <Step title="Remove db/uid/password from calls">
+    The database is identified by `X-Odoo-Database` header (when needed). Authentication is via `Authorization: bearer <key>`. No more per-call credentials.
+  </Step>
+</Steps>
+
+**Before (XML-RPC):**
+```python
+models.execute_kw(db, uid, password, "res.partner", "read",
+    [[1, 2, 3]], {"fields": ["name"], "context": {"lang": "en_US"}})
+```
+
+**After (JSON-2):**
+```python
+requests.post(
+    f"https://{host}/json/2/res.partner/read",
+    headers={"Authorization": f"bearer {api_key}"},
+    json={"ids": [1, 2, 3], "fields": ["name"], "context": {"lang": "en_US"}},
+)
+```

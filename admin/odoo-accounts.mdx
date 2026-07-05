@@ -1,0 +1,107 @@
+---
+title: "Manage Your Odoo Account and Subscriptions"
+sidebarTitle: "Odoo Accounts"
+description: "Learn how to manage your Odoo.com account: update credentials, enable 2FA, manage email addresses, and control database access and subscriptions."
+---
+
+Your [Odoo.com account](https://www.odoo.com) is your central identity for accessing the Odoo platform. It links you to every database you create or are invited to join, controls authentication settings, and provides access to subscription and billing management. Understanding how your Odoo.com account interacts with your databases helps you avoid common issues with passwords, email addresses, and user access.
+
+## Connection & Security
+
+Open the [Connection & Security page](https://www.odoo.com/my/security) on your Odoo.com portal to manage all authentication settings.
+
+<AccordionGroup>
+  <Accordion title="Change Your Password">
+    Update your Odoo.com account password directly from the Security page.
+
+    <Note>
+      When you create a database, a user linked to your Odoo.com account is generated inside that database. **Changing your Odoo.com password also changes the password used to sign in to that database user.**
+
+      You can set a database-specific password for that user by going to the database's Settings. However, your Odoo.com account password will still work as an alternative.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Enable Two-Factor Authentication (2FA)">
+    Enable 2FA using an authenticator app (e.g., Google Authenticator, Authy) from the Security page. The process is similar to enabling 2FA for a standard database user.
+  </Accordion>
+
+  <Accordion title="Log Out from All Devices">
+    Click **Log out from all devices** to invalidate all active sessions linked to your Odoo.com account, except for your current session.
+
+    <Tip>
+      To log out of the current session, click the user icon in the top-right corner and select **Logout**.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Enable Developer Mode & API Keys">
+    Enable [developer mode](https://www.odoo.com/documentation/developer/reference/cli.html) from the Security page to unlock the ability to create a [developer API key](https://www.odoo.com/documentation/developer/reference/external_api.html) for programmatic access.
+  </Accordion>
+
+  <Accordion title="Delete Your Account">
+    Delete your Odoo.com account from the Security page.
+
+    <Warning>
+      Deleting your Odoo.com account is **irreversible**. Once deleted, your account and all associated data **cannot be retrieved**.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+## Account Information
+
+Open the [Account Information page](https://www.odoo.com/my/account) to edit your personal details, including your **email address**.
+
+<Note>
+  - Changing your Odoo.com account **email address** does **not** change the email address used to sign in to your databases. Each database stores its own user email independently.
+  - To update your sign-in email for a specific database, click your avatar in the top-right corner of that database and select **My Preferences**. You will still need to sign in using the email address used at the time the database was created.
+  - To change the sign-in email for a database, [contact Odoo Support](https://www.odoo.com/help).
+</Note>
+
+## Managing Databases
+
+All databases linked to your Odoo.com account are visible in the [database manager](https://www.odoo.com/my/databases). This includes:
+
+- Databases you created directly
+- Databases you were [invited to join](https://www.odoo.com/documentation/applications/general/users.html) using your Odoo.com account email address
+
+From the database manager you can:
+
+<CardGroup cols={2}>
+  <Card title="Upgrade" icon="arrow-up">
+    Launch a version upgrade for a database when a new version is available.
+  </Card>
+  <Card title="Duplicate" icon="copy">
+    Create a copy of a database for testing purposes (expires after 15 days, maximum 5 per database).
+  </Card>
+  <Card title="Rename" icon="pen">
+    Change the database name and its URL.
+  </Card>
+  <Card title="Download Backup" icon="cloud-arrow-down">
+    Download a ZIP backup of the database (daily backups are maintained per the [Odoo Cloud Hosting SLA](https://www.odoo.com/cloud-sla)).
+  </Card>
+  <Card title="Switch Plans" icon="shuffle">
+    Change your subscription tier from the database management view.
+  </Card>
+  <Card title="Transfer Ownership" icon="arrows-rotate">
+    Submit a support request to transfer ownership of a database to another user.
+  </Card>
+  <Card title="Delete" icon="trash">
+    Permanently delete a database and close its subscription. This action is irreversible.
+  </Card>
+  <Card title="View Activity Logs" icon="list">
+    Review a history of administrative actions taken by Odoo employees or the database administrator.
+  </Card>
+</CardGroup>
+
+## Subscriptions
+
+Your Odoo Enterprise subscription is managed through your Odoo.com account. Each subscription covers one active production database. Key points:
+
+- **One database per subscription**: only one database can be actively linked to a subscription code at a time. Test or development databases must be duplicated separately.
+- **User count**: if your database has more users than your subscription allows, you have 30 days to either add users to your subscription or deactivate users before the database expires.
+- **Renewal**: subscriptions can be renewed via the database error banner or through [Odoo Support](https://www.odoo.com/help). Credit card payments are processed immediately; wire transfers may take a few days.
+
+To view and manage your active subscriptions, visit [accounts.odoo.com/my/subscription](https://accounts.odoo.com/my/subscription).
+
+<Tip>
+  If you are an Odoo partner, you can use your partnership code to initiate trial projects on Odoo.sh. Trial builds are limited to 1 GB storage and two staging environments. Once a client subscribes, they must use their own subscription code.
+</Tip>

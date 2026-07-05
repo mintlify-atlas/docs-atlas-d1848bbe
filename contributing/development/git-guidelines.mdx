@@ -1,0 +1,262 @@
+---
+title: "Git Commit and Branch Guidelines for Odoo"
+sidebarTitle: "Git Guidelines"
+description: "Odoo's Git workflow: branch naming, the four-part commit message format, all valid commit tags, squash and merge rules, and the PR review process."
+---
+
+A well-written commit message is a permanent record that explains *why* a change was made — it is the first thing a reviewer reads and the primary reference when debugging a regression months later. These guidelines define the exact format Odoo uses for commit messages, branch names, and the overall PR workflow.
+
+## Initial Git configuration
+
+Set your identity consistently across all repositories. Use the same email address registered on GitHub so commits are attributed correctly:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "youremail@example.com"
+```
+
+Add your full name (and optionally your team and avatar) to your GitHub profile — reviewers and collaborators appreciate knowing who they are working with.
+
+## Commit message structure
+
+Every commit message has four parts: **tag**, **module**, **short description**, and an optional **long description**.
+
+```text
+[TAG] module: describe your change in a short sentence (ideally < 50 chars)
+
+Long version of the change description, including the rationale for the change,
+or a summary of the feature being introduced.
+
+Please spend a lot more time describing WHY the change is being done rather
+than WHAT is being changed. This is usually easy to grasp by actually reading
+the diff. WHAT should be explained only if there are technical choices or
+decisions involved. In that case explain WHY this decision was taken.
+
+End the message with references, such as task or bug numbers, PR numbers, and
+OPW tickets, following the suggested format:
+task-123      (related task)
+Fixes #123    (closes a related GitHub issue)
+Closes #123   (closes a related GitHub PR)
+opw-123       (related support ticket)
+```
+
+<Tip>
+  The commit template file at `commit_template.txt` in the repository root pre-fills this structure in your editor. Configure it with:
+
+  ```bash
+  # Linux / macOS
+  git config commit.template `pwd`/commit_template.txt
+
+  # Windows
+  git config commit.template %CD%\commit_template.txt
+  ```
+</Tip>
+
+## Commit tags
+
+The tag is a required prefix that categorises the purpose of every commit:
+
+<CardGroup cols={2}>
+  <Card title="[FIX]" icon="bug">
+    Bug fixes. Used primarily in stable versions, but also valid for fixing a recent bug in the development version.
+  </Card>
+  <Card title="[IMP]" icon="arrow-up">
+    Improvements. The most common tag for incremental changes in the development version.
+  </Card>
+  <Card title="[ADD]" icon="plus">
+    Adding new modules to the codebase.
+  </Card>
+  <Card title="[REF]" icon="arrows-rotate">
+    Refactoring — when a feature is substantially rewritten without changing its external behaviour.
+  </Card>
+  <Card title="[REM]" icon="trash">
+    Removing resources: dead code, views, modules, deprecated assets.
+  </Card>
+  <Card title="[MOV]" icon="arrow-right-arrow-left">
+    Moving files. Use `git mv` and do **not** change file content in the same commit — Git may lose track of file history if you do both at once.
+  </Card>
+  <Card title="[REV]" icon="rotate-left">
+    Reverting a previous commit that caused issues or was not wanted.
+  </Card>
+  <Card title="[REL]" icon="tag">
+    Release commits for new major or minor stable versions.
+  </Card>
+  <Card title="[MERGE]" icon="code-merge">
+    Merge commits — used in forward-porting bug fixes and as the main commit for features involving several separate commits.
+  </Card>
+  <Card title="[PERF]" icon="gauge">
+    Performance patches.
+  </Card>
+  <Card title="[CLN]" icon="broom">
+    Code cleanup — improving readability or structure without behaviour changes.
+  </Card>
+  <Card title="[LINT]" icon="check">
+    Linting passes — whitespace, import order, and formatting only.
+  </Card>
+  <Card title="[I18N]" icon="language">
+    Changes to translation files (`.po`, `.pot`).
+  </Card>
+  <Card title="[CLA]" icon="file-signature">
+    Signing the Odoo Individual Contributor License Agreement.
+  </Card>
+</CardGroup>
+
+## Module name
+
+After the tag, specify the **technical name** of the module being modified (use the technical name, not the user-facing name, because the latter can change over time):
+
+```text
+[FIX] account: remove unused variable in invoice computation
+[IMP] sale: add warning when margin falls below threshold
+[MOV] web: move legacy widgets to deprecated folder
+```
+
+If multiple modules are affected, list the most important ones or use `various`:
+
+```text
+[IMP] various: update fiscal year closing logic
+```
+
+<Note>
+  Avoid modifying code across several modules in the same commit unless necessary. Cross-module commits make it harder to understand each module's history and to revert a change in isolation.
+</Note>
+
+## Writing the commit message header
+
+The header is the single line after `[TAG] module:`. It must be:
+
+- **Self-explanatory** — include the reason for the change, not just what changed.
+- **Under ~50 characters** — this keeps `git log --oneline` readable.
+- **A valid sentence** when prefixed with "if applied, this commit will …".
+
+```text
+✅  [IMP] base: prevent archiving users linked to active partners
+    → "if applied, this commit will prevent archiving users linked to active partners"
+
+❌  [FIX] sale: bugfix
+❌  [IMP] account: improvements
+```
+
+## Writing the full description
+
+The body of the commit message should focus on **why**, not what. The diff already shows what changed.
+
+Good things to include in the description:
+
+- The business or technical problem being solved.
+- The reasoning behind any non-obvious technical decision.
+- A summary of the approach taken, if multiple approaches were considered.
+- References: task numbers, PR numbers, OPW tickets.
+
+```text
+[REF] models: use `parent_path` to implement parent_store
+
+This replaces the former modified preorder tree traversal (MPTT) with the
+fields `parent_left`/`parent_right`. The new implementation is simpler to
+maintain and resolves the locking issues seen under high-concurrency writes.
+
+task-12345
+```
+
+```text
+[FIX] website: remove unused alert div, fixes look of input-group-btn
+
+Bootstrap's CSS depends on the input-group-btn element being the first/last
+child of its parent. This was not the case because of an invisible and
+useless alert div inserted by the legacy template.
+
+Closes #22793
+Fixes #22769
+```
+
+<Warning>
+  "PO team asked me to do it" is **not** a valid reason. Explain the underlying business need. If the task lacks clear purpose and specifications, clarify them before writing code.
+</Warning>
+
+## Real commit message examples
+
+```text
+[REF] models: use `parent_path` to implement parent_store
+
+This replaces the former modified preorder tree traversal (MPTT) with the
+fields `parent_left`/`parent_right`[...]
+```
+
+```text
+[FIX] account: remove frenglish
+
+[...]
+
+Closes #22793
+Fixes #22769
+```
+
+```text
+[FIX] website: remove unused alert div, fixes look of input-group-btn
+
+Bootstrap's CSS depends on the input-group-btn
+element being the first/last child of its parent.
+This was not the case because of the invisible
+and useless alert.
+```
+
+## Branch naming
+
+Branches must be prefixed with the **base version branch** they target:
+
+```bash
+# External contributor
+git switch -c 18.0-explain-pricelists
+
+# Odoo employee (suffix with your handle)
+git switch -c 18.0-explain-pricelists-xyz
+```
+
+<Note>
+  Contributions targeting an unsupported version of Odoo are not accepted. Verify your target branch is actively maintained before starting work.
+</Note>
+
+## Pushing and opening a pull request
+
+External contributors push to their fork (remote alias `dev`):
+
+```bash
+git push -u dev 18.0-explain-pricelists
+```
+
+Odoo employees push directly to the main codebase (remote alias `origin`):
+
+```bash
+git push -u origin 18.0-explain-pricelists-xyz
+```
+
+Then open a pull request at [github.com/odoo/odoo/compare](https://github.com/odoo/odoo/compare) (or the relevant repo), select the correct base branch, and fill out the PR description.
+
+<Steps>
+  <Step title="Set the base branch">
+    Select the correct version branch (e.g. `18.0`) as the base.
+  </Step>
+
+  <Step title="Click 'compare across forks'">
+    External contributors select their forked repository as the head. Odoo employees leave the head as `odoo/odoo`.
+  </Step>
+
+  <Step title="Allow maintainer edits">
+    Tick **Allow edits from maintainer** so the Odoo team can make minor fixes directly on your branch. Skip this step if you work at Odoo.
+  </Step>
+
+  <Step title="Write a clear description">
+    Summarise what the PR changes and why. Link to relevant issues, tasks, or OPW tickets.
+  </Step>
+</Steps>
+
+## PR review process
+
+1. **CI checks** run automatically. Fix any failures before requesting review.
+2. A member of the Odoo team is **automatically assigned** as reviewer once the PR is marked ready.
+3. The reviewer may post comments — **all comments must be addressed** before the PR can be merged. You will receive email notifications for new comments.
+4. Once approved, the reviewer merges the PR.
+
+<Tip>
+  You spend hours or weeks on a meaningful feature. Take the time to write a clear, complete commit message. Most collaborators will judge your work solely on those few sentences — a well-written message shows respect for your reviewers and your future self.
+</Tip>

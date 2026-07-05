@@ -1,0 +1,170 @@
+---
+title: "Odoo Inventory: Warehouses, Stock Moves & Traceability"
+sidebarTitle: "Inventory"
+description: "Control your supply chain in Odoo—configure warehouses, process receipts and deliveries, track lots and serial numbers, and automate stock replenishment."
+---
+
+Odoo **Inventory** is both an inventory application and a warehouse management system. The app lets you manage lead times, automate replenishment, configure advanced multi-step routes, and maintain complete traceability from supplier receipt to customer delivery. Because Inventory shares product and partner data with Sales, Purchase, and Manufacturing, every stock movement is triggered automatically by business events rather than manual entries.
+
+---
+
+## Warehouses and Locations
+
+Warehouses represent physical storage sites with a postal address. Each warehouse can be configured with its own inbound and outbound routes—1-step (direct receipt/delivery), 2-step (with a quality or packing area), or 3-step (with dedicated input/output zones)—to match your physical fulfillment process.
+
+<CardGroup cols={2}>
+  <Card title="Warehouses" icon="warehouse">
+    Create one warehouse per physical site. Configure multi-step routes on each warehouse independently so high-volume sites use pick-pack-ship while smaller sites use direct shipping.
+  </Card>
+  <Card title="Locations" icon="map-pin">
+    Locations are sub-divisions within a warehouse—shelves, bins, quality control zones, packing tables. Organize stock precisely and enable put-away rules to direct incoming goods automatically.
+  </Card>
+  <Card title="Location Types" icon="layers">
+    Seven location types classify every storage area: Internal, Vendor, Customer, Inventory Loss, Virtual, Transit, and Production. Only Internal locations count toward on-hand stock valuation.
+  </Card>
+  <Card title="Inter-Warehouse Transfers" icon="arrow-right-left">
+    Replenish a secondary warehouse from the main warehouse using automatic resupply routes. Odoo creates the pick-and-ship transfer pair without manual intervention.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Use virtual locations such as **Quality Control** or **Packing Zone** to represent intermediate steps in your fulfillment process without those products appearing as available stock to salespeople.
+</Tip>
+
+---
+
+## Receipts and Deliveries
+
+All stock moves in Odoo—receipts from suppliers, deliveries to customers, internal transfers, and returns—are tracked as **transfer** records. Each transfer references an origin document (purchase order, sales order, or manufacturing order) and moves products between two locations.
+
+### Processing a Vendor Receipt
+
+<Steps>
+  <Step title="Confirm the purchase order">
+    When a purchase order is confirmed in the Purchase app, Odoo automatically generates a receipt transfer in Inventory with the expected products and quantities.
+  </Step>
+  <Step title="Validate the receipt">
+    Open the receipt from **Inventory → Operations → Receipts**. Scan barcodes or enter received quantities. If the received quantity differs from the ordered quantity, Odoo creates a backorder for the remainder.
+  </Step>
+  <Step title="Put away stock">
+    If put-away rules are configured, Odoo suggests destination locations based on product category, storage conditions, or capacity. Accept the suggestion or override it manually.
+  </Step>
+  <Step title="Update valuation">
+    For products using Average Cost (AVCO) or Standard Price valuation, Odoo recalculates unit cost immediately upon receipt validation.
+  </Step>
+</Steps>
+
+### Processing a Customer Delivery
+
+<Steps>
+  <Step title="Confirm the sales order">
+    A confirmed sales order generates a delivery order automatically. Reservations are applied based on the configured reservation method (at confirmation, before scheduled date, or manually).
+  </Step>
+  <Step title="Pick and pack (multi-step)">
+    In 2-step or 3-step warehouses, workers first complete a pick operation to move goods from storage to a packing zone, then complete a separate pack or ship operation.
+  </Step>
+  <Step title="Validate and ship">
+    Mark quantities as done and validate the delivery. Odoo updates stock levels, generates a delivery slip, and—if a shipping carrier is configured—sends tracking information to the customer automatically.
+  </Step>
+</Steps>
+
+---
+
+## Inventory Adjustments
+
+Keep on-hand quantities accurate with periodic or cycle-count inventory adjustments.
+
+<CardGroup cols={2}>
+  <Card title="Physical Inventory" icon="clipboard-list">
+    Run a full inventory count from **Inventory → Operations → Physical Inventory**. Count all products at once and apply adjustments in a single validated entry.
+  </Card>
+  <Card title="Cycle Counts" icon="refresh-cw">
+    Schedule automated cycle counts for specific locations or product categories so high-value or fast-moving items are counted more frequently without stopping warehouse operations.
+  </Card>
+  <Card title="Barcode Scanning" icon="scan-barcode">
+    Use the Barcode app on a handheld device or tablet to count products by scanning. Quantities update in real time, reducing transcription errors.
+  </Card>
+  <Card title="Scrap" icon="trash-2">
+    Move damaged or expired products to a scrap location via **Inventory → Operations → Scrap**. Scrap moves are valued and posted to the Accounting app automatically.
+  </Card>
+</CardGroup>
+
+---
+
+## Lot and Serial Number Tracking
+
+Odoo supports two traceability methods—**lots** for batch tracking and **serial numbers** for individual item tracking—both configurable per product.
+
+<Tabs>
+  <Tab title="Lots">
+    A lot groups multiple units of the same product that share a common attribute—such as a production batch, a supplier shipment, or an expiry date. Lots are ideal for food, pharmaceuticals, and textiles.
+
+    - Assign lot numbers on receipt or manufacturing
+    - Filter inventory by lot to locate all units in a batch
+    - Set expiry dates on lots for FEFO (First Expired, First Out) removal strategies
+    - Trigger product recalls by tracing a lot back through all receipts, internal moves, and deliveries
+  </Tab>
+  <Tab title="Serial Numbers">
+    A serial number uniquely identifies a single unit of a product. Serial numbers are required when each item must have an individual history—electronics, medical devices, serialized assets, and high-value goods.
+
+    - Generate serial numbers automatically in sequence or enter them manually
+    - View the complete history of a single unit: where it was received, stored, and shipped
+    - Track warranty start dates and repair history linked to each serial number
+  </Tab>
+</Tabs>
+
+<Note>
+  Enable **Lots & Serial Numbers** in **Inventory → Configuration → Settings → Traceability** before assigning traceability to products. Once enabled, you can configure each product individually to require lot or serial tracking on receipts, deliveries, or both.
+</Note>
+
+---
+
+## Reordering Rules
+
+Reordering rules automate stock replenishment so you never run out of critical products.
+
+<CardGroup cols={2}>
+  <Card title="Automatic Reordering Rules" icon="zap">
+    Set a minimum (reorder point) and maximum stock quantity. When on-hand stock falls at or below the minimum, Odoo automatically generates a purchase order or manufacturing order to restock to the maximum.
+  </Card>
+  <Card title="Manual Reordering Rules" icon="clipboard">
+    Like automatic rules but generate suggested orders on the **Replenishment Report** for a buyer to review and approve before purchase orders are created.
+  </Card>
+  <Card title="Make to Order (MTO)" icon="arrow-right">
+    Activate the MTO route on a product to trigger a purchase or manufacturing order the moment a sales order for that product is confirmed—bypassing stock and replenishing on demand.
+  </Card>
+  <Card title="Master Production Schedule" icon="calendar">
+    Use the MPS dashboard to plan replenishment over a rolling horizon based on sales forecasts, smoothing out demand peaks and reducing safety stock requirements.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Use **Just-in-Time** logic alongside reordering rules to prevent overstocking. JIT replenishment targets the exact quantity needed to meet upcoming demand rather than topping up to a fixed maximum.
+</Tip>
+
+---
+
+## Inventory Valuation Methods
+
+Odoo supports three costing methods for inventory valuation, configurable per product category.
+
+<Accordion title="Standard Price">
+  Products are valued at a manually set standard cost. Variances between the standard cost and actual purchase price are posted to a price difference account in the Accounting app. Best for manufactured goods with predictable costs.
+</Accordion>
+
+<Accordion title="Average Cost (AVCO)">
+  The unit cost is recalculated as a weighted average each time a new receipt is validated. AVCO is the most common method for purchased goods with fluctuating supplier prices.
+</Accordion>
+
+<Accordion title="First In, First Out (FIFO)">
+  Each receipt creates a cost layer. When goods are delivered, Odoo consumes the oldest cost layers first. FIFO gives the most accurate cost of goods sold when prices change over time and is required for certain accounting standards.
+</Accordion>
+
+<CardGroup cols={2}>
+  <Card title="Landed Costs" icon="ship">
+    Allocate additional procurement costs—freight, customs duties, insurance—to the value of received products. Landed costs are split across product lines by quantity, weight, or volume.
+  </Card>
+  <Card title="Valuation by Lot" icon="layers">
+    When using FIFO, Odoo can maintain separate cost layers per lot, giving precise cost tracking for batches purchased at different prices.
+  </Card>
+</CardGroup>

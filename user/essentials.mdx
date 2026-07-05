@@ -1,0 +1,226 @@
+---
+title: "Master Odoo Essentials: Navigation, Search & Reporting"
+sidebarTitle: "Essentials"
+description: "Learn the core Odoo UI skills that apply across every app: searching, filtering, grouping, reporting views, and exporting or importing data in bulk."
+---
+
+The Essentials section covers the foundational skills that work the same way in every Odoo application. Once you understand how to search and filter records, build pivot and graph reports, and move data in and out of Odoo, you can apply those skills in Accounting, Sales, Inventory, HR, and anywhere else in the platform. This page consolidates the most important cross-application features so you can get productive quickly, regardless of which modules your organization has installed.
+
+## Searching, Filtering, and Grouping Records
+
+The search bar sits at the top of every list, kanban, and reporting view. Start typing to search for a specific value, or click the **dropdown (▾)** icon to the right of the search bar to open the **Filters**, **Group By**, and **Favorites** menus.
+
+### Search for Values
+
+Type any value into the search bar — a customer name, product reference, salesperson — and Odoo displays matching suggestions in a dropdown. Selecting a suggestion adds it as a search chip that filters the current view. This is equivalent to using the *contains* operator in a custom filter.
+
+<Note>
+  If you type a partial value and select a field directly (without expanding the submenu), Odoo returns **all** records where that field contains the typed characters.
+</Note>
+
+### Preconfigured Filters
+
+Click the **▾** dropdown and select one or more options from the **Filters** section to narrow down the displayed records. Each view provides its own set of contextually relevant filters (for example, *My Invoices*, *Overdue*, or *Order Date: Last 365 Days*).
+
+<Tip>
+  Filters within the **same group** in the dropdown are combined with OR logic — a record matches if it satisfies **any** of them. Filters from **different groups** are combined with AND logic — a record must satisfy **all** groups.
+</Tip>
+
+### Custom Filters
+
+When the preconfigured filters are not specific enough, build a custom filter:
+
+<Steps>
+  <Step title="Open the custom filter builder">
+    Click the **▾** dropdown in the search bar, then select **Filters → Add Custom Filter**.
+  </Step>
+  <Step title="Configure the matching logic">
+    Choose **Match all of the following rules** (AND) or **Match any of the following rules** (OR) from the dropdown at the top of the popup.
+  </Step>
+  <Step title="Add filter rules">
+    Each rule has three parts:
+    - **Field name** — the record field to evaluate (use the ▶ submenu icon to reveal nested fields).
+    - **Operator** — a conditional such as `is`, `is not`, `contains`, `>`, `<`, etc. Available operators depend on the field's data type.
+    - **Value** — the target value, which may be a text input, number, date picker, or dropdown depending on the field.
+
+    Click **+ (plus)** to add more rules, or the **⎇ (node)** icon to nest a rule group.
+  </Step>
+  <Step title="Apply the filter">
+    Click **Add** to apply the custom filter to the current view. The filter appears as a chip in the search bar.
+  </Step>
+</Steps>
+
+### Group By
+
+Group records by any available field to cluster related data together. Click the **▾** dropdown, then choose a field from the **Group By** section. You can stack multiple groupings — the first selection is the top-level cluster, and each additional grouping subdivides further.
+
+<Tip>
+  Click **Add Custom Group** at the bottom of the Group By menu to group by any model field, not just the preconfigured options.
+</Tip>
+
+### Saving Favorites
+
+Save any combination of search terms, filters, and groups as a **Favorite** so you can reapply it with a single click.
+
+<Steps>
+  <Step title="Set up your search">
+    Apply the filters and groups you want to save.
+  </Step>
+  <Step title="Open Save current search">
+    Click the **▾** dropdown in the search bar, then expand **Save current search**.
+  </Step>
+  <Step title="Name and configure the favorite">
+    Enter a **Filter name**. Optionally, enable **Default filter** to make this the default view every time you open the page.
+  </Step>
+  <Step title="Save">
+    Click **Save**. Your favorite appears under the ★ **Favorites** section of the dropdown for future use.
+  </Step>
+</Steps>
+
+To share a favorite with other users, click the pencil **(Edit favorite)** icon next to the favorite name, then select users in the **Shared with** field and save.
+
+---
+
+## Reporting Views
+
+Most Odoo applications include a **Reporting** menu that provides pre-built analysis reports. These reports support two generic views optimized for data analysis: **Graph** and **Pivot**.
+
+### Graph View
+
+The graph view visualizes your data to help identify patterns and trends. Access it by clicking the **graph view button** (bar-chart icon) in the top-right corner of the report.
+
+Three chart types are available:
+
+<Tabs>
+  <Tab title="Bar Chart">
+    Best for comparing values across categories or showing distribution across a discrete dimension. Supports a **stacked** option when two or more groups are active, displaying groups on top of one another rather than side by side.
+  </Tab>
+  <Tab title="Line Chart">
+    Best for showing change over time or trends across a continuous dimension. Supports **stacked** and **cumulative** display options — the cumulative option sums values progressively, making it useful for visualising growth over a period.
+  </Tab>
+  <Tab title="Pie Chart">
+    Best for showing the proportional contribution of a small number of categories to a meaningful whole.
+  </Tab>
+</Tabs>
+
+### Pivot View
+
+The pivot view aggregates your records into a cross-tabulation table, allowing multidimensional analysis. Access it by clicking the **pivot view button** (grid icon) in the top-right corner.
+
+**Key pivot actions:**
+
+| Action | How |
+|---|---|
+| Add a row group | Click **➕** next to the **Total** row header |
+| Add a column group | Click **➕** next to the **Total** column header |
+| Remove a group | Click **➖** next to the group name |
+| Flip rows and columns | Click the **⇄** flip axis button |
+| Sort by a measure | Click the measure's column label to toggle ⏶ / ⏷ |
+| Export to Excel | Click the **⭳** download button to get a `.xlsx` file |
+
+### Choosing Measures
+
+In both graph and pivot views, click **Measures** to select which numerical field(s) to aggregate. The **Count** option is always available and counts the total number of filtered records. In the pivot view, multiple measures can be active simultaneously.
+
+---
+
+## Exporting Data
+
+Odoo allows you to export records from any list view to a `.csv` or `.xlsx` file.
+
+<Steps>
+  <Step title="Switch to List view">
+    Click the **list view** (☰) icon at the top-right of the page.
+  </Step>
+  <Step title="Select records">
+    Tick the checkbox next to each record you want to export, or tick the header checkbox to select all records on the page.
+  </Step>
+  <Step title="Open the Export dialog">
+    Click the **Action** button (⚙), then select **Export**.
+  </Step>
+  <Step title="Configure export options">
+    In the **Export Data** dialog:
+    - Tick **I want to update data (import-compatible export)** to limit fields to those that can later be re-imported — this also ensures the *External ID* column is included.
+    - Choose the output format: **CSV** (comma-separated) or **XLS** (Excel with formatting).
+    - Use the **Search** bar and **▶ Show sub-fields** icons to locate and add specific fields to the **Fields to export** list.
+    - Drag the **⇅ (Sort)** handle to reorder export columns.
+    - Save recurring configurations as a named **template** using the template dropdown.
+  </Step>
+  <Step title="Export">
+    Click **Export** to download the file.
+  </Step>
+</Steps>
+
+<Warning>
+  For very large datasets, exports may time out. Process large exports in smaller batches by applying filters before exporting.
+</Warning>
+
+---
+
+## Importing Data
+
+Data can be imported into any Odoo business object — contacts, products, bank statements, journal entries, orders, and more — using Excel (`.xlsx`) or CSV (`.csv`) files.
+
+<Steps>
+  <Step title="Navigate to the target object">
+    Open the list view of the records you want to create or update (for example, **Contacts** or **Products**).
+  </Step>
+  <Step title="Open the Import dialog">
+    Click the **⚙ (Action)** icon and select **Import records**.
+  </Step>
+  <Step title="Download and adapt a template (optional)">
+    Click **Import Template** on the import page to download a pre-formatted spreadsheet. Open it in any spreadsheet application (Microsoft Office, OpenOffice, Google Sheets) and populate it with your data.
+
+    When adapting a template:
+    - Do **not** remove the **External ID (ID)** column — it is used to prevent duplicate records on re-import and to link related records.
+    - Set a unique ID for every row by dragging down the ID sequence.
+    - Add, remove, or reorder columns to match your data structure.
+  </Step>
+  <Step title="Upload your file">
+    Click **Upload Data File** and select your CSV or Excel file. For CSV files, adjust the **Formatting** options (separator, delimiter, date format) as needed.
+  </Step>
+  <Step title="Map columns to Odoo fields">
+    Odoo automatically maps columns whose names match Odoo field labels. Manually correct any unmapped columns using the **Odoo Field** dropdown. Use the **Show fields of relation fields** option to reveal the full list of available fields.
+  </Step>
+  <Step title="Test and import">
+    Click **Test** to validate the data without creating records. Review and fix any errors shown, then click **Import** to complete the operation.
+  </Step>
+</Steps>
+
+<Warning>
+  Imports are **permanent** and cannot be undone. Test on a duplicate or staging database first when importing large or complex datasets.
+</Warning>
+
+### Updating Existing Records
+
+To update records in bulk, export them first with the **I want to update data** option checked (which includes the *External ID*), make your changes in the exported file, then re-import. Odoo matches rows to existing records using the External ID and updates them in place instead of creating duplicates.
+
+### Working with Relation Fields
+
+When importing records that reference another object (such as a contact's country), Odoo accepts three formats for the related field:
+
+| Format | Example | When to use |
+|---|---|---|
+| Name | `Belgium` | CSV files created manually |
+| Database ID | `21` | Rarely — avoids name collisions |
+| External ID | `base.be` | Migrating data from another application |
+
+<Note>
+  Use only **one** of these formats per relation field in a single import file.
+</Note>
+
+### Supported Number Formats
+
+Odoo recognizes numbers with comma/period thousand and decimal separators, parenthetical negatives, and attached currency symbols. Examples of supported formats for 32,000:
+
+```text
+32.000,00
+32,000.00
+(32000.00)
+$ 32.000,00
+(32000.00 €)
+```
+
+### Date Format
+
+When importing CSV files, verify the **Date Format** shown in the Formatting section. Use ISO 8601 format (`YYYY-MM-DD`) to ensure consistent parsing regardless of locale — for example, July 24 1981 should be written as `1981-07-24`.

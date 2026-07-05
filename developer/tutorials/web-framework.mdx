@@ -1,0 +1,471 @@
+---
+title: 'Odoo Web Framework Tutorial: OWL and Custom Views'
+sidebarTitle: 'Web Tutorial'
+description: 'Discover how to build custom Odoo frontend features using OWL components, services, the action manager, and view registries with hands-on examples.'
+---
+
+The Odoo web framework provides everything you need to build rich, reactive user interfaces inside Odoo. At its core is **OWL** (Odoo Web Library), an in-house component system inspired by React and Vue that powers the entire Odoo client since version 15. This tutorial teaches you how OWL components work, how to consume Odoo services from JavaScript, how the registry system connects your code to the broader application, and finally how to build a complete custom view from scratch.
+
+## Prerequisites
+
+Before starting, ensure you have:
+- A working Odoo development environment (version 15 or later).
+- Basic knowledge of JavaScript (ES2020+), HTML, and Odoo model/controller concepts.
+- The `awesome_owl` or `awesome_dashboard` tutorial addon from the [odoo/tutorials](https://github.com/odoo/tutorials) repository installed.
+
+<Note>
+This tutorial focuses on the current OWL-based framework. The legacy JavaScript framework (`Widget`, `web.AbstractAction`, etc.) is deprecated and should not be used for new development.
+</Note>
+
+---
+
+## Tutorial Progression
+
+<Steps>
+  <Step title="Understand OWL Components">
+    Learn the Component class, templates, state, and props — the four pillars of every OWL component.
+  </Step>
+  <Step title="Use Odoo Services">
+    Access built-in services (ORM, notification, dialog) with the `useService` hook.
+  </Step>
+  <Step title="Work with Registries">
+    Register custom views, fields, and client actions so Odoo discovers them automatically.
+  </Step>
+  <Step title="Build a Custom View">
+    Combine a controller, renderer, and model to create a fully functional alternative view type.
+  </Step>
+</Steps>
+
+---
+
+## OWL Component Model
+
+Every piece of Odoo's UI is an OWL component. A component is a JavaScript class that pairs logic with a QWeb XML template.
+
+### The Component Class
+
+```javascript
+/** @odoo-module **/
+
+import { Component, useState, onWillStart } from "@odoo/owl";
+import { useService } from "@web/core/utils/hooks";
+
+export class Counter extends Component {
+    static template = "my_module.Counter";
+
+    setup() {
+        // Reactive state — any read of this object inside the template
+        // will subscribe the component to re-render on change.
+        this.state = useState({ value: 0 });
+    }
+
+    increment() {
+        this.state.value++;
+    }
+}
+```
+
+The matching QWeb template lives in an XML file:
+
+```xml
+<templates xml:space="preserve">
+    <t t-name="my_module.Counter">
+        <div class="counter">
+            <p>Counter: <t t-esc="state.value"/></p>
+            <button class="btn btn-primary" t-on-click="increment">
+                Increment
+            </button>
+        </div>
+    </t>
+</templates>
+```
+
+### Key OWL APIs
+
+<Tabs>
+  <Tab title="useState">
+    `useState` wraps a plain object in a reactive proxy. When a value in the object changes, every component that read that value will automatically re-render.
+
+    ```javascript
+    import { useState } from "@odoo/owl";
+
+    setup() {
+        this.state = useState({
+            isOpen: false,
+            items: [],
+        });
+    }
+    ```
+  </Tab>
+  <Tab title="Props">
+    Components receive data from their parents through `props`. Declare a static `props` object to enable runtime validation in dev mode.
+
+    ```javascript
+    export class PropertyCard extends Component {
+        static template = "estate.PropertyCard";
+        static props = {
+            title: { type: String },
+            price: { type: Number },
+            onSelect: { type: Function, optional: true },
+        };
+    }
+    ```
+
+    Usage in a parent template:
+
+    ```xml
+    <PropertyCard title="property.name" price="property.expected_price"
+                  onSelect.bind="selectProperty"/>
+    ```
+  </Tab>
+  <Tab title="Lifecycle Hooks">
+    OWL provides hooks that run at specific moments in a component's life:
+
+    ```javascript
+    import { onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
+
+    setup() {
+        onWillStart(async () => {
+            // Runs before the first render — good for async data fetching.
+            this.data = await this.fetchData();
+        });
+
+        onMounted(() => {
+            // Runs after the component is inserted into the DOM.
+            console.log("Component mounted");
+        });
+
+        onWillUnmount(() => {
+            // Cleanup before the component is removed.
+        });
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Services System
+
+Odoo services are singletons registered in the service registry. Any component can access them with the `useService` hook inside `setup()`.
+
+### The `useService` Hook
+
+```javascript
+/** @odoo-module **/
+
+import { Component, useState, onWillStart } from "@odoo/owl";
+import { useService } from "@web/core/utils/hooks";
+
+export class PropertyList extends Component {
+    static template = "estate.PropertyList";
+
+    setup() {
+        // Grab services by name
+        this.orm = useService("orm");
+        this.notification = useService("notification");
+        this.action = useService("action");
+
+        this.state = useState({ properties: [] });
+
+        onWillStart(async () => {
+            this.state.properties = await this.orm.searchRead(
+                "estate.property",
+                [["state", "=", "new"]],
+                ["name", "expected_price", "postcode"],
+                { limit: 40 }
+            );
+        });
+    }
+
+    async markAsSold(propertyId) {
+        try {
+            await this.orm.call("estate.property", "action_sold", [[propertyId]]);
+            this.notification.add("Property marked as sold!", { type: "success" });
+        } catch (error) {
+            this.notification.add(error.message, { type: "danger" });
+        }
+    }
+}
+```
+
+### Commonly Used Services
+
+| Service | Description |
+|---|---|
+| `orm` | Call `search`, `read`, `create`, `write`, `unlink`, `call` against Odoo models. |
+| `notification` | Display toast notifications (`add(message, { type })`). |
+| `action` | Trigger actions programmatically (`doAction`, `switchView`). |
+| `dialog` | Open modal dialogs. |
+| `router` | Read and push URL state. |
+| `user` | Access current user info (`userId`, `lang`, `context`). |
+| `rpc` | Make raw JSON-RPC calls to controllers. |
+
+### The ORM Service in Detail
+
+```javascript
+/** @odoo-module **/
+
+import { useService } from "@web/core/utils/hooks";
+
+setup() {
+    this.orm = useService("orm");
+}
+
+async loadRecords() {
+    // search — returns list of ids
+    const ids = await this.orm.search("res.partner", [["is_company", "=", true]]);
+
+    // searchRead — returns records with specified fields
+    const partners = await this.orm.searchRead(
+        "res.partner",
+        [["customer_rank", ">", 0]],
+        ["name", "email", "phone"],
+        { limit: 10, order: "name asc" }
+    );
+
+    // create — returns new record id
+    const newId = await this.orm.create("estate.property", [{
+        name: "New Property",
+        expected_price: 250000,
+    }]);
+
+    // write — update existing records
+    await this.orm.write("estate.property", [newId], { state: "offer_received" });
+
+    // call — call a Python method
+    const result = await this.orm.call(
+        "estate.property",
+        "action_sold",
+        [[newId]],
+        {}
+    );
+}
+```
+
+---
+
+## Registries
+
+The Odoo registry system is how JavaScript code announces its existence to the rest of the application. Rather than importing components directly, most things — views, fields, client actions, services — register themselves under a named key. The framework then looks them up by that key at runtime.
+
+### How Registries Work
+
+```javascript
+/** @odoo-module **/
+
+import { registry } from "@web/core/registry";
+
+// Register a custom service
+const myService = {
+    dependencies: ["orm"],
+    start(env, { orm }) {
+        return {
+            async fetchProperties() {
+                return orm.searchRead("estate.property", [], ["name", "state"]);
+            },
+        };
+    },
+};
+
+registry.category("services").add("estate.properties", myService);
+```
+
+### Views Registry
+
+The `views` registry maps a view type string to its implementation:
+
+```javascript
+/** @odoo-module **/
+
+import { registry } from "@web/core/registry";
+import { MapView } from "./map_view";
+import { MapController } from "./map_controller";
+import { MapRenderer } from "./map_renderer";
+
+registry.category("views").add("map", {
+    type: "map",
+    display_name: "Map",
+    icon: "oi-view-map",
+    searchMenuTypes: ["filter", "groupBy"],
+    Controller: MapController,
+    Renderer: MapRenderer,
+    Model: MapModel,
+});
+```
+
+### Fields Registry
+
+Override or extend how a field type is displayed in forms and lists:
+
+```javascript
+/** @odoo-module **/
+
+import { registry } from "@web/core/registry";
+import { CharField } from "@web/views/fields/char/char_field";
+import { PriceField } from "./price_field";
+
+// Replace the standard char field with a custom one for a specific widget name
+registry.category("fields").add("price_display", PriceField);
+```
+
+---
+
+## Building a Custom View
+
+A custom view in Odoo consists of three cooperating classes: a **Controller**, a **Renderer**, and a **Model**. This mirrors the MVC pattern.
+
+<CardGroup cols={3}>
+  <Card title="Controller" icon="sliders">
+    Manages the view lifecycle, loads the model, and passes data down to the renderer. Extends `Component`.
+  </Card>
+  <Card title="Renderer" icon="image">
+    Renders the actual UI. Receives props from the controller and emits events upward. Extends `Component`.
+  </Card>
+  <Card title="Model" icon="layer-group">
+    Fetches and holds data from the server. A plain JavaScript class (not a Component).
+  </Card>
+</CardGroup>
+
+### Example: A Simple Kanban-style Gallery View
+
+**`gallery_model.js`** — Fetches records:
+
+```javascript
+/** @odoo-module **/
+
+export class GalleryModel {
+    constructor(env, resModel, fields, domain) {
+        this.env = env;
+        this.resModel = resModel;
+        this.fields = fields;
+        this.domain = domain;
+        this.records = [];
+    }
+
+    async load() {
+        this.records = await this.env.services.orm.searchRead(
+            this.resModel,
+            this.domain,
+            this.fields,
+            { limit: 80 }
+        );
+    }
+}
+```
+
+**`gallery_renderer.js`** — Renders the grid:
+
+```javascript
+/** @odoo-module **/
+
+import { Component } from "@odoo/owl";
+
+export class GalleryRenderer extends Component {
+    static template = "estate.GalleryRenderer";
+    static props = {
+        records: Array,
+        onRecordClick: Function,
+    };
+}
+```
+
+**`gallery_renderer.xml`** — Template:
+
+```xml
+<templates xml:space="preserve">
+    <t t-name="estate.GalleryRenderer">
+        <div class="o_gallery_view">
+            <t t-foreach="props.records" t-as="record" t-key="record.id">
+                <div class="o_gallery_card" t-on-click="() => props.onRecordClick(record)">
+                    <span class="fw-bold" t-esc="record.name"/>
+                    <span class="text-muted" t-esc="record.postcode"/>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
+```
+
+**`gallery_controller.js`** — Orchestrates model + renderer:
+
+```javascript
+/** @odoo-module **/
+
+import { Component, onWillStart, useState } from "@odoo/owl";
+import { useService } from "@web/core/utils/hooks";
+import { GalleryModel } from "./gallery_model";
+import { GalleryRenderer } from "./gallery_renderer";
+
+export class GalleryController extends Component {
+    static template = "estate.GalleryController";
+    static components = { GalleryRenderer };
+
+    setup() {
+        this.action = useService("action");
+        this.orm = useService("orm");
+
+        this.model = new GalleryModel(
+            this.env,
+            this.props.resModel,
+            ["name", "postcode", "expected_price"],
+            this.props.domain ?? []
+        );
+
+        this.state = useState({ records: [] });
+
+        onWillStart(async () => {
+            await this.model.load();
+            this.state.records = this.model.records;
+        });
+    }
+
+    openRecord(record) {
+        this.action.switchView("form", { resId: record.id });
+    }
+}
+```
+
+**Register the view:**
+
+```javascript
+/** @odoo-module **/
+
+import { registry } from "@web/core/registry";
+import { GalleryController } from "./gallery_controller";
+import { GalleryRenderer } from "./gallery_renderer";
+
+registry.category("views").add("gallery", {
+    type: "gallery",
+    display_name: "Gallery",
+    icon: "oi-view-list",
+    searchMenuTypes: ["filter", "groupBy", "favorite"],
+    Controller: GalleryController,
+    Renderer: GalleryRenderer,
+    Model: null, // model is instantiated directly in the controller
+});
+```
+
+**Include the JS assets in `__manifest__.py`:**
+
+```python
+'assets': {
+    'web.assets_backend': [
+        'estate/static/src/views/gallery_controller.js',
+        'estate/static/src/views/gallery_renderer.js',
+        'estate/static/src/views/gallery_renderer.xml',
+        'estate/static/src/views/gallery_model.js',
+        'estate/static/src/views/gallery_view.js',
+    ],
+},
+```
+
+**Reference the view type in an action:**
+
+```xml
+<record id="action_estate_property" model="ir.actions.act_window">
+    <field name="name">Properties</field>
+    <field name="res_model">estate.property</field>
+    <field name="view_mode">list,form,gallery</field>
+</record>
+```

@@ -1,0 +1,91 @@
+---
+title: "Choose the Right Odoo Hosting Option for Your Needs"
+sidebarTitle: "Hosting"
+description: "Compare Odoo Online, Odoo.sh, packaged installers, source installs, and Docker to find the right hosting solution for your business."
+---
+
+Odoo can be deployed in several ways, from a fully managed SaaS platform to a self-hosted installation you control completely. Understanding the trade-offs between each option — and which Odoo edition (Community or Enterprise) it supports — is the first step toward a stable, well-maintained deployment.
+
+## Editions
+
+There are two editions of Odoo to choose from before selecting a hosting method.
+
+<CardGroup cols={2}>
+  <Card title="Odoo Community" icon="code-branch">
+    The free, open-source version of Odoo licensed under the [GNU LGPLv3](https://github.com/odoo/odoo/blob/master/LICENSE). It is the core upon which Odoo Enterprise is built and is fully self-hosted.
+  </Card>
+  <Card title="Odoo Enterprise" icon="building">
+    The shared-source version that adds more functionality, functional support, upgrades, and hosting options. [Pricing](https://www.odoo.com/pricing-plan) starts from one app free.
+  </Card>
+</CardGroup>
+
+<Tip>
+  You can [switch from Community to Enterprise](/admin/on-premise#switching-community-to-enterprise) at any time — except when running a source install.
+</Tip>
+
+## Hosting Options
+
+<CardGroup cols={2}>
+  <Card title="Odoo Online (SaaS)" icon="cloud" href="/admin/odoo-online">
+    Fully managed databases hosted and operated by Odoo. Access from any browser with no local installation required. Ideal for long-term production use or testing customizations that don't require custom code.
+  </Card>
+  <Card title="Odoo.sh (PaaS)" icon="server" href="/admin/odoo-sh">
+    A Platform-as-a-Service cloud environment with GitHub integration, branch-based staging, continuous integration, SSH access, and automated backups. Best for teams building or maintaining custom modules.
+  </Card>
+  <Card title="Packaged Installers" icon="box-archive" href="/admin/on-premise">
+    Official `.deb` and `.rpm` packages for Debian/Ubuntu and Fedora/RHEL, plus a Windows installer. Suitable for testing and production deployments where you manage your own infrastructure.
+  </Card>
+  <Card title="Source Install" icon="terminal" href="/admin/on-premise">
+    Run Odoo directly from the GitHub source code for maximum flexibility. Lets you run multiple Odoo versions side-by-side and is the preferred setup for module developers.
+  </Card>
+</CardGroup>
+
+A [Docker](https://hub.docker.com/_/odoo/) base image is also available for both development and containerized production deployments.
+
+## Comparison at a Glance
+
+| Feature | Odoo Online | Odoo.sh | Packaged / Source |
+|---|---|---|---|
+| Managed hosting | ✅ Fully managed | ✅ Platform managed | ❌ Self-managed |
+| Custom modules | ❌ Not supported | ✅ Supported | ✅ Supported |
+| GitHub integration | ❌ | ✅ Native | ❌ |
+| Staging environments | ❌ | ✅ Built-in | Manual |
+| SSH / shell access | ❌ | ✅ | ✅ |
+| Automated backups | ✅ Daily | ✅ Daily (production) | Self-managed |
+| Community edition | ❌ Enterprise only | ❌ Enterprise only | ✅ Both editions |
+| Upgrade tooling | ✅ Database manager | ✅ Platform UI | ✅ CLI script |
+
+## Changing Your Hosting Solution
+
+You can migrate between hosting types at any time. The process depends on your current setup and destination.
+
+<AccordionGroup>
+  <Accordion title="Transferring an On-Premise Database">
+    **To Odoo Online:**
+    1. Create a duplicate of the database and uninstall all non-standard apps (Odoo Online does not support custom modules).
+    2. Use the database manager to export a dump with filestore.
+    3. [Open a support ticket](https://www.odoo.com/help-form) including your subscription number, desired URL, dump file, target region, database name, version, and administrator email.
+
+    <Note>
+      The database's current version must be a [supported version](/admin/upgrade#support-policy). Odoo validates compatibility before going live.
+    </Note>
+
+    **To Odoo.sh:** Follow the [Import a database](/admin/odoo-sh#importing-a-database) instructions in the Odoo.sh documentation.
+  </Accordion>
+
+  <Accordion title="Transferring an Odoo Online Database">
+    <Warning>
+      Odoo Online intermediary versions (e.g., 16.3, 17.2) are **not** supported by Odoo.sh or on-premise. You must first upgrade to the next major version before transferring.
+    </Warning>
+
+    **To on-premise:** Sign in to the [Odoo Online database manager](https://www.odoo.com/my/databases), click the gear icon next to your database, select **Download**, then restore the backup on your local server.
+
+    **To Odoo.sh:** Download the backup the same way, then follow the Odoo.sh import process.
+  </Accordion>
+
+  <Accordion title="Transferring an Odoo.sh Database">
+    **To Odoo Online:** Uninstall all non-standard apps in a staging build first, then [open a support ticket](https://www.odoo.com/help-form) with your subscription number, desired URL, branch to migrate, hosting region, administrator(s), and go-live date.
+
+    **To on-premise:** Download a [backup of your Odoo.sh production database](/admin/odoo-sh#backups) and restore it using the database manager on your local server.
+  </Accordion>
+</AccordionGroup>

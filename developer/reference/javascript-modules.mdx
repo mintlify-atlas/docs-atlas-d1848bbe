@@ -1,0 +1,246 @@
+---
+title: 'JavaScript Modules and Asset Bundles in Odoo'
+sidebarTitle: 'JS Modules'
+description: "Understand Odoo's ES module system, @odoo/* import paths, asset bundles, the patching mechanism, and how to add JavaScript to your addon."
+---
+
+Odoo supports three kinds of JavaScript files: plain scripts (for external libraries), **native ES modules** (the standard for all new code), and the legacy Odoo custom module system (for older code not yet converted). All JS files are bundled and served to the browser through the asset pipeline defined in `__manifest__.py`.
+
+## Three Module Flavours
+
+<CardGroup cols={3}>
+  <Card title="Plain JS" icon="file-code">
+    External libraries or low-level scripts with no module system. Use IIFE style to avoid leaking globals. No `import`/`export`.
+  </Card>
+  <Card title="Native ES Modules" icon="arrow-right-to-bracket">
+    All new addon code. Uses standard `import`/`export` syntax. Transpiled by Odoo at serve time into Odoo modules.
+  </Card>
+  <Card title="Odoo Module System" icon="gear">
+    Legacy `odoo.define('name', ['dep'], function(require){})` pattern. Still valid; use for files not yet migrated.
+  </Card>
+</CardGroup>
+
+## Native JavaScript Modules
+
+### Writing a Module
+
+Any file under `/static/src` or `/static/tests` is automatically transpiled. Use standard ES syntax:
+
+```javascript
+// File: myaddon/static/src/utils/helpers.js
+import { someFunction } from "./other_file";
+
+export function myHelper(val) {
+  return someFunction(val + 3);
+}
+```
+
+After transpilation, this becomes an Odoo module named `@myaddon/utils/helpers`. The naming rule is:
+
+> `some_addon/static/src/path/to/file.js` → `@some_addon/path/to/file`
+
+### Import Paths
+
+Within the same addon, use relative paths:
+
+```javascript
+import { something } from "./file_a";
+```
+
+Across addons, always use the full `@addon_name/...` path:
+
+```javascript
+// Importing from the web addon
+import { memoize } from "@web/core/utils/functions";
+import { registry } from "@web/core/registry";
+import { Component, useState } from "@odoo/owl";
+```
+
+<Warning>
+Relative imports only work within the same Odoo addon. Importing from another addon with a relative path will silently fail at runtime. Always use `@addon_name/...` for cross-addon imports.
+</Warning>
+
+### Opting Out of Transpilation
+
+To prevent a file from being transpiled (e.g., an IIFE library wrapper):
+
+```javascript
+/** @odoo-module ignore **/
+(function () {
+  const sum = (a, b) => a + b;
+  console.log(sum(1, 2));
+})();
+```
+
+### Opting In (Outside `/static/src`)
+
+For files outside the default transpiled directories, add the `@odoo-module` comment to opt in:
+
+```javascript
+/** @odoo-module **/
+export function sum(a, b) {
+  return a + b;
+}
+```
+
+### Module Aliases
+
+During migration from the legacy system, create an alias so old `require('web.name')` calls continue to work:
+
+```javascript
+/** @odoo-module alias=web.someName **/
+import { someFunction } from "./file_b";
+
+export default function otherFunction(val) {
+  return someFunction(val + 3);
+}
+```
+
+By default, aliases re-export the `default` export. To alias the entire module namespace:
+
+```javascript
+/** @odoo-module alias=web.someName default=0 **/
+export function otherFunction(val) { ... }
+```
+
+### Transpilation Limitations
+
+The Odoo transpiler is not a full parser. Avoid these patterns:
+
+```javascript
+// ❌ Not supported — import must start on its own line
+var a = 1; import X from "xxx";
+
+// ❌ Not supported — export object cannot contain comments
+export {
+  a as b, // this is a comment  ← breaks transpilation
+  c,
+}
+
+// ✅ Supported — import/export on their own lines
+import X from "xxx";
+export { a as b, c };
+```
+
+Module names with a `/` are treated as file paths by the heuristic. Do not use `/` in symbolic module names.
+
+## Legacy Odoo Module System
+
+The `odoo.define` pattern is still valid for code not yet migrated:
+
+```javascript
+// file a.js
+odoo.define("module.A", [], function (require) {
+  "use strict";
+  const A = { /* ... */ };
+  return A;
+});
+
+// file b.js
+odoo.define("module.B", ["module.A"], function (require) {
+  "use strict";
+  const A = require("module.A");
+  const B = { /* uses A */ };
+  return B;
+});
+```
+
+`odoo.define` takes:
+1. **moduleName** — unique string, convention: `addon_name.DescriptiveName`
+2. **dependencies** — array of module name strings required before this module runs
+3. **factory function** — receives `require`, returns the module's exported value
+
+<Note>
+Circular dependencies are not supported and will prevent dependent modules from loading. Both the native and legacy systems can coexist within the same addon.
+</Note>
+
+## Asset Bundles
+
+JavaScript (and SCSS) files are grouped into **asset bundles** declared in `__manifest__.py`. Odoo provides several standard bundles:
+
+| Bundle | Used in |
+|--------|---------|
+| `web.assets_backend` | All backend (web client) pages |
+| `web.assets_frontend` | Public website pages |
+| `web.assets_common` | Shared between backend and frontend |
+| `web.assets_tests` | Test tours (loaded in `debug=tests` mode) |
+| `web.assets_backend_lazy` | Loaded on demand in the backend |
+
+### Adding Files to a Bundle
+
+In `__manifest__.py`:
+
+```python
+{
+    "name": "My Addon",
+    "version": "1.0",
+    "depends": ["web"],
+    "assets": {
+        "web.assets_backend": [
+            "myaddon/static/src/my_component/my_component.js",
+            "myaddon/static/src/my_component/my_component.xml",
+            "myaddon/static/src/my_component/my_component.scss",
+        ],
+        "web.assets_frontend": [
+            "myaddon/static/src/website/my_widget.js",
+        ],
+    },
+}
+```
+
+<Tip>
+Asset paths use glob patterns. For example, `"myaddon/static/src/**/*"` includes all files recursively. However, for Odoo SaaS databases, list files individually — wildcard inclusion is not supported there.
+</Tip>
+
+### Overriding Bundle Contents
+
+You can prepend, append, or remove entries using special keys:
+
+```python
+"assets": {
+    "web.assets_backend": [
+        # Prepend before existing entries
+        ("prepend", "myaddon/static/src/early_loader.js"),
+        # Remove an existing entry
+        ("remove", "web/static/src/core/some_file.js"),
+        # Replace an existing entry
+        ("replace", "web/static/src/core/old.js", "myaddon/static/src/new.js"),
+    ],
+},
+```
+
+## The Patching Mechanism
+
+OWL components and plain objects can be patched (monkey-patched) without modifying source files. Use `patch` from `@web/core/utils/patch`:
+
+```javascript
+import { patch } from "@web/core/utils/patch";
+import { FormController } from "@web/views/form/form_controller";
+
+patch(FormController.prototype, {
+  setup() {
+    super.setup();
+    // additional initialization
+    this.myExtraState = useState({ count: 0 });
+  },
+
+  async onSaveRecord() {
+    await super.onSaveRecord();
+    this.myExtraState.count++;
+  },
+});
+```
+
+<Warning>
+Always call `super` when patching `setup()` and other lifecycle methods — failing to do so will break all other patches that rely on the original method.
+</Warning>
+
+To unpatch (useful in tests):
+
+```javascript
+import { patch } from "@web/core/utils/patch";
+
+const unpatch = patch(SomeClass.prototype, { myMethod() { ... } });
+// later:
+unpatch();
+```

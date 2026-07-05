@@ -1,0 +1,498 @@
+---
+title: 'Server Framework 101: Build Your First Odoo Module'
+sidebarTitle: 'Server Tutorial'
+description: 'Learn Odoo module development from scratch: architecture, models, views, security, computed fields, and actions in a step-by-step real-estate app tutorial.'
+---
+
+This tutorial walks you through building a real estate advertisement module from the ground up using Odoo's server-side framework. By the time you finish, you will have created a fully functional Odoo application complete with custom models, list and form views, security rules, computed fields, and business logic actions — all organized as a proper Odoo module. Each section builds on the last, so work through them in order.
+
+## Architecture Overview
+
+Odoo follows a **three-tier architecture** separating presentation, business logic, and data storage into distinct layers.
+
+<CardGroup cols={3}>
+  <Card title="Presentation Tier" icon="display">
+    HTML5, JavaScript, and CSS rendered in the browser. Since Odoo 15, the OWL framework handles UI components.
+  </Card>
+  <Card title="Logic Tier" icon="gear">
+    Python handles all business logic. Every model, rule, and computation lives here.
+  </Card>
+  <Card title="Data Tier" icon="database">
+    PostgreSQL is the only supported database. The ORM maps Python classes to tables automatically.
+  </Card>
+</CardGroup>
+
+### What an Odoo Module Contains
+
+A module is a Python package that Odoo loads from the configured `addons_path`. It can include any combination of:
+
+- **Business objects** — Python classes extending `models.Model` that map to database tables via the ORM.
+- **Views** — XML definitions describing how records are displayed (list, form, kanban, graph, etc.).
+- **Data files** — XML or CSV files that load configuration records, security rules, and demo data.
+- **Controllers** — Python classes handling HTTP routes.
+- **Static assets** — JavaScript, CSS, and images served to the browser.
+
+None of these elements are mandatory; you include only what your feature requires.
+
+## Tutorial Progression
+
+<Steps>
+  <Step title="Scaffold the Module">
+    Create the required directory structure and manifest so Odoo recognizes your addon.
+  </Step>
+  <Step title="Define a Model">
+    Add a Python model class with typed fields and register it in the ORM.
+  </Step>
+  <Step title="Add Security Rules">
+    Create an access CSV file and optional record rules so users can interact with your data.
+  </Step>
+  <Step title="Build Views">
+    Write XML for a list view, form view, and window action to expose the model in the menu.
+  </Step>
+  <Step title="Add Computed Fields">
+    Use `@api.depends` to derive values automatically from other fields.
+  </Step>
+  <Step title="Implement Business Actions">
+    Add Python methods that users trigger from buttons or automated rules.
+  </Step>
+</Steps>
+
+---
+
+## Step 1 — Scaffold the Module
+
+Every Odoo module lives in its own directory and must contain at minimum two files: `__manifest__.py` and `__init__.py`.
+
+### Module Directory Structure
+
+```bash
+estate/
+├── models/
+│   ├── __init__.py
+│   └── estate_property.py
+├── views/
+│   └── estate_property_views.xml
+├── security/
+│   ├── ir.model.access.csv
+│   └── estate_security.xml
+├── data/
+│   └── estate_property_data.xml
+├── static/
+│   └── description/
+│       └── icon.png
+├── __init__.py
+└── __manifest__.py
+```
+
+### `__manifest__.py`
+
+The manifest file declares the module and its metadata. The only required key is `name`, but a real module always provides more:
+
+```python
+{
+    'name': 'Real Estate',
+    'version': '1.0',
+    'depends': ['base'],
+    'author': 'My Company',
+    'category': 'Real Estate/Brokerage',
+    'summary': 'Manage real estate property listings and offers',
+    'description': """
+Real Estate Advertisement Module
+=================================
+Manage property listings, track offers, and close deals.
+    """,
+    'website': 'https://www.example.com',
+    'license': 'LGPL-3',
+    'application': True,
+    'installable': True,
+    'data': [
+        'security/ir.model.access.csv',
+        'security/estate_security.xml',
+        'views/estate_property_views.xml',
+    ],
+    'demo': [
+        'data/estate_property_data.xml',
+    ],
+}
+```
+
+<Note>
+The order of entries in `data` matters. Security files should be loaded before views so that access rights are in place when view records are created.
+</Note>
+
+### `__init__.py`
+
+The root `__init__.py` imports your `models` sub-package:
+
+```python
+from . import models
+```
+
+The `models/__init__.py` imports each model file:
+
+```python
+from . import estate_property
+```
+
+---
+
+## Step 2 — Define a Model
+
+Business objects are declared as Python classes that extend `models.Model`. The ORM maps each class to a PostgreSQL table automatically when the module is installed or updated.
+
+```python
+from odoo import models, fields
+
+class EstateProperty(models.Model):
+    _name = 'estate.property'
+    _description = 'Real Estate Property'
+
+    name = fields.Char(required=True)
+    description = fields.Text()
+    postcode = fields.Char()
+    date_availability = fields.Date(copy=False)
+    expected_price = fields.Float(required=True)
+    selling_price = fields.Float(readonly=True, copy=False)
+    bedrooms = fields.Integer(default=2)
+    living_area = fields.Integer()
+    facades = fields.Integer()
+    garage = fields.Boolean()
+    garden = fields.Boolean()
+    garden_area = fields.Integer()
+    garden_orientation = fields.Selection(
+        selection=[('north', 'North'), ('south', 'South'),
+                   ('east', 'East'), ('west', 'West')],
+    )
+```
+
+<Tip>
+Always set `_description` on your model. Odoo will emit a warning at startup for any model without a human-readable description.
+</Tip>
+
+### Key Model Attributes
+
+| Attribute | Purpose |
+|---|---|
+| `_name` | Technical name (required). Used as the database table name (dots become underscores). |
+| `_description` | Human-readable label shown in the UI and logs. |
+| `_inherit` | Inherit from an existing model to extend or modify it. |
+| `_order` | Default sort order, e.g. `'name asc'`. |
+| `_rec_name` | Field used as the display name for records. Defaults to `name`. |
+
+### Common Field Types
+
+<Accordion title="Basic Fields">
+- `fields.Char(size=None, trim=True)` — Variable-length string. Stored as `VARCHAR`.
+- `fields.Text()` — Multi-line string. Stored as `TEXT`.
+- `fields.Html()` — HTML content with sanitization.
+- `fields.Integer()` — Integer value.
+- `fields.Float(digits=None)` — Floating-point number. Use `digits=(precision, scale)` to control rounding.
+- `fields.Monetary(currency_field='currency_id')` — Currency-aware float.
+- `fields.Boolean()` — True/False flag.
+- `fields.Binary(attachment=False)` — Binary data (files, images). Set `attachment=True` to store on the filesystem.
+</Accordion>
+
+<Accordion title="Date and Time Fields">
+- `fields.Date()` — Calendar date, stored as `DATE`. Always use `fields.Date.today()` for the current date.
+- `fields.Datetime()` — Date + time stored in UTC as `TIMESTAMP`. Use `fields.Datetime.now()` for current timestamp.
+</Accordion>
+
+<Accordion title="Selection Field">
+```python
+state = fields.Selection(
+    selection=[
+        ('new', 'New'),
+        ('offer_received', 'Offer Received'),
+        ('offer_accepted', 'Offer Accepted'),
+        ('sold', 'Sold'),
+        ('cancelled', 'Cancelled'),
+    ],
+    default='new',
+    required=True,
+)
+```
+</Accordion>
+
+<Accordion title="Relational Fields">
+```python
+# Many2one — stores a foreign key
+property_type_id = fields.Many2one(
+    comodel_name='estate.property.type',
+    string='Property Type',
+    ondelete='set null',
+)
+
+# One2many — virtual inverse of a Many2one
+offer_ids = fields.One2many(
+    comodel_name='estate.property.offer',
+    inverse_name='property_id',
+    string='Offers',
+)
+
+# Many2many — stored in a join table
+tag_ids = fields.Many2many(
+    comodel_name='estate.property.tag',
+    string='Tags',
+)
+```
+</Accordion>
+
+---
+
+## Step 3 — Add Security Rules
+
+Odoo enforces security at two levels: model-level access rights (ACLs) and record-level rules.
+
+### Access Rights (`ir.model.access.csv`)
+
+The CSV file defines which groups can create, read, write, and delete records on each model:
+
+```csv
+id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
+access_estate_property_user,estate.property user,model_estate_property,base.group_user,1,1,1,0
+access_estate_property_manager,estate.property manager,model_estate_property,base.group_system,1,1,1,1
+```
+
+Columns explained:
+- `id` — External ID for the record (must be unique in the module).
+- `model_id/id` — External ID of the model: `model_` + the model name with dots replaced by underscores.
+- `group_id/id` — External ID of the group that receives these rights.
+- `perm_read/write/create/unlink` — `1` to grant, `0` to deny.
+
+### Record Rules (`ir.rule`)
+
+Record rules further restrict access by filtering which records a user can see or modify. They are domain expressions evaluated per record:
+
+```xml
+<record id="rule_estate_property_salesperson" model="ir.rule">
+    <field name="name">Estate Property: Salesperson Only</field>
+    <field name="model_id" ref="model_estate_property"/>
+    <field name="domain_force">[('salesperson_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_unlink" eval="False"/>
+</record>
+```
+
+<Warning>
+Global record rules (those without any group) intersect with each other. If you add two global rules with non-overlapping domains, no user will be able to access any record. Always test record rule combinations carefully.
+</Warning>
+
+---
+
+## Step 4 — Build Views
+
+Views are XML records stored in the database that define how the user interface renders your model.
+
+### Window Action
+
+A window action connects a menu item to one or more view types:
+
+```xml
+<record id="action_estate_property" model="ir.actions.act_window">
+    <field name="name">Properties</field>
+    <field name="res_model">estate.property</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'search_default_available': 1}</field>
+</record>
+```
+
+### List View
+
+```xml
+<record id="view_estate_property_list" model="ir.ui.view">
+    <field name="name">estate.property.list</field>
+    <field name="model">estate.property</field>
+    <field name="arch" type="xml">
+        <list string="Properties">
+            <field name="name"/>
+            <field name="postcode"/>
+            <field name="bedrooms"/>
+            <field name="living_area"/>
+            <field name="expected_price"/>
+            <field name="selling_price"/>
+            <field name="date_availability"/>
+            <field name="state"/>
+        </list>
+    </field>
+</record>
+```
+
+### Form View
+
+```xml
+<record id="view_estate_property_form" model="ir.ui.view">
+    <field name="name">estate.property.form</field>
+    <field name="model">estate.property</field>
+    <field name="arch" type="xml">
+        <form string="Property">
+            <header>
+                <button name="action_sold" type="object" string="Mark as Sold"/>
+                <button name="action_cancel" type="object" string="Cancel"/>
+                <field name="state" widget="statusbar"
+                       statusbar_visible="new,offer_received,offer_accepted,sold"/>
+            </header>
+            <sheet>
+                <h1>
+                    <field name="name"/>
+                </h1>
+                <group>
+                    <group>
+                        <field name="property_type_id"/>
+                        <field name="postcode"/>
+                        <field name="date_availability"/>
+                    </group>
+                    <group>
+                        <field name="expected_price"/>
+                        <field name="best_price"/>
+                        <field name="selling_price"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Description">
+                        <group>
+                            <field name="description"/>
+                            <field name="bedrooms"/>
+                            <field name="living_area"/>
+                            <field name="facades"/>
+                            <field name="garage"/>
+                            <field name="garden"/>
+                            <field name="garden_area" attrs="{'invisible': [('garden', '=', False)]}"/>
+                            <field name="garden_orientation" attrs="{'invisible': [('garden', '=', False)]}"/>
+                        </group>
+                    </page>
+                    <page string="Offers">
+                        <field name="offer_ids"/>
+                    </page>
+                </notebook>
+            </sheet>
+        </form>
+    </field>
+</record>
+```
+
+### Menu Items
+
+```xml
+<menuitem id="menu_estate_root" name="Real Estate" sequence="10"/>
+<menuitem id="menu_estate_listings" name="Listings" parent="menu_estate_root" sequence="10"/>
+<menuitem id="menu_estate_property"
+          name="Properties"
+          parent="menu_estate_listings"
+          action="action_estate_property"
+          sequence="10"/>
+```
+
+---
+
+## Step 5 — Computed Fields
+
+Computed fields derive their value from other fields using a method decorated with `@api.depends`. The decorator tells the ORM which fields to watch; any change to those fields will trigger recomputation.
+
+```python
+from odoo import api, models, fields
+
+class EstateProperty(models.Model):
+    _name = 'estate.property'
+    _description = 'Real Estate Property'
+
+    living_area = fields.Integer()
+    garden_area = fields.Integer()
+    total_area = fields.Integer(
+        string='Total Area (sqm)',
+        compute='_compute_total_area',
+    )
+
+    best_price = fields.Float(
+        string='Best Offer',
+        compute='_compute_best_price',
+    )
+    offer_ids = fields.One2many('estate.property.offer', 'property_id')
+
+    @api.depends('living_area', 'garden_area')
+    def _compute_total_area(self):
+        for record in self:
+            record.total_area = record.living_area + record.garden_area
+
+    @api.depends('offer_ids.price')
+    def _compute_best_price(self):
+        for record in self:
+            record.best_price = max(record.offer_ids.mapped('price'), default=0.0)
+```
+
+<Note>
+Computed fields are not stored in the database by default. Add `store=True` to persist the value and enable filtering and grouping on it. When `store=True`, the field is recomputed automatically in a background write whenever a dependency changes.
+</Note>
+
+---
+
+## Step 6 — Business Actions
+
+Business logic is implemented as methods on the model class. Methods starting with `action_` are the convention for button handlers.
+
+```python
+from odoo import api, models, fields
+from odoo.exceptions import UserError
+
+class EstateProperty(models.Model):
+    _name = 'estate.property'
+    _description = 'Real Estate Property'
+
+    state = fields.Selection(
+        selection=[
+            ('new', 'New'),
+            ('offer_received', 'Offer Received'),
+            ('offer_accepted', 'Offer Accepted'),
+            ('sold', 'Sold'),
+            ('cancelled', 'Cancelled'),
+        ],
+        default='new',
+        required=True,
+        copy=False,
+    )
+
+    def action_sold(self):
+        for record in self:
+            if record.state == 'cancelled':
+                raise UserError("Cancelled properties cannot be sold.")
+            record.state = 'sold'
+        return True
+
+    def action_cancel(self):
+        for record in self:
+            if record.state == 'sold':
+                raise UserError("Sold properties cannot be cancelled.")
+            record.state = 'cancelled'
+        return True
+```
+
+<Tip>
+Always iterate over `self` even when you expect a single record. Odoo may call your method on a batch of records, especially from server actions or automated actions.
+</Tip>
+
+### Constraints
+
+Use `@api.constrains` to enforce business rules that cannot be expressed with simple field attributes:
+
+```python
+from odoo import api, models, fields
+from odoo.exceptions import ValidationError
+
+class EstateProperty(models.Model):
+    _name = 'estate.property'
+    _description = 'Real Estate Property'
+
+    expected_price = fields.Float(required=True)
+    selling_price = fields.Float(readonly=True, copy=False)
+
+    @api.constrains('selling_price', 'expected_price')
+    def _check_selling_price(self):
+        for record in self:
+            if record.selling_price > 0 and \
+               record.selling_price < record.expected_price * 0.9:
+                raise ValidationError(
+                    "The selling price cannot be lower than 90% of the expected price."
+                )
+```

@@ -1,0 +1,303 @@
+---
+title: "Odoo Documentation Content Style Guidelines"
+sidebarTitle: "Content Guidelines"
+description: "Official Odoo writing style rules: present tense, imperative mood, active voice, capitalization, UI element markup, screenshot standards, and admonition usage."
+---
+
+Writing Odoo documentation is different from blogging or marketing copy. Readers skim to find the answer they need, so every word must earn its place. These guidelines define the consistent voice, structure, and formatting conventions that keep the documentation clear and easy to navigate — and that speed up the review process for your contribution.
+
+<Note>
+  Read the [RST Guidelines](/contributing/documentation/rst-guidelines) alongside this page before writing or editing content. RST formatting mistakes are the most common reason PRs need revision.
+</Note>
+
+## Documentation organisation
+
+For most topics, **a single page is enough**. Place it in the correct section of the documentation (for example, content about the CRM app belongs under **User Docs → Sales → CRM**) and follow the document structure described below.
+
+For complex topics that span multiple pages, create child pages that are referenced from the parent (TOC) page. Whenever possible, include introductory content on the parent page itself rather than leaving it as a bare table of contents. Make the parent page appear in the navigation menu by adding the `:show-content:` metadata directive at the top of the RST file.
+
+<Warning>
+  Avoid duplicating content. If a topic is already documented elsewhere, reference that page with a `:doc:` or `:ref:` link instead of repeating the information.
+</Warning>
+
+<Note>
+  When you delete or move an `.rst` file, add a redirect entry to the matching `redirects/<version>.txt` file. For example, if you move `unsplash.rst` from `applications/websites/website/configuration` to `applications/general/integrations`:
+
+  ```text
+  applications/websites/website/configuration/unsplash.rst applications/general/integrations/unsplash.rst
+  ```
+</Note>
+
+## Document structure
+
+Every page must have **exactly one H1 heading**. Use subsequent heading levels to organise sections and sub-sections.
+
+| Level | Purpose |
+|---|---|
+| **H1** | Page title — gives readers a clear, immediate understanding of the topic |
+| **H2** | Main sections — typically one for configuration/prerequisites, then one per major action or feature |
+| **H3** | Sub-sections — for very specific points within a section |
+
+The content directly under the H1 (the *lead paragraph*) should confirm to the reader that they are on the right page, then explain the **business aspects** of the topic. Documentation describes, it does not promote.
+
+### Heading style rules
+
+- **Be concise.** Avoid full sentences, questions, or headings that start with "how to".
+- **No pronouns.** Do not use *you* or *your* in headings.
+- **Sentence case.** Capitalise only the first word, the first word after a colon, and proper nouns (brand and product names).
+
+<Accordion title="Heading capitalisation examples">
+  | ✅ Correct | ❌ Incorrect |
+  |---|---|
+  | `Create a sales order` | `Create a Sales Order` |
+  | `Odoo Sales: configuration guide` | `Odoo Sales: Configuration Guide` |
+  | `POS: point of sale setup` | `POS: Point Of Sale Setup` |
+</Accordion>
+
+## Writing style
+
+### Tense
+
+Use the **present tense** for descriptions and instructions. Reserve the future tense only for events that genuinely occur later.
+
+```
+✅  Screenshots are automatically resized to fit the content block's width.
+❌  When you take a screenshot, remember that it will be automatically resized.
+```
+
+### Mood and voice
+
+Use the **imperative mood** to avoid addressing the reader as *you*, and prefer **active voice** over passive constructions.
+
+```
+✅  Select the appropriate option from the dropdown menu.
+❌  You can select the appropriate option from the dropdown menu.
+```
+
+### American English spelling
+
+Use American English throughout — *color* not *colour*, *organize* not *organise*, etc.
+
+### Consistency
+
+When modifying existing content, match the existing tone and presentation, or rewrite both old and new text to be consistent. Never leave a page that mixes two incompatible styles.
+
+## Capitalisation
+
+- Use **sentence case** in titles and headings (see above).
+- **Capitalise app names** — *Odoo Sales*, the *Sales* app.
+- **Capitalise UI labels** exactly as they appear in the interface. If a label is in ALL CAPS in the UI, convert it to sentence case in the documentation.
+- Capitalise the first letter after a colon when it begins a complete sentence.
+- Do **not** capitalise common nouns like *sales order* or *bill of materials* unless you are referencing a specific model or label name.
+
+## Lists
+
+Use lists to organise information, guide readers through steps, or enumerate options. Choose the right list type:
+
+- **Numbered lists** when the sequence matters (procedures, instructions, ordered steps).
+- **Bulleted lists** when order does not matter (features, fields, options).
+
+<Tip>
+  Use inline text instead of a list when there are three or fewer items, or when the items are very short. Combine bulleted and numbered lists with nesting where appropriate.
+
+  Consider grouping simple consecutive steps within a single list item:
+  > Go to **Website → Site → Pages** and click **New**.
+
+  End a list item with a period only if it forms a complete sentence.
+</Tip>
+
+### Examples
+
+**Bulleted list** — fields on the Replenishment report:
+
+- **Product**: the product that requires a replenishment
+- **Location**: the specific location where the product is stored
+- **On Hand**: the amount of product currently available
+
+**Numbered list** — creating a new website page:
+
+1. Either open the **Website** app and click **+ New → Page**, or go to **Website → Site → Pages** and click **New**.
+2. Enter a **Page Title** — this is used in the menu and the page URL.
+3. Click **Create**.
+4. Customise the page using the website builder, then click **Save**.
+
+## Icons
+
+Use icons in instructions to help readers identify UI elements and reduce lengthy explanations. Always follow an icon with a plain-text descriptor in brackets.
+
+```rst
+Once developer mode is activated, access developer tools by clicking the
+:icon:`fa-bug` (:guilabel:`bug`) icon.
+```
+
+## Images
+
+Images illustrate and reinforce written content — they never replace it. Written instructions must be complete and clear on their own. Use images **sparingly**: to highlight a key detail or clarify a concrete example.
+
+<Warning>
+  Always compress PNG files with [pngquant](https://pngquant.org/) before committing:
+
+  ```bash
+  pngquant path/to/image.png
+  mv path/to/image-fs8.png path/to/image.png
+  ```
+</Warning>
+
+### Screenshots
+
+Screenshots are automatically resized to fit the content width. Images that are too wide become unreadable on smaller screens. Keep screenshots within **768 – 933 pixels wide** and avoid full-screen captures unless absolutely necessary.
+
+Tips for good screenshots:
+
+1. **Resize the browser window** or use DevTools to set a narrow viewport width.
+2. **Crop** to the relevant area — do not show the entire browser chrome.
+3. **Remove unnecessary information** and resize table columns where needed.
+
+<Warning>
+  Do not add rectangles, arrows, or other markup to screenshots. Crop to highlight the relevant area and ensure written instructions are self-explanatory without the image.
+</Warning>
+
+### Media file naming
+
+| Rule | Example |
+|---|---|
+| Lowercase letters only | `screenshot-tips.gif` |
+| Words separated by hyphens | `awesome-filename.png` |
+| Name reflects the content | `developer-mode-settings.png` |
+
+Each RST file gets its own subdirectory for media. The folder name must match the RST filename exactly:
+
+```text
+├── section/
+│   ├── doc_filename/
+│   │   ├── screenshot-tips.gif
+│   │   └── awesome-filename.png
+│   └── doc_filename.rst
+```
+
+### ALT tags
+
+Every image must have an ALT tag. Good ALT text is:
+
+- **Short** — one line maximum.
+- **Not repetitive** — do not restate the preceding heading or paragraph.
+- **Descriptive** — explains the action or state shown in the image.
+- **Readable aloud** — makes sense when a screen reader vocalises it.
+
+```rst
+.. image:: content_guidelines/settings.png
+   :alt: Activating the developer mode in the Settings app
+```
+
+## UI element references
+
+Use the correct RST markup for every UI element to ensure consistent rendering and accessibility.
+
+<CardGroup cols={2}>
+  <Card title=":guilabel: — labels, buttons, fields">
+    Use for any interactive UI text: button labels, field names, checkboxes, section headers.
+
+    ```rst
+    Update your credentials, then click :guilabel:`Save`.
+    ```
+
+    Do **not** use `:guilabel:` for general concepts or model names.
+  </Card>
+
+  <Card title=":menuselection: — navigation paths">
+    Use for sequences of menus, always starting with the app name. Use `-->` as the separator.
+
+    ```rst
+    Go to :menuselection:`Sales --> Reporting --> Dashboard`.
+    ```
+
+    Only include actual menu items — not section headers.
+  </Card>
+
+  <Card title=":file: — file paths and names">
+    ```rst
+    Create redirections using the :file:`redirects.txt` file.
+    ```
+  </Card>
+
+  <Card title=":command: — shell commands">
+    ```rst
+    Run :command:`make clean html` to rebuild.
+    ```
+  </Card>
+</CardGroup>
+
+## Admonitions
+
+Use admonitions to draw attention to specific types of information. Choose the right type:
+
+<Accordion title="Note — additional information">
+  Use to highlight important supplementary details that the reader should be aware of.
+
+  ```rst
+  .. note::
+     Use this alert block to draw the reader's attention and highlight important
+     additional information.
+  ```
+</Accordion>
+
+<Accordion title="Tip — useful tricks">
+  Use to share a helpful shortcut or trick that requires the reader to take an action.
+
+  ```rst
+  .. tip::
+     Use this alert block to inform the reader about a useful trick that
+     requires an action.
+  ```
+</Accordion>
+
+<Accordion title="Important — critical information">
+  Use to notify the reader of information they must not overlook.
+
+  ```rst
+  .. important::
+     Use this alert block to notify the reader about important information.
+  ```
+</Accordion>
+
+<Accordion title="Warning — proceed with caution">
+  Use when the reader must exercise care to avoid data loss, errors, or unexpected results.
+
+  ```rst
+  .. warning::
+     Use this alert block to require the reader to proceed with caution.
+  ```
+</Accordion>
+
+<Accordion title="Danger — serious threats">
+  Use only for information about serious or irreversible consequences.
+
+  ```rst
+  .. danger::
+     Use this alert block to bring the reader's attention to a serious threat.
+  ```
+</Accordion>
+
+<Accordion title="Example — concrete illustrations">
+  Use to show a worked example directly following an explanation.
+
+  ```rst
+  .. example::
+     Use this alert block to show an example.
+  ```
+</Accordion>
+
+## Quick reference: dos and don'ts
+
+| ✅ Do | ❌ Don't |
+|---|---|
+| Write in present tense | Use future tense for current-state descriptions |
+| Use imperative mood | Address the reader as "you" in instructions |
+| Use American English spelling | Use British English spellings |
+| Sentence case for all headings | Title Case for headings |
+| Capitalise app names and UI labels as they appear | Capitalise common nouns like "sales order" |
+| Crop screenshots to the relevant area | Post full-screen captures with annotations |
+| Compress PNGs with pngquant | Commit uncompressed images |
+| Use `:menuselection:` for menu paths | Put menu items inside `:guilabel:` |
+| Reference existing pages with `:doc:` or `:ref:` | Duplicate content from other pages |
+| Add redirects when renaming `.rst` files | Leave old URLs broken |

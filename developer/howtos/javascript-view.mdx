@@ -1,0 +1,320 @@
+---
+title: 'Create a Custom JavaScript View in Odoo'
+sidebarTitle: 'Custom JS View'
+description: 'Step-by-step guide to building a custom Odoo view: controller, renderer, model, arch parser, view registry registration, and XML view record declaration.'
+---
+
+A custom JavaScript view in Odoo is a first-class view type built with OWL components, registered in the `views` registry, and declared in the database via `ir.ui.view`. Views consist of four cooperating pieces: a **controller** (coordinates everything), a **renderer** (displays records), a **model** (fetches and manages data), and an **arch parser** (reads the view's XML arch). You can either subclass an existing view or build one from scratch.
+
+## Approach 1: Subclass an Existing View
+
+The fastest path is to extend an existing view. The example below adds a custom ribbon to the Kanban view by extending its controller.
+
+<Steps>
+  <Step title="Extend the controller and register the view">
+    Create `custom_kanban_controller.js`:
+
+    ```javascript
+    import { KanbanController } from "@web/views/kanban/kanban_controller";
+    import { kanbanView } from "@web/views/kanban/kanban_view";
+    import { registry } from "@web/core/registry";
+
+    class CustomKanbanController extends KanbanController {
+      static template = "my_module.CustomKanbanView";
+
+      // Override or add methods here.
+      // Always call super.setup() if you override setup().
+      setup() {
+        super.setup();
+        // additional initialization
+      }
+    }
+
+    export const customKanbanView = {
+      ...kanbanView, // inherit default Renderer, Controller, Model
+      Controller: CustomKanbanController,
+    };
+
+    // Register with a unique key in the "views" registry
+    registry.category("views").add("custom_kanban", customKanbanView);
+    ```
+  </Step>
+
+  <Step title="Define the template">
+    Create `custom_kanban_controller.xml`. Use `t-inherit` to extend the base template:
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <templates>
+      <t t-name="my_module.CustomKanbanView"
+         t-inherit="web.KanbanView"
+         t-inherit-mode="primary">
+        <xpath expr="//Layout" position="before">
+          <div class="o_custom_ribbon">
+            Custom information ribbon
+          </div>
+        </xpath>
+      </t>
+    </templates>
+    ```
+  </Step>
+
+  <Step title="Activate the view in the arch">
+    Use `js_class` on any kanban arch declaration to use your custom view:
+
+    ```xml
+    <kanban js_class="custom_kanban">
+      <templates>
+        <t t-name="card">
+          <!-- kanban card template -->
+        </t>
+      </templates>
+    </kanban>
+    ```
+  </Step>
+
+  <Step title="Add files to the asset bundle">
+    Register both files in `__manifest__.py`:
+
+    ```python
+    "assets": {
+        "web.assets_backend": [
+            "my_module/static/src/views/custom_kanban_controller.js",
+            "my_module/static/src/views/custom_kanban_controller.xml",
+        ],
+    },
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Approach 2: Build a View from Scratch
+
+Building a completely new view type requires implementing all four pieces. This example creates a `"beautiful"` view type.
+
+<Steps>
+  <Step title="Create the controller">
+    The controller coordinates the model, renderer, and layout. It creates the model instance, makes it reactive, and initiates the data load.
+
+    ```javascript
+    // beautiful_controller.js
+    import { Layout } from "@web/search/layout";
+    import { useService } from "@web/core/utils/hooks";
+    import { Component, onWillStart, useState } from "@odoo/owl";
+
+    export class BeautifulController extends Component {
+      static template = "my_module.View";
+      static components = { Layout };
+
+      setup() {
+        this.orm = useService("orm");
+
+        // Create the model and make it reactive for automatic re-rendering
+        this.model = useState(
+          new this.props.Model(
+            this.orm,
+            this.props.resModel,
+            this.props.fields,
+            this.props.archInfo,
+            this.props.domain
+          )
+        );
+
+        onWillStart(async () => {
+          await this.model.load();
+        });
+      }
+    }
+    ```
+
+    Controller template (`beautiful_controller.xml`):
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <templates xml:space="preserve">
+      <t t-name="my_module.View">
+        <Layout display="props.display" className="'h-100 overflow-auto'">
+          <t t-component="props.Renderer"
+             records="model.records"
+             propsYouWant="'Hello world'"/>
+        </Layout>
+      </t>
+    </templates>
+    ```
+  </Step>
+
+  <Step title="Create the renderer">
+    The renderer's job is to display the records passed down from the controller.
+
+    ```javascript
+    // beautiful_renderer.js
+    import { Component } from "@odoo/owl";
+
+    export class BeautifulRenderer extends Component {
+      static template = "my_module.Renderer";
+    }
+    ```
+
+    Renderer template (`beautiful_renderer.xml`):
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <templates xml:space="preserve">
+      <t t-name="my_module.Renderer">
+        <t t-esc="props.propsYouWant"/>
+        <t t-foreach="props.records" t-as="record" t-key="record.id">
+          <!-- display each record here -->
+          <div t-esc="record.display_name"/>
+        </t>
+      </t>
+    </templates>
+    ```
+  </Step>
+
+  <Step title="Create the model">
+    The model fetches data from the server and exposes it to the controller:
+
+    ```javascript
+    // beautiful_model.js
+    import { KeepLast } from "@web/core/utils/concurrency";
+
+    export class BeautifulModel {
+      constructor(orm, resModel, fields, archInfo, domain) {
+        this.orm = orm;
+        this.resModel = resModel;
+        const { fieldFromTheArch } = archInfo;
+        this.fieldFromTheArch = fieldFromTheArch;
+        this.fields = fields;
+        this.domain = domain;
+        // KeepLast ensures only the most recent async call's result is used
+        this.keepLast = new KeepLast();
+      }
+
+      async load() {
+        const { length, records } = await this.keepLast.add(
+          this.orm.webSearchRead(
+            this.resModel,
+            this.domain,
+            [this.fieldFromTheArch],
+            {}
+          )
+        );
+        this.records = records;
+        this.recordsLength = length;
+      }
+    }
+    ```
+
+    <Note>
+    For advanced use cases, you can extend `RelationalModel` (used by form/list/kanban views) instead of building a model from scratch.
+    </Note>
+  </Step>
+
+  <Step title="Create the arch parser">
+    The arch parser reads the view's XML definition and extracts configuration:
+
+    ```javascript
+    // beautiful_arch_parser.js
+    import { XMLParser } from "@web/core/utils/xml";
+
+    export class BeautifulArchParser extends XMLParser {
+      parse(arch) {
+        const xmlDoc = this.parseXML(arch);
+        const fieldFromTheArch = xmlDoc.getAttribute("fieldFromTheArch");
+        return {
+          fieldFromTheArch,
+        };
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Assemble and register the view">
+    Combine all pieces into a view descriptor object and register it:
+
+    ```javascript
+    // beautiful_view.js
+    import { registry } from "@web/core/registry";
+    import { BeautifulController } from "./beautiful_controller";
+    import { BeautifulArchParser } from "./beautiful_arch_parser";
+    import { BeautifulModel } from "./beautiful_model";
+    import { BeautifulRenderer } from "./beautiful_renderer";
+
+    export const beautifulView = {
+      type: "beautiful",
+      display_name: "Beautiful",
+      icon: "fa fa-picture-o",  // icon shown in the Layout view switcher
+      multiRecord: true,
+      Controller: BeautifulController,
+      ArchParser: BeautifulArchParser,
+      Model: BeautifulModel,
+      Renderer: BeautifulRenderer,
+
+      props(genericProps, view) {
+        const { ArchParser } = view;
+        const { arch } = genericProps;
+        const archInfo = new ArchParser().parse(arch);
+        return {
+          ...genericProps,
+          Model: view.Model,
+          Renderer: view.Renderer,
+          archInfo,
+        };
+      },
+    };
+
+    registry.category("views").add("beautifulView", beautifulView);
+    ```
+  </Step>
+
+  <Step title="Declare the view in XML data">
+    Create the `ir.ui.view` record that exposes this view type to the ORM:
+
+    ```xml
+    <record id="my_beautiful_view" model="ir.ui.view">
+      <field name="name">my_view</field>
+      <field name="model">my_model</field>
+      <field name="arch" type="xml">
+        <beautiful fieldFromTheArch="res.partner"/>
+      </field>
+    </record>
+    ```
+  </Step>
+</Steps>
+
+---
+
+## View Descriptor Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Unique view type identifier, matches the arch root tag |
+| `display_name` | string | Human-readable name shown in the view switcher |
+| `icon` | string | Font Awesome class for the view switcher icon |
+| `multiRecord` | boolean | `true` for list-like views, `false` for single-record views |
+| `Controller` | Component class | Manages state and coordinates renderer/model |
+| `Renderer` | Component class | Renders the visual output |
+| `Model` | class | Fetches and holds data |
+| `ArchParser` | class | Parses the arch XML into a structured `archInfo` object |
+| `props(genericProps, view)` | function | Transforms generic props into view-specific props |
+
+---
+
+## Tips
+
+<Tip>
+When you only need to customize the renderer (e.g. how records look), you can spread the existing view and only replace the `Renderer`:
+
+```javascript
+export const myView = {
+  ...kanbanView,
+  Renderer: MyCustomRenderer,
+};
+registry.category("views").add("my_view", myView);
+```
+</Tip>
+
+<Tip>
+The `KeepLast` utility from `@web/core/utils/concurrency` prevents race conditions when the user triggers multiple data loads before the previous one completes. Only the response to the most recent call is applied.
+</Tip>

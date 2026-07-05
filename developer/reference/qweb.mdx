@@ -1,0 +1,315 @@
+---
+title: 'QWeb Templating Engine Reference'
+sidebarTitle: 'QWeb'
+description: 'Complete reference for QWeb directives: t-if, t-foreach, t-att, t-out, t-call, t-set, t-field, and template inheritance for both Python and JavaScript.'
+---
+
+QWeb is Odoo's primary XML templating engine, used for generating HTML fragments in both server-side Python controllers and client-side OWL components. Template directives are XML attributes prefixed with `t-`. A `<t>` placeholder element executes its directive without emitting any HTML tag itself.
+
+```xml
+<!-- <t> is transparent — only its content is rendered -->
+<t t-if="condition">
+  <p>Test</p>
+</t>
+<!-- renders: <p>Test</p> when condition is truthy, nothing otherwise -->
+
+<!-- a real element renders itself -->
+<div t-if="condition">
+  <p>Test</p>
+</div>
+<!-- renders: <div><p>Test</p></div> -->
+```
+
+## Data Output
+
+### `t-out` (safe output)
+
+`t-out` HTML-escapes its value by default, protecting against XSS:
+
+```xml
+<p><t t-out="value"/></p>
+<!-- with value=42 → <p>42</p> -->
+```
+
+Content that is already marked safe (e.g. `markupsafe.Markup` in Python) is injected as-is without re-escaping.
+
+### Deprecated Output Directives
+
+| Directive | Status | Notes |
+|-----------|--------|-------|
+| `t-esc` | Legacy alias | Identical to `t-out`; not yet formally deprecated |
+| `t-raw` | **Deprecated since 15.0** | Never escapes; use `t-out` with `Markup` instead |
+
+<Warning>
+`t-raw` was deprecated because it is easy to inadvertently inject unsanitized HTML as the code producing the value evolves. Replace all uses of `t-raw` with `t-out` + a `markupsafe.Markup` value on the Python side.
+</Warning>
+
+## Conditionals
+
+```xml
+<div>
+  <p t-if="user.birthday == today()">Happy birthday!</p>
+  <p t-elif="user.login == 'root'">Welcome master!</p>
+  <p t-else="">Welcome!</p>
+</div>
+```
+
+The directive can be placed on any element — it controls whether that element is included in the output.
+
+## Loops
+
+`t-foreach` iterates over arrays, mappings, or integers (deprecated). Pair it with `t-as` to name the iteration variable:
+
+```xml
+<t t-foreach="[1, 2, 3]" t-as="i">
+  <p><t t-out="i"/></p>
+</t>
+```
+
+Inside the loop body, QWeb provides automatic helper variables. Replace `$as` with your `t-as` name:
+
+| Variable | Description |
+|----------|-------------|
+| `$as_value` | Current item value (same as `$as` for lists; for dicts it's the value, `$as` is the key) |
+| `$as_index` | Zero-based iteration index |
+| `$as_size` | Total size of the collection (if available) |
+| `$as_first` | `true` on the first iteration |
+| `$as_last` | `true` on the last iteration (requires `$as_size`) |
+| `$as_all` | The entire collection *(JS only, deprecated)* |
+| `$as_parity` | `"even"` or `"odd"` *(deprecated)* |
+
+<Note>
+Variables created inside a `t-foreach` scope are **local** to that loop, except for variables that already existed in the outer scope — those are updated in the outer scope after the loop ends.
+</Note>
+
+```xml
+<t t-set="existing_variable" t-value="False"/>
+<p t-foreach="[1, 2, 3]" t-as="i">
+  <t t-set="existing_variable" t-value="True"/>
+  <!-- new_variable is local to the loop -->
+  <t t-set="new_variable" t-value="True"/>
+</p>
+<!-- existing_variable is now True, new_variable is undefined -->
+```
+
+## Attributes
+
+Three forms of dynamic attribute generation:
+
+<Tabs>
+  <Tab title="t-att-$name">
+    Evaluates an expression and sets it as the named attribute:
+
+    ```xml
+    <div t-att-a="42"/>
+    <!-- → <div a="42"></div> -->
+    ```
+  </Tab>
+  <Tab title="t-attf-$name">
+    Format string (jinja-style `{{ }}` or ruby-style `#{ }`):
+
+    ```xml
+    <t t-foreach="[1, 2, 3]" t-as="item">
+      <li t-attf-class="row {{ item_index % 2 === 0 ? 'even' : 'odd' }}">
+        <t t-out="item"/>
+      </li>
+    </t>
+    <!-- → <li class="row even">1</li>  etc. -->
+    ```
+  </Tab>
+  <Tab title="t-att=mapping">
+    A mapping generates multiple attributes at once:
+
+    ```xml
+    <div t-att="{'a': 1, 'b': 2}"/>
+    <!-- → <div a="1" b="2"></div> -->
+    ```
+
+    A 2-element pair sets one attribute:
+
+    ```xml
+    <div t-att="['href', url]"/>
+    <!-- → <div href="<url value>"></div> -->
+    ```
+  </Tab>
+</Tabs>
+
+## Setting Variables
+
+`t-set` creates a template-local variable:
+
+```xml
+<!-- Using t-value expression -->
+<t t-set="foo" t-value="2 + 1"/>
+<t t-out="foo"/>
+<!-- → 3 -->
+
+<!-- Using node body as value (renders body and assigns result) -->
+<t t-set="foo">
+  <li>ok</li>
+</t>
+<t t-out="foo"/>
+```
+
+## Sub-Templates
+
+`t-call` invokes another named template within the current execution context:
+
+```xml
+<t t-call="other-template"/>
+```
+
+Variables set **inside** the call body are local to that call (they don't leak to the parent):
+
+```xml
+<t t-call="other-template">
+  <t t-set="var" t-value="1"/>
+</t>
+<!-- "var" does not exist here -->
+```
+
+The rendered body of the call is available inside the sub-template as the magic variable `0`:
+
+```xml
+<!-- other-template definition -->
+<div>
+  Content passed:
+  <t t-out="0"/>
+</div>
+
+<!-- calling it -->
+<t t-call="other-template">
+  <em>content</em>
+</t>
+<!-- → <div>Content passed: <em>content</em></div> -->
+```
+
+## Advanced Output (Python-side)
+
+In Python QWeb, the following produce safe (non-re-escaped) content:
+- `odoo.fields.Html` field values
+- `html_escape()` / `markupsafe.escape()` — escape a string and mark it safe
+- `html_sanitize()` — sanitize and mark safe
+- `markupsafe.Markup(...)` — explicit safe assertion (use with care)
+
+To force double-escaping of already-safe content: `str(content)` in Python, `String(content)` in JavaScript.
+
+## Python-Exclusive Directives
+
+### `t-field` (Smart Record Fields)
+
+`t-field` formats a model field value using its type-specific widget. Only valid on `browse()` record attributes:
+
+```xml
+<span t-field="record.name"/>
+<span t-field="record.date" t-options="{'widget': 'date'}"/>
+```
+
+Use `t-options` to pass widget-specific options.
+
+### Request-Based Rendering
+
+In HTTP controllers, render a QWeb view template:
+
+```python
+response = http.request.render("my-template", {
+    "context_value": 42
+})
+```
+
+The `_render` method on `ir.qweb` renders by database ID or external ID:
+
+```python
+html = self.env["ir.qweb"]._render("addon_name.template_xml_id", values)
+```
+
+### `t-debug`
+
+Invokes `breakpoint()` (Python debugger) during rendering:
+
+```xml
+<t t-debug=""/>
+```
+
+---
+
+## JavaScript-Exclusive Directives
+
+### `t-name` (Define a Template)
+
+```xml
+<templates>
+  <t t-name="myaddon.MyComponent">
+    <!-- template code -->
+  </t>
+</templates>
+```
+
+All template files registered in asset bundles are loaded into the OWL engine automatically.
+
+### Template Inheritance
+
+Two modes of template inheritance:
+
+<Tabs>
+  <Tab title="Primary (child template)">
+    Creates a new template derived from a parent. Use `t-inherit-mode="primary"` and provide a new `t-name`:
+
+    ```xml
+    <t t-name="myaddon.MyView"
+       t-inherit="web.KanbanView"
+       t-inherit-mode="primary">
+      <xpath expr="//Layout" position="before">
+        <div>Extra ribbon</div>
+      </xpath>
+    </t>
+    ```
+  </Tab>
+  <Tab title="Extension (in-place)">
+    Modifies the parent template in place. Use `t-inherit-mode="extension"`:
+
+    ```xml
+    <t t-inherit="web.FormView" t-inherit-mode="extension">
+      <xpath expr="//div[@class='o_form_buttons']" position="after">
+        <button>My Extra Button</button>
+      </xpath>
+    </t>
+    ```
+  </Tab>
+</Tabs>
+
+XPath `position` values: `before`, `after`, `inside` (append), `replace`, `attributes`.
+
+### JavaScript Debugging Hooks
+
+| Directive | Description |
+|-----------|-------------|
+| `t-log="expr"` | `console.log(expr)` during rendering |
+| `t-debug=""` | Triggers a debugger breakpoint in the browser |
+| `t-js="ctx"` | Executes inline JS with `ctx` bound to the render context |
+
+```xml
+<t t-set="foo" t-value="42"/>
+<t t-log="foo"/>
+<!-- → logs 42 to the browser console -->
+
+<t t-js="ctx">
+  console.log("foo is", ctx.foo);
+</t>
+```
+
+### QWeb2.Engine API (Client-Side)
+
+Access the global QWeb instance via `core.qweb` (from the legacy `web.core` module):
+
+```javascript
+// Render a template to an HTML string
+const html = core.qweb.render("myaddon.MyTemplate", { name: "World" });
+```
+
+Key `QWeb2.Engine` methods:
+
+| Method | Description |
+|--------|-------------|
+| `render(template, context)` | Renders a loaded template to a string |
+| `add_template(templates)` | Loads templates from an XML string, URL, or DOM node |

@@ -1,0 +1,221 @@
+---
+title: "Accept Online Payments with Odoo Payment Providers"
+sidebarTitle: "Payment Providers"
+description: "Connect Stripe, PayPal, Adyen, and 15+ other payment providers to accept online payments on your eCommerce site, customer portal, and sales invoices in Odoo."
+---
+
+Odoo embeds integrations with numerous **payment providers** so your customers can pay online — directly from their customer portal, your eCommerce website, or on a sales order or invoice. Customers can settle payments using their preferred method, including credit cards, bank transfers, and digital wallets. Each payment provider is linked to a configurable list of payment methods that can be activated or deactivated based on the needs of your business.
+
+<Note>
+  Odoo never stores sensitive payment data such as credit card numbers. All cardholder data is handled exclusively by the certified payment provider. Odoo stores only a unique reference token for data held securely in the provider's systems, so you are not required to achieve PCI DSS certification at the highest levels — only the minimal Self-Assessment Questionnaire (SAQ) with your provider is needed to obtain the Attestation of Compliance (AoC).
+</Note>
+
+---
+
+## Supported Payment Providers
+
+To access the list of available providers, navigate to any of:
+
+- **Accounting → Configuration → Payment Providers**
+- **Website → Configuration → Payment Providers**
+- **Sales → Configuration → Payment Providers**
+
+Click a provider card to open its configuration form.
+
+### Online Payment Providers
+
+The following providers integrate via API and process payments entirely online:
+
+| Provider | Payment Flow | Tokenization | Manual Capture | Refunds | Express Checkout |
+|---|---|---|---|---|---|
+| **Adyen** | Odoo | ✔ | Full & partial | Full & partial | |
+| **Amazon Payment Services** | Provider's website | | | | |
+| **AsiaPay** | Provider's website | | | | |
+| **Authorize.Net** | Odoo | ✔ | Full only | Full only | |
+| **Buckaroo** | Provider's website | | | | |
+| **DPO Pay** | Provider's website | | | | |
+| **ECPay** | Provider's website | | | | |
+| **Flutterwave** | Provider's website | ✔ | | | |
+| **Iyzico** | Provider's website | | | | |
+| **Mercado Pago** | Odoo or provider's website | ✔ | | | |
+| **Mollie** | Provider's website | | | | |
+| **Nuvei** | Provider's website | | | | |
+| **Paymob** | Provider's website | | | | |
+| **PayPal** | Odoo | | | | |
+| **Razorpay** | Odoo | ✔ | Full only | Full & partial | |
+| **Redsys** | Provider's website | | | | |
+| **Stripe** | Odoo | ✔ | Full only | Full & partial | ✔ |
+| **Toss Payments** | Odoo | | | | |
+| **Worldline** | Provider's website | ✔ | | | |
+| **Xendit** | Odoo or provider's website | ✔* | | | |
+
+*Refer to the Xendit documentation for tokenization specifics.*
+
+<Tip>
+  Odoo also includes a **Demo payment provider** for testing business flows without real transactions. No credentials are required — demo payments are dummy entries that do not touch any live payment network.
+</Tip>
+
+### Bank Payments
+
+<Accordion title="Wire Transfer">
+  Odoo displays your bank account details and a payment reference on the checkout page. You must manually approve the payment in Odoo once you confirm receipt in your bank account.
+</Accordion>
+
+<Accordion title="SEPA Direct Debit">
+  Customers complete a SEPA Direct Debit mandate, allowing your company to charge their bank account directly for current and future payments (useful for subscriptions).
+</Accordion>
+
+### In-Person Payments
+
+<Accordion title="Pay on Site">
+  Customers reserve products online and pay when collecting their order in-store. No payment gateway is required for the online portion.
+</Accordion>
+
+<Accordion title="Cash on Delivery">
+  Customers place an order online and pay the delivery driver on receipt. Odoo tracks the order as unpaid until you register the payment manually.
+</Accordion>
+
+---
+
+## Enabling a Payment Provider
+
+<Steps>
+  <Step title="Create an account with the provider">
+    Visit the payment provider's website, create a merchant account, and obtain the **API credentials** required for third-party integrations (API key, secret, merchant ID, etc.). The exact credentials differ by provider.
+  </Step>
+  <Step title="Open the provider form in Odoo">
+    Navigate to **Accounting → Configuration → Payment Providers** (or from the **Website** or **Sales** configuration menus) and click the relevant provider card.
+  </Step>
+  <Step title="Enter your credentials">
+    Open the **Credentials** tab and enter the API credentials provided by the payment provider. The fields shown depend on the specific provider.
+  </Step>
+  <Step title="Activate the provider">
+    Set the **State** field to **Enabled**. The provider is automatically published on your website and becomes available to customers at checkout.
+  </Step>
+</Steps>
+
+<Note>
+  Once enabled, the provider is automatically published on your website. To temporarily hide it from customers without removing the configuration, click the **Published** button to toggle it to **Unpublished**. Customers cannot make new payments through an unpublished provider, but they can still manage (delete or reassign to a subscription) any existing saved payment tokens linked to that provider.
+</Note>
+
+### Test Mode
+
+Before going live, validate your integration using the provider's sandbox environment:
+
+<Warning>
+  Always use test mode on a **duplicate** or **test database** — never on your production database. Test transactions can affect invoice numbering sequences.
+</Warning>
+
+Set the **State** field to **Test mode**, then enter the provider's **dedicated test or sandbox credentials** in the **Credentials** tab. Each payment provider maintains its own separate test environment. By default, a provider in test mode remains unpublished so it is not visible to real visitors.
+
+---
+
+## Payment Methods
+
+Each payment provider supports a specific set of payment methods (such as Visa, Mastercard, iDEAL, Bancontact, etc.). The methods listed in the **Payment methods** field on the **Configuration** tab of the provider form are the ones currently activated.
+
+### Activating and Deactivating Methods
+
+On the provider's configuration form, click **Enable Payment Methods**, then use the toggle button next to each method to activate or deactivate it.
+
+<Tip>
+  To view the complete list of all payment methods across all providers, navigate to **Accounting → Configuration → Payment Methods** (or the equivalent menu in Website or Sales). Payment methods are displayed on your eCommerce checkout in the sequence order shown in this list — drag and drop to reorder them.
+</Tip>
+
+### Icons and Brands
+
+The icons displayed next to each payment method at checkout come from the **brands** activated for that method. To update icons or manage brand associations:
+
+1. Navigate to the payment method list and click the relevant method.
+2. To change the method's icon, hover over the image in the upper-right corner and click the **pencil** icon.
+3. Open the **Brands** tab to view and reorder activated brands. Drag and drop to change their display sequence. Click a brand to edit its icon in the popup window.
+
+---
+
+## Tokenization
+
+Providers that support tokenization (marked ✔ in the table above) can save a customer's payment method details for future use. When a customer pays and tokenization is enabled, Odoo stores a **payment token** — a secure reference in the provider's system — instead of card details.
+
+To enable tokenization, open the provider's **Configuration** tab and enable **Allow Saving Payment Methods**.
+
+Tokenization is particularly valuable for:
+- **eCommerce** — improving conversion rates by allowing returning customers to check out without re-entering card details.
+- **Subscriptions** — enabling automatic recurring charges without customer intervention.
+
+Customers can manage (add or delete) their saved payment methods by clicking **Manage payment methods** in their customer portal.
+
+---
+
+## Manual Capture
+
+Providers that support manual capture (marked in the table above) allow you to **authorize** a payment without immediately charging the customer. The funds are reserved on the customer's payment method and charged only when you manually capture them later.
+
+To enable manual capture, open the provider's **Configuration** tab and enable **Capture Amount Manually**.
+
+**Common use cases for manual capture:**
+
+- Wait until an order ships before charging the customer.
+- Review orders for fraud before completing payment.
+- Avoid refund fees — voiding an authorization is typically free, whereas refunding a captured payment may incur a fee.
+- Hold a security deposit that may be partially returned later.
+
+To capture or void a payment after authorization, open the related sales order or invoice and click **Capture Transaction** or **Void Transaction**.
+
+<Note>
+  Adyen and Stripe also support capturing and voiding payments directly from their respective web dashboards. Some providers support **full and partial** capture; others support **full only** — refer to the provider table above.
+</Note>
+
+---
+
+## Refunds
+
+If your payment provider supports refunds (marked in the table above), you can initiate a refund directly from Odoo without enabling any additional setting. Navigate to the customer payment record and click **Refund**.
+
+Some providers support partial refunds (marked **Full and partial** in the table); others only support full refunds (**Full only**). Adyen and Stripe also support issuing refunds from their own web interfaces.
+
+---
+
+## Express Checkout
+
+Stripe is currently the only provider that supports the **Express Checkout** feature. When enabled, customers can pay with **Google Pay** or **Apple Pay** buttons — going directly from the cart to the order confirmation page in a single click, without filling in a contact form.
+
+To enable express checkout, open the Stripe provider's **Configuration** tab and enable **Allow Express Checkout**.
+
+<Note>
+  All prices shown on the express checkout payment form always include taxes.
+</Note>
+
+---
+
+## Availability: Currencies, Countries, and Maximum Amount
+
+You can restrict when a payment provider is offered to customers using the **Configuration** tab:
+
+<Accordion title="Currencies and Countries">
+  Each provider has a built-in list of supported currencies and countries that filters availability during checkout. If a customer's currency or country is not in the supported list, the provider's payment methods are not shown to them. You can manually add or remove currencies and countries from the provider's configuration.
+
+  Payment methods also have their own separate currency and country restrictions that act as an additional filter layer.
+
+  If the supported currencies or countries list appears empty, it either means the list is too long to display, or Odoo does not have that data for the provider. The provider remains available, though the provider may reject the transaction at the network level.
+</Accordion>
+
+<Accordion title="Maximum Amount">
+  Set a **Maximum Amount** in the **Configuration** tab to prevent customers from using a provider for transactions above a certain value. Set the field to `0.00` to remove any upper limit.
+
+  This restriction does not apply reliably on pages where the customer can modify the amount (such as the Donation snippet or the checkout page when paid shipping methods are active).
+</Accordion>
+
+---
+
+## Payment Journal and Accounting
+
+A **payment journal** (of the Bank type) must be linked to each payment provider to record incoming payments in the correct outstanding account. The **Bank** journal is assigned by default. To change it, open the provider's **Configuration** tab and select a different **Payment journal**.
+
+<Note>
+  Payment journals only need to be configured if the **Invoicing** or **Accounting** app is installed.
+</Note>
+
+From an accounting perspective, online payments fall into two workflows:
+
+- **Direct deposit** — payments deposited directly into your bank account follow the standard bank reconciliation workflow.
+- **Third-party provider** — payments held by an online provider (Stripe, PayPal, etc.) require a separate reconciliation step. Odoo recommends designating a dedicated **outstanding account** per provider to isolate those payments from your regular bank flow. Consult your accountant for guidance on the most appropriate journal entry structure for your situation.

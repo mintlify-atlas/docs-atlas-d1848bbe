@@ -1,0 +1,128 @@
+---
+title: "Run Recruitment Pipelines in Odoo"
+sidebarTitle: "Recruitment"
+description: "Manage job positions, track applicants through a configurable Kanban pipeline, conduct interviews, send offer letters, and onboard new hires in Odoo."
+---
+
+Odoo **Recruitment** keeps all job applicants organized with a preconfigured series of steps and stages that each applicant moves through—from initial qualification to a signed contract. When an applicant submits an application, an applicant card is created automatically for the relevant job position. Recruiters drag cards from stage to stage as the process advances, and automated emails fire at each transition to keep candidates informed. The entire flow is configurable to match any hiring process, from startup to enterprise.
+
+---
+
+## Job Positions
+
+Job positions are the roles you are actively hiring for. Each position has its own Kanban pipeline for managing applicants independently.
+
+<Steps>
+  <Step title="Create a job position">
+    Go to the main **Recruitment** dashboard and click **New**. Enter the job title, department, and target number of new employees. Each job position generates a dedicated application page on your website (if the Website app is installed).
+  </Step>
+  <Step title="Publish the job">
+    Toggle the position to **Published** on your website so candidates can find and apply from your career page. Applications submitted online are automatically converted into applicant cards in the pipeline.
+  </Step>
+  <Step title="Set the expected salary range">
+    Configure the salary range on the job position. This information populates the **Salary Package Configurator** when an offer letter is sent, guiding recruiters to stay within budget.
+  </Step>
+</Steps>
+
+<Note>
+  Stages in Odoo apply to **all** job positions by default. If you need position-specific stages (e.g., a technical test stage only for engineering roles), mark those stages as job-specific in the stage settings.
+</Note>
+
+---
+
+## Applications Pipeline
+
+The pipeline is a Kanban board where each column represents a stage and each card represents an applicant. The pipeline gives the hiring team a real-time view of every candidate across all active positions.
+
+<CardGroup cols={2}>
+  <Card title="Default Stages" icon="columns">
+    Odoo ships with six default stages: **New**, **Initial Qualification**, **First Interview**, **Second Interview**, **Contract Proposal**, and **Contract Signed**. The last stage is folded by default and expands when clicked.
+  </Card>
+  <Card title="Stage Status Colors" icon="circle">
+    Each applicant card has a colored status dot: **green** (ready to advance), **red** (blocked), or **gray** (in progress). Recruiters set this manually to signal the card's current state at a glance.
+  </Card>
+  <Card title="Automated Emails" icon="mail">
+    Configure each stage to send an automatic email from a template when a card enters that stage—confirmation of application, interview invitation, rejection notice, or offer letter.
+  </Card>
+  <Card title="Résumé Display" icon="file-text">
+    Enable **Résumé Display** in settings to show the candidate's CV alongside their applicant card in full-screen mode, eliminating the need to open a separate document viewer.
+  </Card>
+</CardGroup>
+
+---
+
+## Interview Stages
+
+<Tabs>
+  <Tab title="Initial Qualification">
+    Recruiters review the application, scan the résumé, and schedule a brief phone screen. Activities (call, email, meeting) are logged directly on the applicant card. If OCR digitization is enabled, Odoo extracts the candidate's name, phone, and email from the uploaded CV automatically.
+  </Tab>
+  <Tab title="First Interview">
+    Move the card to the **First Interview** stage and schedule the meeting. Interviewers are added as followers so they receive notifications and can leave internal notes on the card after the interview.
+  </Tab>
+  <Tab title="Second Interview">
+    For roles requiring multiple rounds, the second interview stage allows a different panel to evaluate the candidate. Interview survey links can be sent to candidates prior to each round to gather structured feedback.
+  </Tab>
+</Tabs>
+
+<Tip>
+  Enable **Send Interview Survey** in **Recruitment → Configuration → Settings** to send structured questionnaires to candidates before their interview. Survey responses are stored on the applicant card for the hiring team to review.
+</Tip>
+
+---
+
+## Offer Letters
+
+<Steps>
+  <Step title="Create a contract proposal">
+    When a candidate reaches the **Contract Proposal** stage, click **Create Offer** on the applicant card. The offer form pulls in the job position, department, and salary range pre-filled from the job position configuration.
+  </Step>
+  <Step title="Configure the salary package">
+    Use the **Salary Package Configurator** to build the compensation offer—base salary, benefits, meal vouchers, company car, and any other advantages. The configurator shows the total employer cost alongside the net salary the candidate will see.
+  </Step>
+  <Step title="Set an expiration date">
+    Set the number of days the offer is valid. After this period, if the offer has not been accepted, it expires automatically and the candidate must be sent a revised offer if you wish to proceed.
+  </Step>
+  <Step title="Send the offer">
+    Click **Send Offer** to email the offer letter to the candidate. The candidate can view and accept the offer through a secure link—no Odoo account required. Their acceptance is recorded on the applicant card.
+  </Step>
+</Steps>
+
+---
+
+## Contract Signed and Onboarding
+
+<Steps>
+  <Step title="Move to Contract Signed">
+    Once the candidate accepts the offer and both parties sign the contract (using Odoo **Sign** for e-signatures), move the applicant card to **Contract Signed**. This stage is the final step in the recruitment pipeline.
+  </Step>
+  <Step title="Create the employee record">
+    Click **Create Employee** on the applicant card. Odoo populates the new employee form with all information collected during recruitment—name, contact details, job position, department, and salary—so there is no re-entry of data.
+  </Step>
+  <Step title="Launch onboarding">
+    Attach the relevant onboarding plan to the new employee record. Odoo assigns all onboarding tasks to the responsible parties and tracks completion status so nothing falls through the cracks.
+  </Step>
+</Steps>
+
+<Accordion title="Using referrals">
+  Enable the **Referrals** app to run a structured employee referral program. Employees share job postings with their network via a unique referral link. When a referred candidate is hired, the referring employee earns configurable reward points or bonuses tracked automatically in the Referrals app.
+</Accordion>
+
+---
+
+## Recruitment Settings
+
+<CardGroup cols={2}>
+  <Card title="Résumé Digitization (OCR)" icon="scan">
+    Automatically extract applicant name, phone, and email from uploaded CVs using OCR. Choose between **Digitize Automatically** (all CVs) or **Digitize on Demand** (when manually triggered) to balance speed and cost.
+  </Card>
+  <Card title="SMS Communication" icon="message-square">
+    Send text messages to applicants directly from their card. SMS credits are purchased through Odoo's in-app purchase system and deducted per message sent.
+  </Card>
+  <Card title="Interview Surveys" icon="clipboard-check">
+    Install the **Surveys** app to create structured interview questionnaires. Send surveys to candidates at any stage and review responses within Odoo before the interview.
+  </Card>
+  <Card title="Rules-Based Assignment" icon="git-merge">
+    Enable **Rules-Based Assignment** on a sales team to automatically assign incoming applicants to the correct recruiter based on criteria such as country, language, or job position.
+  </Card>
+</CardGroup>

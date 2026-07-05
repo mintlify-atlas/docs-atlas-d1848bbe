@@ -1,0 +1,277 @@
+---
+title: "Contribute to Odoo Documentation: Getting Started"
+sidebarTitle: "Overview"
+description: "Learn how the Odoo documentation is structured with Sphinx and RST, how to set up your local environment, build docs with make html, and submit changes via GitHub PRs."
+---
+
+The Odoo documentation is an open-source effort written in **reStructuredText (RST)** and built into HTML using [Sphinx](https://www.sphinx-doc.org/). Anyone — whether an Odoo employee, community developer, or general user — can propose improvements. This guide walks you through everything you need to go from zero to your first merged pull request.
+
+<Note>
+  Before diving in, read both the [Content Guidelines](/contributing/documentation/content-guidelines) and [RST Guidelines](/contributing/documentation/rst-guidelines) to ensure your contribution passes review quickly.
+</Note>
+
+## How the docs are organised
+
+The source lives in the [`odoo/documentation`](https://github.com/odoo/documentation) GitHub repository. Every page is an `.rst` file under the `content/` directory. Sphinx reads a hierarchy of `toctree` directives to assemble the full site, so every new file must be referenced in its parent's `toctree`.
+
+Key directories inside the repo:
+
+| Path | Purpose |
+|---|---|
+| `content/` | All RST source pages |
+| `redirects/` | Per-version redirect rules (`17.0.txt`, `18.0.txt`, …) |
+| `static/` | CSS, JS, and image assets used by the Sphinx theme |
+| `conf.py` | Sphinx configuration (versions, languages, extensions) |
+| `requirements.txt` | Python build dependencies |
+
+## Environment setup
+
+<Steps>
+  <Step title="Create a GitHub account and fork the repo">
+    [Sign up on GitHub](https://github.com/join) if you haven't already. Then go to [github.com/odoo/documentation](https://github.com/odoo/documentation) and click **Fork** in the top-right corner to create your own copy. Skip the fork if you are an Odoo employee pushing directly to the main codebase.
+  </Step>
+
+  <Step title="Generate an SSH key and register it">
+    Follow GitHub's guide to [generate an SSH key and add it to your account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) so you can push commits without a password.
+  </Step>
+
+  <Step title="Clone the repository">
+    ```bash
+    git clone git@github.com:odoo/documentation.git
+    cd documentation
+    ```
+
+    If you are an external contributor, add your fork as a remote named `dev`:
+    ```bash
+    git remote add dev git@github.com:<your_github_account>/documentation.git
+    ```
+  </Step>
+
+  <Step title="Configure your Git identity">
+    Use the same email address registered on GitHub so commits are attributed correctly:
+    ```bash
+    git config --global user.name "Your Name"
+    git config --global user.email "youremail@example.com"
+    ```
+  </Step>
+
+  <Step title="Configure line endings and the commit template">
+    <CodeGroup>
+      ```bash Linux / macOS
+      git config --global core.autocrlf input
+      git config commit.template `pwd`/commit_template.txt
+      ```
+
+      ```bash Windows (PowerShell)
+      git config --global core.autocrlf true
+      git config commit.template %CD%\commit_template.txt
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Create and activate a Python virtual environment">
+    <CodeGroup>
+      ```bash Linux / macOS
+      python3 -m venv .venv
+      source .venv/bin/activate
+      ```
+
+      ```bash Windows (PowerShell)
+      py3 -m venv .venv
+      .\.venv\Scripts\Activate.ps1
+      ```
+    </CodeGroup>
+
+    Python **3.10 – 3.14** is required.
+  </Step>
+
+  <Step title="Install Python dependencies">
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    Verify that the installation directory is in your `PATH` (default `~/.local/bin` on Linux/macOS).
+  </Step>
+
+  <Step title="Install Make">
+    <CodeGroup>
+      ```bash Linux
+      sudo apt install make -y
+      ```
+
+      ```bash macOS
+      # Install via Homebrew: https://formulae.brew.sh/formula/make
+      brew install make
+      ```
+
+      ```bash Windows
+      # Follow: https://www.technewstoday.com/install-and-use-make-in-windows
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install pngquant">
+    [Install pngquant](https://pngquant.org/) to compress PNG screenshots before committing them.
+  </Step>
+</Steps>
+
+## Building the documentation locally
+
+Once your environment is set up, build the full site with:
+
+```bash
+make html
+```
+
+Then open `_build/html/index.html` in your browser to preview the result.
+
+### Useful build variants
+
+| Command | Effect |
+|---|---|
+| `make fast` | Builds with a shallow menu (faster for iteration) |
+| `make clean` | Deletes all build artefacts |
+| `make test` | Runs guidelines linter tests |
+| `make html CURRENT_LANG=fr` | Builds only the French version |
+| `make html VERSIONS=17.0,18.0,saas-18.4` | Enables the version switcher |
+
+<Tip>
+  Run `make help` to see all available targets and their descriptions.
+</Tip>
+
+### Using local Odoo sources
+
+If you have a local checkout of [`odoo/odoo`](https://github.com/odoo/odoo) or [`odoo/upgrade-util`](https://github.com/odoo/upgrade-util), place them either as siblings of the `documentation` directory (in the parent folder) or inside `documentation/`. When present, the build will automatically include Python docstrings from those repositories when their version matches the documentation version.
+
+## Making your first contribution
+
+### Via the GitHub interface (minor changes)
+
+The GitHub web editor is the fastest path for typo fixes or short paragraph additions — no local setup required.
+
+<Steps>
+  <Step title="Navigate to the page you want to edit">
+    Browse to the live documentation page, select the correct version from the top dropdown, then click **Edit on GitHub** in the top-right corner.
+  </Step>
+
+  <Step title="Fork if prompted">
+    Click **Fork this repository** to create a copy under your account. Skip this step if you work at Odoo.
+  </Step>
+
+  <Step title="Make your changes">
+    Edit the RST source in the browser. Click **Preview changes** to get a rough preview (note: directives like notes/tips render as plain text in the preview).
+  </Step>
+
+  <Step title="Propose the changes">
+    Scroll to the bottom, write a short summary (e.g., "Fix a typo" or "Add invoicing section") and an explanation of *why*, then click **Propose changes**.
+  </Step>
+
+  <Step title="Open a pull request">
+    Review the diff, click **Create pull request**, tick **Allow edits from maintainer**, complete the description, and submit.
+  </Step>
+</Steps>
+
+### Via Git (complex changes)
+
+Use Git when adding new pages, restructuring sections, or making changes that require a local build preview.
+
+<Steps>
+  <Step title="Create a feature branch">
+    Branch from the target version branch (e.g., `18.0`). Prefix the branch name with the base branch:
+
+    ```bash
+    git switch -c 18.0-explain-pricelists
+    ```
+
+    Odoo employees suffix the branch name with their handle:
+    ```bash
+    git switch -c 18.0-explain-pricelists-xyz
+    ```
+  </Step>
+
+  <Step title="Write your changes">
+    Follow the [Content Guidelines](/contributing/documentation/content-guidelines) and [RST Guidelines](/contributing/documentation/rst-guidelines) while editing.
+  </Step>
+
+  <Step title="Compress PNG images">
+    Run `pngquant` on every PNG you added or modified:
+
+    ```bash
+    pngquant path/to/image.png
+    mv path/to/image-fs8.png path/to/image.png
+    ```
+  </Step>
+
+  <Step title="Add redirect rules for renamed files">
+    If you renamed or moved an `.rst` file, add a redirect entry in the matching `redirects/<version>.txt` file:
+
+    ```text
+    applications/websites/website/configuration/unsplash.rst applications/general/integrations/unsplash.rst
+    ```
+  </Step>
+
+  <Step title="Build and preview">
+    ```bash
+    make html
+    # Open _build/html/index.html in your browser
+    ```
+  </Step>
+
+  <Step title="Commit your changes">
+    Write a clear commit message as described in the [Git Guidelines](/contributing/development/git-guidelines):
+
+    ```bash
+    git add .
+    git commit
+    ```
+  </Step>
+
+  <Step title="Push and open a pull request">
+    External contributors push to their fork:
+    ```bash
+    git push -u dev 18.0-explain-pricelists
+    ```
+
+    Odoo employees push to `origin`:
+    ```bash
+    git push -u origin 18.0-explain-pricelists-xyz
+    ```
+
+    Then open a PR at [github.com/odoo/documentation/compare](https://github.com/odoo/documentation/compare), select the correct base branch, and submit.
+  </Step>
+</Steps>
+
+## Pull request review process
+
+Once your PR is open:
+
+1. The CI checks mergeability and runs the guidelines tests (`make test`). Fix any reported issues.
+2. A member of the Odoo documentation team is automatically assigned as reviewer.
+3. The reviewer may post comments — all comments must be addressed before merging.
+4. Once approved, the reviewer merges the PR and the changes go live the next day.
+
+<Warning>
+  Contributions targeting an unsupported version of Odoo are **not accepted**. Verify the version you are targeting is still actively maintained before starting work.
+</Warning>
+
+<Note>
+  New features and entirely new documentation pages are primarily written by Odoo employees. If you want to write a new page, **discuss it with the Odoo team first** to get the green light before starting — some content may already be in progress internally.
+</Note>
+
+## Troubleshooting
+
+<Accordion title="Wrong Python version">
+  Run `python3 --version` and confirm the output is between 3.10 and 3.14. If not, install a supported version from [python.org](https://www.python.org/downloads/).
+</Accordion>
+
+<Accordion title="Dependencies not found after pip install">
+  Ensure your virtual environment is activated (`source .venv/bin/activate` on Linux/macOS) and that `~/.local/bin` is in your `PATH`.
+</Accordion>
+
+<Accordion title="Stale build artefacts causing errors">
+  Run `make clean` to delete the `_build/` directory, then rebuild with `make html`.
+</Accordion>
+
+<Accordion title="Language or version switcher redirects to a missing page">
+  You need to build the documentation for every language and version combination listed in the switcher. Run `make html` separately for each `CURRENT_LANG` and `VERSIONS` combination you want to serve.
+</Accordion>

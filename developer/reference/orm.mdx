@@ -1,0 +1,456 @@
+---
+title: 'Odoo ORM API: Models, Fields, and Recordsets'
+sidebarTitle: 'ORM API'
+description: 'Complete reference for the Odoo ORM: model attributes, all field types with options, CRUD methods, environment, computed fields, and API decorators.'
+---
+
+The Odoo ORM (Object-Relational Mapping) layer sits between your Python business logic and the PostgreSQL database, eliminating the need to write raw SQL for most operations. Every table in an Odoo database corresponds to a Python class that extends `models.Model`, and every column corresponds to a field attribute on that class. The ORM handles schema creation, query generation, caching, access control, and much more — letting you focus on business logic instead of database mechanics.
+
+---
+
+## Models
+
+### Model Base Classes
+
+<Tabs>
+  <Tab title="models.Model">
+    Standard persistent model. Each class instance maps to a row in a PostgreSQL table. This is the most common base class.
+
+    ```python
+    from odoo import models, fields
+
+    class SaleOrder(models.Model):
+        _name = 'sale.order'
+        _description = 'Sales Order'
+    ```
+  </Tab>
+  <Tab title="models.TransientModel">
+    Temporary model whose records are stored in the database but periodically vacuumed. Used for wizards (pop-up dialogs that collect user input and perform an action).
+
+    ```python
+    from odoo import models, fields
+
+    class SaleOrderConfirmWizard(models.TransientModel):
+        _name = 'sale.order.confirm.wizard'
+        _description = 'Confirm Sale Order Wizard'
+    ```
+  </Tab>
+  <Tab title="models.AbstractModel">
+    Abstract model — never instantiated directly. Used as a mixin to share fields and methods between multiple models via `_inherit`.
+
+    ```python
+    from odoo import models, fields
+
+    class MailThread(models.AbstractModel):
+        _name = 'mail.thread'
+        _description = 'Email Thread'
+    ```
+  </Tab>
+</Tabs>
+
+### Model Attributes
+
+| Attribute | Type | Description |
+|---|---|---|
+| `_name` | `str` (required) | Technical name. Determines the table name (dots → underscores). |
+| `_description` | `str` | Human-readable model name. Required to avoid warnings. |
+| `_inherit` | `str` or `list[str]` | Inherit from another model. When `_name` is omitted, extends the parent in-place. |
+| `_inherits` | `dict` | Delegate inheritance: `{'res.partner': 'partner_id'}`. |
+| `_order` | `str` | Default sort order, e.g. `'date_order desc, name'`. |
+| `_rec_name` | `str` | Field used as display name. Defaults to `name`. |
+| `_auto` | `bool` | If `False`, the ORM will not create a database table (default `True` for `Model`). |
+| `_abstract` | `bool` | Set `True` on `AbstractModel` automatically. |
+| `_transient` | `bool` | Set `True` on `TransientModel` automatically. |
+| `_table` | `str` | Override the database table name. |
+| `_check_company_auto` | `bool` | Automatically check that relational fields belong to the same company. |
+
+---
+
+## Fields
+
+All field types live in `odoo.fields`. Declare them as class attributes on your model.
+
+### Common Options (All Field Types)
+
+| Option | Description |
+|---|---|
+| `string` | Field label shown in the UI. Defaults to the attribute name capitalized. |
+| `required` | If `True`, a `NOT NULL` constraint is added and the UI prevents saving empty values. |
+| `readonly` | If `True`, the field cannot be edited in the UI by default. |
+| `help` | Tooltip text shown in the UI. |
+| `default` | Default value or callable: `default=0`, `default=lambda self: self.env.user`. |
+| `compute` | Name of the method that computes the field value. |
+| `store` | Persist a computed field in the database (default `False` for computed fields). |
+| `related` | Dot-path shorthand to a field on a related record, e.g. `'partner_id.country_id'`. |
+| `copy` | Whether the field value is copied when duplicating a record. Defaults to `True`. |
+| `index` | Add a database index on this column. |
+| `groups` | Comma-separated external IDs of groups that can see this field. |
+| `states` | `{'draft': [('readonly', True)]}` — conditional attributes based on a `state` field. |
+
+### Basic Fields
+
+```python
+from odoo import fields
+
+# String fields
+name = fields.Char(string='Name', required=True, size=256, trim=True)
+description = fields.Text(string='Description')
+body = fields.Html(string='Body Content', sanitize=True)
+
+# Numeric fields
+quantity = fields.Integer(string='Quantity', default=1)
+price = fields.Float(string='Unit Price', digits=(16, 2))
+amount = fields.Monetary(string='Amount', currency_field='currency_id')
+currency_id = fields.Many2one('res.currency', string='Currency')
+
+# Other simple types
+active = fields.Boolean(string='Active', default=True)
+document = fields.Binary(string='Attachment', attachment=True)
+image = fields.Image(string='Image', max_width=1024, max_height=1024)
+```
+
+### Date and Time Fields
+
+```python
+from odoo import fields
+
+# Date — stored as PostgreSQL DATE
+start_date = fields.Date(string='Start Date', default=fields.Date.today)
+
+# Datetime — stored as UTC TIMESTAMP WITHOUT TIME ZONE
+created_at = fields.Datetime(string='Created At', default=fields.Datetime.now)
+```
+
+<Warning>
+Datetime fields are always stored in UTC. Timezone conversion is handled entirely by the client. Never compare a `Date` field to a `datetime` object — they are incompatible types.
+</Warning>
+
+### Selection Field
+
+```python
+from odoo import fields
+
+state = fields.Selection(
+    selection=[
+        ('draft', 'Draft'),
+        ('confirmed', 'Confirmed'),
+        ('done', 'Done'),
+        ('cancelled', 'Cancelled'),
+    ],
+    string='Status',
+    default='draft',
+    required=True,
+    copy=False,
+)
+```
+
+### Relational Fields
+
+```python
+from odoo import fields
+
+# Many2one — foreign key to another model
+partner_id = fields.Many2one(
+    comodel_name='res.partner',
+    string='Customer',
+    ondelete='restrict',   # 'set null' | 'restrict' | 'cascade'
+    auto_join=False,       # join in SQL rather than sub-selecting
+    domain="[('customer_rank', '>', 0)]",
+)
+
+# One2many — virtual inverse of a Many2one; no column in the database
+order_line_ids = fields.One2many(
+    comodel_name='sale.order.line',
+    inverse_name='order_id',
+    string='Order Lines',
+    copy=True,
+)
+
+# Many2many — stored in a separate join table
+tag_ids = fields.Many2many(
+    comodel_name='res.partner.category',
+    relation='res_partner_category_rel',   # join table name (auto-generated if omitted)
+    column1='partner_id',                  # this model's FK in the join table
+    column2='category_id',                 # comodel's FK in the join table
+    string='Tags',
+)
+```
+
+---
+
+## Computed Fields
+
+Fields can derive their value from other fields by specifying a `compute` method name and decorating that method with `@api.depends`.
+
+```python
+from odoo import api, fields, models
+
+class SaleOrderLine(models.Model):
+    _name = 'sale.order.line'
+    _description = 'Sale Order Line'
+
+    price_unit = fields.Float(string='Unit Price')
+    product_qty = fields.Float(string='Quantity')
+    discount = fields.Float(string='Discount (%)')
+
+    price_subtotal = fields.Float(
+        string='Subtotal',
+        compute='_compute_price_subtotal',
+        store=True,   # persist so it can be searched/grouped
+    )
+
+    @api.depends('price_unit', 'product_qty', 'discount')
+    def _compute_price_subtotal(self):
+        for line in self:
+            price = line.price_unit * (1 - line.discount / 100.0)
+            line.price_subtotal = price * line.product_qty
+```
+
+### Related Fields
+
+A related field is a shortcut for a computed field that traverses a relation chain:
+
+```python
+from odoo import fields, models
+
+class SaleOrder(models.Model):
+    _name = 'sale.order'
+    _description = 'Sale Order'
+
+    partner_id = fields.Many2one('res.partner', string='Customer')
+
+    # Equivalent to a computed field reading self.partner_id.country_id
+    partner_country_id = fields.Many2one(
+        'res.country',
+        related='partner_id.country_id',
+        string='Customer Country',
+        store=True,
+    )
+```
+
+---
+
+## Recordsets and CRUD
+
+All ORM interactions return **recordsets** — ordered collections of records of the same model. The model class itself is also a recordset (an empty one by default).
+
+### Creating Records
+
+```python
+# create() accepts a dict or a list of dicts (batch create)
+new_order = self.env['sale.order'].create({
+    'partner_id': partner.id,
+    'date_order': fields.Datetime.now(),
+})
+
+# Batch create with model_create_multi
+new_lines = self.env['sale.order.line'].create([
+    {'order_id': new_order.id, 'price_unit': 100.0, 'product_qty': 2.0},
+    {'order_id': new_order.id, 'price_unit': 50.0, 'product_qty': 5.0},
+])
+```
+
+### Reading Records
+
+```python
+# search() — returns a recordset
+orders = self.env['sale.order'].search(
+    domain=[('state', '=', 'draft')],
+    order='date_order desc',
+    limit=10,
+    offset=0,
+)
+
+# search_count() — returns an integer
+count = self.env['sale.order'].search_count([('state', '=', 'draft')])
+
+# browse() — build a recordset from known ids (no domain evaluation)
+order = self.env['sale.order'].browse(42)
+
+# read() — returns a list of dicts (bypasses the ORM active record interface)
+data = orders.read(['name', 'partner_id', 'amount_total'])
+
+# read_group() — aggregate data (like SQL GROUP BY)
+groups = self.env['sale.order'].read_group(
+    domain=[('state', '=', 'done')],
+    fields=['partner_id', 'amount_total:sum'],
+    groupby=['partner_id'],
+)
+```
+
+### Updating Records
+
+```python
+# write() — update fields on all records in the recordset
+orders.write({'state': 'confirmed'})
+
+# Or set individual fields (triggers ORM update on save)
+order.date_confirm = fields.Datetime.now()
+```
+
+### Deleting Records
+
+```python
+# unlink() — deletes all records in the recordset
+old_orders.unlink()
+```
+
+### Copying Records
+
+```python
+# copy() — duplicate a record; fields with copy=False are left at default
+new_record = record.copy({'name': 'Copy of ' + record.name})
+```
+
+---
+
+## Environment
+
+The environment (`self.env`) is the gateway to models, context, and the current user. It is an instance of `odoo.api.Environment`.
+
+```python
+# Access the environment from any model method
+self.env                       # the Environment object
+self.env.uid                   # current user's database ID
+self.env.user                  # current user as a res.users recordset
+self.env.lang                  # current language code (e.g. 'en_US')
+self.env.context               # dict of context values
+self.env.cr                    # database cursor (use sparingly)
+
+# Get an empty recordset for another model
+Partner = self.env['res.partner']
+
+# Fetch a record by external ID
+default_currency = self.env.ref('base.EUR')
+```
+
+### Modifying the Environment
+
+```python
+# with_context() — add or override context keys for subsequent calls
+records_in_lang = self.env['res.partner'].with_context(lang='fr_FR').search([])
+
+# sudo() — re-execute as the superuser, bypassing access rights
+self.sudo().write({'state': 'validated'})
+
+# with_user() — execute as a specific user
+self.with_user(admin_user).env['res.partner'].search([])
+
+# with_company() — switch the current company context
+self.with_company(other_company).create({...})
+```
+
+<Warning>
+Use `sudo()` sparingly. It bypasses all access control checks. Only use it when you genuinely need to perform an operation that the current user is not permitted to do, and ensure the surrounding code has already validated the user's intent.
+</Warning>
+
+---
+
+## Domain Syntax
+
+A domain is a list of criteria used to filter records. It follows a Polish prefix notation.
+
+```python
+# Simple criterion: [('field_name', 'operator', value)]
+[('state', '=', 'draft')]
+[('amount_total', '>=', 1000)]
+[('partner_id.country_id.code', '=', 'BE')]
+[('name', 'ilike', 'odoo')]       # case-insensitive LIKE
+[('tag_ids', 'in', [1, 2, 3])]   # Many2many / One2many membership
+
+# AND is implicit when you list multiple criteria
+[('state', '=', 'draft'), ('amount_total', '>', 500)]
+
+# Explicit AND with '&'
+['&', ('state', '=', 'draft'), ('amount_total', '>', 500)]
+
+# OR with '|'
+['|', ('state', '=', 'draft'), ('state', '=', 'sent')]
+
+# NOT with '!'
+['!', ('state', '=', 'cancel')]
+
+# Complex: (draft OR sent) AND amount > 500
+['&', '|', ('state', '=', 'draft'), ('state', '=', 'sent'),
+      ('amount_total', '>', 500)]
+```
+
+Common operators: `=`, `!=`, `<`, `>`, `<=`, `>=`, `like`, `ilike`, `not like`, `in`, `not in`, `child_of`, `parent_of`.
+
+---
+
+## API Decorators
+
+Decorators live in `odoo.api` and modify the behavior of model methods.
+
+```python
+from odoo import api, models, fields
+from odoo.exceptions import ValidationError
+
+class EstateProperty(models.Model):
+    _name = 'estate.property'
+    _description = 'Real Estate Property'
+
+    name = fields.Char(required=True)
+    living_area = fields.Integer()
+    garden_area = fields.Integer()
+    total_area = fields.Integer(compute='_compute_total_area')
+    expected_price = fields.Float()
+    selling_price = fields.Float()
+    garden = fields.Boolean()
+
+    @api.depends('living_area', 'garden_area')
+    def _compute_total_area(self):
+        """Recomputed whenever living_area or garden_area changes."""
+        for record in self:
+            record.total_area = record.living_area + record.garden_area
+
+    @api.constrains('selling_price', 'expected_price')
+    def _check_price(self):
+        """Runs after write; raises ValidationError to block the save."""
+        for record in self:
+            if record.selling_price > 0 and \
+               record.selling_price < record.expected_price * 0.9:
+                raise ValidationError(
+                    "Selling price cannot be less than 90% of the expected price."
+                )
+
+    @api.onchange('garden')
+    def _onchange_garden(self):
+        """Runs in the browser when the 'garden' field changes.
+        Can set field values or return a warning dict — never saved automatically."""
+        if self.garden:
+            self.garden_area = 10
+            self.garden_orientation = 'north'
+        else:
+            self.garden_area = 0
+            self.garden_orientation = False
+
+    @api.model
+    def default_get(self, fields_list):
+        """Called when a new record form is opened. Decorates a method that
+        receives no specific record (model-level, not record-level)."""
+        defaults = super().default_get(fields_list)
+        defaults['bedrooms'] = 2
+        return defaults
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to process a list of value dicts.
+        Always use @api.model_create_multi rather than @api.model for create."""
+        for vals in vals_list:
+            if not vals.get('name'):
+                vals['name'] = 'New Property'
+        return super().create(vals_list)
+```
+
+### Decorator Reference
+
+| Decorator | Use Case |
+|---|---|
+| `@api.depends(*fields)` | Mark a compute method and its dependencies. |
+| `@api.depends_context(*keys)` | Recompute when specific context keys change. |
+| `@api.constrains(*fields)` | Validate field values after write; raise `ValidationError` to reject. |
+| `@api.onchange(*fields)` | React to field changes in the form view UI (not persisted automatically). |
+| `@api.model` | Method receives no record (self is the model class). Use for `default_get`, `search`, etc. |
+| `@api.model_create_multi` | Override `create`; receives a list of value dicts for efficient batch creation. |

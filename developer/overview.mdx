@@ -1,0 +1,121 @@
+---
+title: "Odoo Developer Framework: Build Custom Modules"
+sidebarTitle: "Overview"
+description: "A complete guide to the Odoo technical stack — Python ORM backend, JavaScript/OWL frontend, XML views, QWeb templating, and the security model."
+---
+
+Odoo's developer framework is a full-stack toolkit for building modular business applications. Every feature in Odoo — accounting, inventory, CRM, e-commerce — is a **module** built on the same foundation of Python models, XML views, and a JavaScript frontend. You can extend any existing app or build an entirely new one from scratch without touching the core codebase.
+
+The framework follows a **three-tier architecture**: the presentation tier is built with HTML5, JavaScript (using the OWL component framework), and CSS; the business logic tier is written exclusively in Python; and the data tier uses PostgreSQL as the only supported RDBMS. Understanding this separation is the key to effective Odoo development.
+
+<Note>
+  Since version 15.0, Odoo actively transitions its frontend to the in-house **OWL** (Odoo Web Library) reactive component framework. The legacy JavaScript widget system is still supported but deprecated. New frontend work should target OWL.
+</Note>
+
+## The Technical Stack at a Glance
+
+| Layer | Technology | Role |
+|---|---|---|
+| Presentation | HTML5, JavaScript, OWL, CSS | Views, widgets, client actions |
+| Business Logic | Python 3.10+ | Models, ORM, controllers |
+| Templating | QWeb (XML) | Views, reports, email templates |
+| Data | PostgreSQL | Persistent storage |
+| Configuration | XML / CSV data files | Security rules, menus, demo data |
+
+## What a Module Contains
+
+An Odoo module is a Python package inside an **addons directory**. It can contain any combination of:
+
+- **Business objects** — Python classes extending `odoo.models.Model`, automatically mapped to database tables by the ORM.
+- **Views** — XML files defining list, form, kanban, graph, and other UI representations.
+- **Data files** — XML or CSV files that load configuration, security rules, and demo records.
+- **Web controllers** — Python classes handling HTTP requests via `odoo.http.route`.
+- **Static assets** — JavaScript, CSS, and image files served to the browser.
+
+A minimal module requires only two files:
+
+```bash
+my_module/
+├── __init__.py        # Python package marker
+└── __manifest__.py    # Module metadata and dependencies
+```
+
+## Core Framework Components
+
+<CardGroup cols={2}>
+  <Card title="Tutorials" icon="graduation-cap" href="/developer/tutorials/server-framework">
+    Hands-on exercises to build skills in Odoo development. Start with the Server Framework 101 tutorial to build a real estate module from scratch.
+  </Card>
+  <Card title="Setup Guide" icon="wrench" href="/developer/setup">
+    Install Git, Python, clone the Odoo source, create a virtual environment, and run `odoo-bin` for the first time.
+  </Card>
+  <Card title="ORM API" icon="database" href="/developer/reference/orm">
+    Complete reference for models, field types, CRUD methods, domains, environment, and API decorators.
+  </Card>
+  <Card title="Module Manifests" icon="package" href="/developer/reference/module">
+    Document `__manifest__.py` fields, module structure, data files, and the upgrade mechanism.
+  </Card>
+  <Card title="Actions" icon="bolt" href="/developer/reference/actions">
+    Window actions, server actions, report actions, URL actions, scheduled crons, and action bindings.
+  </Card>
+  <Card title="Security" icon="shield" href="/developer/reference/security">
+    Access rights via `ir.model.access` CSV, record rules with `ir.rule`, groups, `sudo()`, and field-level access.
+  </Card>
+  <Card title="Testing" icon="flask" href="/developer/reference/testing">
+    TransactionCase, HttpCase, test tags, `--test-enable`, browser tours, and performance query count assertions.
+  </Card>
+  <Card title="Web Framework" icon="browser" href="/developer/tutorials/web-framework">
+    OWL components, services, registries, QWeb templates, and building custom views in the JavaScript layer.
+  </Card>
+</CardGroup>
+
+## The ORM in One Glance
+
+All database interaction goes through the ORM. You never write raw SQL for normal business logic. Models are declared as Python classes:
+
+```python
+from odoo import models, fields, api
+
+class RealEstateProperty(models.Model):
+    _name = 'estate.property'
+    _description = 'Real Estate Property'
+    _order = 'date_availability'
+
+    name = fields.Char(required=True)
+    expected_price = fields.Float(required=True)
+    state = fields.Selection(
+        [('new', 'New'), ('offer_received', 'Offer Received'),
+         ('sold', 'Sold'), ('cancelled', 'Cancelled')],
+        default='new', required=True, copy=False,
+    )
+    salesperson_id = fields.Many2one('res.users', default=lambda self: self.env.user)
+
+    @api.depends('living_area', 'garden_area')
+    def _compute_total_area(self):
+        for record in self:
+            record.total_area = record.living_area + record.garden_area
+
+    total_area = fields.Integer(compute='_compute_total_area')
+```
+
+The ORM automatically creates the `estate_property` table in PostgreSQL, handles migrations, enforces access rights, fires computed field recomputation, and much more.
+
+## Security Model Overview
+
+Odoo's security is data-driven and group-based. Access control works in two layers:
+
+1. **Model-level access** (`ir.model.access`) — grants or denies create/read/write/unlink on a whole model for a group.
+2. **Record-level rules** (`ir.rule`) — domain-based predicates that restrict which individual records a user can see or modify.
+
+Both are typically declared in CSV and XML data files loaded by the module manifest.
+
+## Next Steps
+
+<Tip>
+  If you are new to Odoo development, follow the [Server Framework 101 tutorial](/developer/tutorials/server-framework) first. It walks you from an empty directory to a fully-functional real estate application covering models, views, security, computed fields, and actions.
+</Tip>
+
+- **Set up your environment** → [Setup Guide](/developer/setup)
+- **Build your first module** → [Server Framework 101](/developer/tutorials/server-framework)
+- **Understand the ORM** → [ORM API Reference](/developer/reference/orm)
+- **Learn the frontend** → [Web Framework Tutorial](/developer/tutorials/web-framework)

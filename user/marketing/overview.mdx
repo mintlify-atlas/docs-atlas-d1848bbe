@@ -1,0 +1,162 @@
+---
+title: "Odoo Marketing: Email, SMS, Events & Social Media"
+sidebarTitle: "Marketing"
+description: "Run targeted email and SMS campaigns, automate multi-channel workflows, manage events with ticketing, and schedule social media posts—all from Odoo Marketing."
+---
+
+Odoo's Marketing suite gives your team the tools to reach the right audience through the right channel at exactly the right moment. Email Marketing, SMS Marketing, Marketing Automation, Events, and Social Marketing all share the same contact database and reporting framework, so campaigns across channels are coordinated rather than siloed. Whether you are nurturing leads, re-engaging lapsed customers, or selling event tickets, every interaction flows back into the CRM for a complete picture of each contact's journey.
+
+---
+
+## Email Marketing
+
+The **Email Marketing** app provides drag-and-drop design tools, pre-built templates, and detailed reporting metrics to help you create and measure email campaigns at scale.
+
+### Creating an Email Campaign
+
+<Steps>
+  <Step title="Create a new mailing">
+    Go to **Email Marketing** and click **New**. Give the mailing a descriptive subject line, select the recipients (a mailing list, a CRM segment, or a custom domain filter), and choose a template or start from scratch.
+  </Step>
+  <Step title="Design the email">
+    Use the drag-and-drop email builder to compose the message. Add text blocks, images, buttons, social links, and dynamic variables (e.g., first name) that personalize the email for each recipient.
+  </Step>
+  <Step title="Test before sending">
+    Send a test email to one or more internal addresses to verify layout and links across email clients. Review the spam score and subject line preview.
+  </Step>
+  <Step title="Send or schedule">
+    Click **Send Now** to dispatch immediately, or set a **Scheduled Date** to send at a specific time. Odoo queues large sends and processes them in batches to respect delivery rates.
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card title="Mailing Lists" icon="list">
+    Organize contacts into targeted mailing lists. Subscribers can opt in through website forms or be imported from CSV. Each list tracks subscription status and opt-out history independently.
+  </Card>
+  <Card title="Unsubscriptions & Blacklist" icon="ban">
+    Every email includes a mandatory unsubscribe link. Contacts who unsubscribe are added to the blacklist and excluded from all future mailings automatically—ensuring compliance with GDPR and CAN-SPAM.
+  </Card>
+  <Card title="Campaign Metrics" icon="chart-bar">
+    The dashboard shows delivered rate, open rate, click rate, and bounce rate for every mailing in list, Kanban, calendar, or graph view. Use these metrics to A/B test subject lines and content.
+  </Card>
+  <Card title="Lost Lead Reactivation" icon="refresh-cw">
+    Target CRM leads marked as lost with a tailored re-engagement email. Select the **Lost Leads** domain filter when creating a mailing to reach prospects who went quiet and attempt to re-open the opportunity.
+  </Card>
+</CardGroup>
+
+---
+
+## SMS Marketing
+
+SMS Marketing reaches audiences where open rates often exceed 90%—directly on their mobile phones. It is especially effective in markets where email adoption is lower or for time-sensitive communications.
+
+<CardGroup cols={2}>
+  <Card title="Create SMS Messages" icon="message-square">
+    Compose short text messages with optional links, personalized variables, and opt-out keywords. Odoo validates the character count and warns you when a message will be split across multiple SMS credits.
+  </Card>
+  <Card title="SMS Campaigns" icon="megaphone">
+    Group individual SMS mailings into campaigns to measure collective performance. Campaigns can coordinate SMS sends with email mailings under the same marketing initiative.
+  </Card>
+  <Card title="Mailing Lists & Blacklists" icon="list">
+    Reuse the same contact lists from Email Marketing or create SMS-specific lists. Opt-out numbers are tracked on a shared blacklist across both channels.
+  </Card>
+  <Card title="Pricing & Credits" icon="credit-card">
+    SMS messages are sent using prepaid credits purchased through Odoo's in-app purchase system. Prices vary by destination country. Alternatively, connect a Twilio account for wider international reach.
+  </Card>
+</CardGroup>
+
+---
+
+## Marketing Automation
+
+The **Marketing Automation** app lets you build dynamic, multi-step workflows that trigger automatically based on contact behavior, time delays, or record attributes—so your team can nurture leads at scale without manual follow-up.
+
+### Building a Campaign
+
+<Steps>
+  <Step title="Create a campaign">
+    Go to **Marketing Automation** and click **New**. Name the campaign, set the target model (e.g., Contacts, CRM Leads, Event Registrations), and apply filters to define the audience.
+  </Step>
+  <Step title="Add workflow activities">
+    Click **Add an Activity** to add the first action—an email, SMS, internal note, or server action. Set a trigger (immediately, after a delay, or when a condition is met) and configure the action content.
+  </Step>
+  <Step title="Branch on behavior">
+    Add child activities that fire only when a contact opens an email, clicks a link, or meets a custom condition. This lets you send a follow-up only to engaged contacts and a different message to those who did not interact.
+  </Step>
+  <Step title="Test and launch">
+    Use **Test Mode** to run the campaign against a single test contact and verify that triggers and actions fire correctly. When satisfied, click **Start** to launch the campaign for the full audience.
+  </Step>
+</Steps>
+
+<Note>
+  Installing **Marketing Automation** automatically installs **Email Marketing**. Install **CRM** and **SMS Marketing** as well to unlock all available activity types including CRM lead creation and SMS sends.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Campaign Templates" icon="layout-template">
+    Odoo provides six pre-built campaign templates to help you get started—welcome sequences, lead nurturing, event promotion, and more. Load a template and customize it rather than building from scratch.
+  </Card>
+  <Card title="Campaign Metrics" icon="activity">
+    Track open rates, click rates, reply rates, and conversion events for each activity in the workflow. Metrics update in real time as contacts progress through the campaign.
+  </Card>
+</CardGroup>
+
+---
+
+## Events
+
+The **Events** app manages the full lifecycle of both online and in-person events—from creation and registration to check-in and revenue reporting.
+
+<CardGroup cols={2}>
+  <Card title="Create Events" icon="calendar-plus">
+    Set up events with a name, date, location (physical or online), and registration limit. Use **Event Templates** to pre-fill common settings for recurring event formats, saving setup time.
+  </Card>
+  <Card title="Sell Tickets" icon="ticket">
+    Create multiple ticket tiers—Early Bird, Standard, VIP—each with its own price and availability window. Tickets are sold through the event's public registration page on your website.
+  </Card>
+  <Card title="Event Tracks" icon="presentation">
+    Manage conference-style agendas with talks, workshops, and sessions. Speakers can propose talks through a public submission form. Accepted tracks appear on the event's schedule page.
+  </Card>
+  <Card title="Event Booths" icon="store">
+    Offer sponsor and exhibitor booth packages as paid add-ons. Manage booth assignments and track which sponsors have confirmed their participation.
+  </Card>
+</CardGroup>
+
+### Event Check-In
+
+<Steps>
+  <Step title="Set up the Registration Desk">
+    Enable the **Registration Desk** feature on the event. Attendees are greeted at check-in with a barcode scanner or a name search on a tablet.
+  </Step>
+  <Step title="Scan badges">
+    Scan the QR code on each attendee's ticket confirmation email. Odoo marks the registration as attended instantly and the attendee count updates in real time.
+  </Step>
+  <Step title="Review attendance reports">
+    After the event, review the **Attendees Report** to see registration counts by ticket type, check-in rates, and geographic distribution of attendees. The **Revenues Report** shows ticket income and booth sales.
+  </Step>
+</Steps>
+
+---
+
+## Social Marketing
+
+**Social Marketing** lets you manage all your business social media accounts, create and schedule posts, monitor engagement, and measure content effectiveness from one centralized dashboard.
+
+<CardGroup cols={2}>
+  <Card title="Social Media Streams" icon="rss">
+    Connect Facebook, Instagram, LinkedIn, Twitter/X, and YouTube business accounts as streams. Each stream displays the account's latest posts, comments, and engagement metrics in a unified feed.
+  </Card>
+  <Card title="Create Posts" icon="pen-line">
+    Write a post, attach images or videos, and select which accounts to post to simultaneously. Preview how the post will look on each platform before publishing.
+  </Card>
+  <Card title="Schedule Posts" icon="clock">
+    Schedule posts for optimal publishing times. Odoo's calendar view shows all scheduled and published posts across all connected accounts, making it easy to maintain a consistent content calendar.
+  </Card>
+  <Card title="Social Campaigns" icon="target">
+    Group posts under a named social campaign to track collective performance metrics—reach, impressions, clicks, and engagement rate—across all posts in the campaign.
+  </Card>
+</CardGroup>
+
+<Warning>
+  Social Marketing connects to **business accounts only**—personal profiles cannot be added as streams. In multi-company databases, each company must activate its social media pages independently to avoid permission errors.
+</Warning>

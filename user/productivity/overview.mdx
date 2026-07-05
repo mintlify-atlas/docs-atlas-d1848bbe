@@ -1,0 +1,186 @@
+---
+title: "Boost Productivity with Odoo Discuss, Notes & Approvals"
+sidebarTitle: "Productivity"
+description: "Communicate in real time with Odoo Discuss, build a company knowledge base, manage document signing with Sign, and streamline approvals across your organization."
+---
+
+Odoo's Productivity suite brings together the internal communication, document management, knowledge base, and workflow tools that keep teams aligned and moving forward. **Discuss** provides persistent messaging and video calls that work across every app; **Sign** digitizes contract and document approval; **Knowledge** centralizes your company's know-how; and **To-Do** keeps personal tasks from falling through the cracks. Because all of these tools are built into the same platform, a message in Discuss can link directly to a sales order, a Kanban card in To-Do can be converted into a project task, and a document in the Sign app can be triggered from any record's chatter.
+
+---
+
+## Discuss
+
+**Odoo Discuss** is the internal communication hub that keeps every conversation—whether a quick direct message, a team channel, or a video call—connected to the work happening in other apps.
+
+### Messaging Channels
+
+Channels are persistent group chat spaces organized by team, project, or topic. Any user with access can follow a channel, and messages are searchable and archived indefinitely.
+
+<Steps>
+  <Step title="Create a channel">
+    In the Discuss app, click the **+** icon next to **Channels** in the left sidebar and enter a channel name. The channel is created immediately and is visible to all internal users by default.
+  </Step>
+  <Step title="Configure privacy">
+    Open the channel settings (gear icon next to the channel name) and go to the **Privacy** tab. Restrict access to a specific user group using **Authorized Group**, or use **Auto Subscribe Departments** to automatically add all members of a department as followers.
+  </Step>
+  <Step title="Invite members">
+    Click the **Add a Member** icon in the top-right of the channel, search for colleagues, and confirm. Invited members receive a notification and the channel appears in their sidebar.
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card title="Direct Messages" icon="message-circle">
+    Start a private conversation with one or more colleagues by clicking the **+** next to **Direct Messages** and typing a name. Group direct messages support up to a configurable participant limit and can be named like a channel.
+  </Card>
+  <Card title="Message Actions" icon="more-horizontal">
+    React to any message with an emoji, reply in a thread, star messages as to-dos, pin important messages in a channel, or edit and delete your own messages—all accessible by hovering over a message.
+  </Card>
+  <Card title="Inbox & Starred" icon="inbox">
+    The **Inbox** shows unread messages and mentions across all channels and records. **Starred** collects messages you flagged as important. **History** shows chatter updates from records you are assigned to or tagged on.
+  </Card>
+  <Card title="Video Calls" icon="video">
+    Start a meeting directly from any direct message or channel conversation by clicking **Start a Call**. Video calls support screen sharing, a camera, and a microphone—no external conferencing tool required.
+  </Card>
+</CardGroup>
+
+### Chatter
+
+Every record in Odoo—sales orders, invoices, CRM leads, support tickets, employee records—has a **Chatter** thread at the bottom. The chatter combines a message log (external-facing) with internal notes and a full audit trail of every field change.
+
+<CardGroup cols={2}>
+  <Card title="Log Notes" icon="pen-line">
+    Post internal notes visible only to followers, not to external contacts. Notes are timestamped and attributed to the author. Tag a colleague with @mention to notify them and add them as a follower.
+  </Card>
+  <Card title="Send Messages" icon="send">
+    Send an external-facing message to contacts following the record. The message is delivered by email to those contacts and their replies are automatically appended to the chatter thread.
+  </Card>
+  <Card title="Attach Files" icon="paperclip">
+    Attach documents, images, and spreadsheets directly to any record's chatter. Files are stored in the **Documents** app and remain linked to the record for future reference.
+  </Card>
+  <Card title="Schedule Activities" icon="calendar-clock">
+    Schedule follow-up activities—calls, meetings, emails, to-dos—directly from the chatter. Activities appear in the responsible user's activity view and send reminders on the due date.
+  </Card>
+</CardGroup>
+
+---
+
+## Knowledge
+
+**Odoo Knowledge** is a collaborative wiki and knowledge base built into Odoo. Teams write, organize, and share articles—from onboarding guides to SOPs—in a structured hierarchy accessible from any app.
+
+<CardGroup cols={2}>
+  <Card title="Create Articles" icon="file-plus">
+    Click **New Article** in the Knowledge sidebar to start writing. Use the Odoo editor to add text, images, tables, embedded Odoo records (like product lists or contact tables), and AI-generated content blocks.
+  </Card>
+  <Card title="Organize with Hierarchy" icon="folder-tree">
+    Nest articles under parent articles to create a tree structure. Private articles are visible only to their creator; Workspace articles are shared with the entire company. Drag-and-drop to reorganize the tree.
+  </Card>
+  <Card title="Templates" icon="layout-template">
+    Browse pre-configured templates—meeting notes, project briefs, onboarding checklists—and load one into a new article to start from a structured foundation rather than a blank page.
+  </Card>
+  <Card title="Kanban & List Views" icon="columns">
+    Build item kanban boards, structured item lists, and calendar views inside articles. These are useful for lightweight project tracking, content calendars, or inventory lists that don't need a full app.
+  </Card>
+</CardGroup>
+
+---
+
+## To-Do
+
+**Odoo To-Do** is a personal task manager for capturing and organizing everything you need to get done—separate from project tasks, which are owned by the team.
+
+<Steps>
+  <Step title="Create a to-do">
+    Click **New** on the To-Do dashboard or press **Ctrl+K** anywhere in Odoo to open the command palette and select **Add a To-Do**. Enter a title and optionally add tags, assignees, and a detailed description using the Odoo editor.
+  </Step>
+  <Step title="Manage stages">
+    To-dos are organized in a personal Kanban pipeline. Drag and drop cards between stages (e.g., To Do, In Progress, Done) or click **+ Personal Stage** to add custom stages that match your workflow.
+  </Step>
+  <Step title="Convert to a project task">
+    If a to-do grows into formal work tracked in a project, open the to-do, click the gear icon, and select **Convert to Task**. Select the target project, and the to-do becomes a full project task with all its context intact.
+  </Step>
+</Steps>
+
+---
+
+## Sign
+
+**Odoo Sign** allows you to prepare, send, and sign documents electronically. Electronic signatures generated in Sign are considered legally valid in the European Union and the United States, meeting the requirements for electronic signatures in most countries worldwide.
+
+### Signing Workflow
+
+<Steps>
+  <Step title="Upload and prepare the document">
+    Go to **Sign → Documents → My Documents** and click **Upload PDF**. Drag and drop signature fields, initials, date fields, checkboxes, and text fields onto the document to mark where each signer must act.
+  </Step>
+  <Step title="Configure signers">
+    Add one or more signers. For each signer, define their role (Customer, Employee, Witness), optionally set an authentication requirement (SMS verification, Aadhaar eSign, or itsme®), and configure whether they can delegate signing to another person.
+  </Step>
+  <Step title="Send the request">
+    Click **Send**. Each signer receives an email with a secure link to the document. When all parties have signed, the completed document and a certificate of completion are emailed to the requestor and all signers automatically.
+  </Step>
+  <Step title="Use templates for recurring documents">
+    Save any prepared document as a template—employment contracts, NDAs, purchase agreements—so future signature requests require only selecting the template, entering signers, and clicking send.
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card title="Sign from Any Record" icon="file-signature">
+    Trigger a signature request from any Odoo record using the **Actions → Request Signature** menu. The related customer is pre-filled as a signer and the signed document is attached to the record automatically.
+  </Card>
+  <Card title="Document Envelopes" icon="mail">
+    Bundle multiple documents into a single envelope and send them as one signature request. The signer reviews and signs all documents in sequence before the envelope is considered complete.
+  </Card>
+  <Card title="Auto-Fill Fields" icon="wand-sparkles">
+    Configure auto-complete fields that pull data from the Odoo database—contact name, company address, contract start date—and populate them automatically during the signing session.
+  </Card>
+  <Card title="Validity & Legal Compliance" icon="shield-check">
+    Every signed document includes a tamper-proof certificate of completion with timestamps, signer identities, and IP addresses. Sign meets eIDAS standards (EU) and ESIGN Act requirements (US).
+  </Card>
+</CardGroup>
+
+---
+
+## Documents
+
+**Odoo Documents** provides centralized file storage organized into company-wide and personal workspaces, with access controls, version tracking, and deep integration with other Odoo apps.
+
+<CardGroup cols={2}>
+  <Card title="File Centralization" icon="folder">
+    Files associated with specific apps—HR documents, accounting attachments, contract PDFs—are automatically organized into dedicated folders when file centralization is enabled for that app.
+  </Card>
+  <Card title="Workspaces" icon="layout-dashboard">
+    Organize files in **Company** workspaces (shared across the organization) and **My Drive** (personal files). Share specific files or folders with colleagues who need access without opening the full workspace.
+  </Card>
+  <Card title="Request Documents" icon="send">
+    Request a document from a colleague or external contact by sending a secure upload link. When the recipient uploads the file, it lands directly in the designated folder.
+  </Card>
+  <Card title="Chatter & Versioning" icon="history">
+    Each file has a chatter thread that logs all changes and comments. Upload a new version of a file to keep the history intact without creating duplicate records.
+  </Card>
+</CardGroup>
+
+---
+
+## Approvals
+
+Odoo's **Approvals** module allows you to define multi-step approval workflows for any type of request—budget approvals, purchase requisitions, travel requests, or custom business processes.
+
+<CardGroup cols={2}>
+  <Card title="Approval Types" icon="check-square">
+    Create custom approval types in **Approvals → Configuration → Approval Types**. Each type has its own set of approvers, required information fields, and escalation rules.
+  </Card>
+  <Card title="Approval Requests" icon="clipboard-check">
+    Employees submit approval requests from the **Approvals** app or through a request button on a related record. Approvers are notified immediately and can approve, refuse, or request more information.
+  </Card>
+  <Card title="Multi-Level Approvals" icon="git-merge">
+    Chain multiple approvers sequentially—each approver is notified only after the previous one has approved. This ensures the right people review requests in the correct order.
+  </Card>
+  <Card title="Tracking & Reporting" icon="chart-bar">
+    View all pending and completed approval requests in one dashboard. Filter by type, status, requester, or approver to stay on top of bottlenecks in your approval processes.
+  </Card>
+</CardGroup>
+
+<Note>
+  The Approvals app integrates with **Discuss**—every approval request has a chatter thread where approvers can leave comments, request clarifications, or loop in additional stakeholders before making a decision.
+</Note>

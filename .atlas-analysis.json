@@ -1,24 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Odoo",
+  "projectType": "saas",
+  "projectName": "Odoo",
+  "projectDescription": "Odoo is a comprehensive open-source ERP and business application suite covering finance, sales, inventory, HR, marketing, and more, with a developer framework for building custom modules.",
   "theme": "maple",
-  "colors": {
-    "primary": "#744e6b",
-    "light": "#b4a4b4",
-    "dark": "#92888f"
-  },
-  "favicon": "https://media.brand.dev/c0eb38f2-ab28-45c7-afd1-b8c3dca4abfa.jpg",
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/odoo/documentation"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/odoo/documentation"
-    }
-  },
+  "primaryColor": "#744e6b",
+  "lightColor": "#b4a4b4",
+  "darkColor": "#92888f",
   "navigation": {
     "tabs": [
       {
@@ -163,5 +150,29 @@
         ]
       }
     ]
-  }
+  },
+  "keyFeatures": [
+    "Comprehensive ERP suite covering finance, sales, inventory, HR, marketing, and more",
+    "Modular architecture allowing installation of only required applications",
+    "Odoo.sh cloud hosting platform with CI/CD and SSH access",
+    "Powerful ORM for building custom server-side modules in Python",
+    "JavaScript/Owl frontend framework for building custom views and components",
+    "External JSON API and legacy XML-RPC API for third-party integrations",
+    "Multi-company, multi-currency, and multi-language support",
+    "Studio tool for no-code customization of applications",
+    "Built-in localization and fiscal position management for global compliance",
+    "Sphinx-based documentation build system with multi-language and multi-version support"
+  ],
+  "publicApiSurface": [
+    "POST /json/2/<model>/<method> — External JSON-2 API",
+    "POST /xmlrpc/2/common — XML-RPC authentication endpoint",
+    "POST /xmlrpc/2/object — XML-RPC record operations (search, read, write, create, unlink)",
+    "odoo.models.Model — Base class for all Odoo models",
+    "odoo.fields.* — Field type library (Char, Integer, Many2one, One2many, etc.)",
+    "odoo.api.model, @api.depends, @api.onchange — ORM decorator API",
+    "odoo-bin server — Start the Odoo server",
+    "odoo-bin scaffold — Scaffold a new Odoo module",
+    "odoo-bin shell — Launch interactive Python shell against database",
+    "__manifest__.py — Module declaration and metadata file"
+  ]
 }

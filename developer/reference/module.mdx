@@ -1,0 +1,302 @@
+---
+title: 'Odoo Module Structure and Manifest Reference'
+sidebarTitle: 'Modules'
+description: 'Reference for Odoo module __manifest__.py fields, module file structure, data file loading, demo data, and upgrade/install hooks.'
+---
+
+An Odoo module (also called an addon) is a Python package that Odoo discovers in one or more `addons_path` directories. Every module must contain at minimum a `__manifest__.py` file that describes it and a `__init__.py` that makes it a Python package. Everything in the Odoo ecosystem — business apps, technical modules, localization packs, themes — is delivered as a module with this same structure.
+
+---
+
+## Module Directory Structure
+
+A well-organized module follows a conventional layout that makes it easy to navigate:
+
+```bash
+estate/
+├── __init__.py                  # Python package entry point; imports sub-packages
+├── __manifest__.py              # Module declaration and metadata
+│
+├── models/
+│   ├── __init__.py              # Imports each model file
+│   ├── estate_property.py
+│   └── estate_property_offer.py
+│
+├── views/
+│   ├── estate_property_views.xml
+│   └── estate_menus.xml
+│
+├── security/
+│   ├── ir.model.access.csv      # ACL rules (model-level access)
+│   └── estate_security.xml      # Record rules and group definitions
+│
+├── data/
+│   └── estate_property_data.xml # Configuration data loaded at install
+│
+├── demo/
+│   └── estate_demo.xml          # Demo data (only in demo mode)
+│
+├── wizard/
+│   ├── __init__.py
+│   └── estate_property_offer_wizard.py
+│
+├── report/
+│   └── estate_property_report.xml
+│
+└── static/
+    ├── description/
+    │   ├── icon.png             # App icon (128×128 px)
+    │   └── index.html           # Module description page in Apps
+    └── src/
+        ├── js/
+        ├── xml/
+        └── css/
+```
+
+<Note>
+Only `__manifest__.py` and `__init__.py` are strictly required. All other directories are conventional — Odoo imposes no requirement on folder names except that static assets must be under `static/`.
+</Note>
+
+---
+
+## `__manifest__.py` Reference
+
+The manifest is a plain Python dictionary. Odoo reads it when scanning `addons_path` for available modules.
+
+```python
+{
+    'name': 'Real Estate',
+    'version': '17.0.1.0.0',
+    'depends': ['base', 'mail'],
+    'author': 'My Company',
+    'website': 'https://www.example.com',
+    'category': 'Real Estate/Brokerage',
+    'summary': 'Manage property listings and offers',
+    'description': """
+Real Estate Advertisement Module
+=================================
+Track property listings, manage buyer offers, and close deals.
+    """,
+    'license': 'LGPL-3',
+    'application': True,
+    'installable': True,
+    'auto_install': False,
+    'data': [
+        'security/ir.model.access.csv',
+        'security/estate_security.xml',
+        'views/estate_property_views.xml',
+        'views/estate_menus.xml',
+        'data/estate_property_data.xml',
+    ],
+    'demo': [
+        'demo/estate_demo.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'estate/static/src/js/estate_dashboard.js',
+            'estate/static/src/xml/estate_dashboard.xml',
+        ],
+    },
+}
+```
+
+### Field Reference
+
+<Accordion title="name (required)">
+**Type:** `str`
+
+The human-readable name of the module as it appears in the Apps list and module page.
+
+```python
+'name': 'Real Estate',
+```
+</Accordion>
+
+<Accordion title="version">
+**Type:** `str`
+
+Module version following Odoo's convention: `{odoo_major}.{module_major}.{minor}.{patch}`.
+
+```python
+'version': '17.0.1.0.0',
+```
+</Accordion>
+
+<Accordion title="depends">
+**Type:** `list[str]`
+
+List of module technical names that must be installed before this module. The framework installs all dependencies automatically. If a dependency is uninstalled, this module is also uninstalled.
+
+```python
+'depends': ['base', 'mail', 'web'],
+```
+
+<Note>
+The `base` module is always installed, but you should still declare it as a dependency to ensure your module updates correctly when `base` is updated.
+</Note>
+</Accordion>
+
+<Accordion title="data">
+**Type:** `list[str]`
+
+Paths (relative to the module root) of XML or CSV files that are loaded every time the module is installed or upgraded. Files are loaded in the listed order — earlier files can be referenced by later ones.
+
+```python
+'data': [
+    'security/ir.model.access.csv',
+    'views/my_views.xml',
+    'data/config_data.xml',
+],
+```
+</Accordion>
+
+<Accordion title="demo">
+**Type:** `list[str]`
+
+Paths to data files that are loaded **only** when Odoo is running in demonstration mode (started with `--load-language` demo data or when a new database is created with demo data enabled). These files typically populate the database with realistic-looking sample records.
+
+```python
+'demo': [
+    'demo/estate_demo.xml',
+],
+```
+</Accordion>
+
+<Accordion title="license">
+**Type:** `str` | Default: `LGPL-3`
+
+Distribution license. Accepted values: `GPL-2`, `GPL-3`, `AGPL-3`, `LGPL-3`, `OEEL-1` (Enterprise), `OPL-1` (Proprietary), `Other OSI approved licence`, `Other proprietary`.
+</Accordion>
+
+<Accordion title="application">
+**Type:** `bool` | Default: `False`
+
+Set to `True` to make the module appear as a top-level application in the Apps menu. Technical modules that extend other applications should leave this as `False`.
+</Accordion>
+
+<Accordion title="auto_install">
+**Type:** `bool` or `list[str]` | Default: `False`
+
+If `True`, the module is automatically installed when all of its `depends` are installed. Useful for integration ("glue") modules. If a list of module names is provided, the module auto-installs when all listed names (a subset of `depends`) are installed.
+
+```python
+# Install automatically when both 'sale' and 'crm' are installed
+'auto_install': ['sale', 'crm'],
+```
+</Accordion>
+
+<Accordion title="assets">
+**Type:** `dict`
+
+Maps asset bundle names to lists of static file paths. Paths are module-relative or glob patterns.
+
+```python
+'assets': {
+    'web.assets_backend': [
+        'my_module/static/src/js/my_widget.js',
+        'my_module/static/src/xml/my_widget.xml',
+        'my_module/static/src/scss/my_widget.scss',
+    ],
+    'web.assets_tests': [
+        'my_module/static/tests/tours/my_tour.js',
+    ],
+},
+```
+</Accordion>
+
+<Accordion title="pre_init_hook / post_init_hook / uninstall_hook">
+**Type:** `str` (function name in `__init__.py`)
+
+Hooks called at install/uninstall time. Each receives the Odoo `env` as its single argument. Use these only when ORM operations alone cannot accomplish the setup or teardown you need.
+
+```python
+# __manifest__.py
+'post_init_hook': 'post_init_hook',
+
+# __init__.py
+def post_init_hook(env):
+    env['estate.property'].search([]).write({'state': 'new'})
+```
+</Accordion>
+
+---
+
+## Data Files
+
+Odoo data files are XML or CSV documents that create or update records in the database. They are processed in the order listed in the `data` key.
+
+### XML Data Files
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- noupdate="1" means this record won't be overwritten on module upgrade -->
+    <data noupdate="1">
+
+        <record id="property_type_house" model="estate.property.type">
+            <field name="name">House</field>
+            <field name="sequence">1</field>
+        </record>
+
+        <record id="property_type_apartment" model="estate.property.type">
+            <field name="name">Apartment</field>
+            <field name="sequence">2</field>
+        </record>
+
+    </data>
+
+    <!-- Records outside noupdate are re-created/updated on every upgrade -->
+    <record id="action_estate_property" model="ir.actions.act_window">
+        <field name="name">Properties</field>
+        <field name="res_model">estate.property</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
+```
+
+<Tip>
+Wrap configuration records (property types, stages, email templates) in `<data noupdate="1">` so that system administrators can customize them without losing changes on the next module upgrade.
+</Tip>
+
+### CSV Data Files
+
+CSV files are a concise way to load records for models with many flat fields. The first row is the header with field names:
+
+```csv
+id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
+access_estate_property_user,estate property user,model_estate_property,base.group_user,1,1,1,0
+access_estate_property_manager,estate property manager,model_estate_property,base.group_system,1,1,1,1
+```
+
+---
+
+## External IDs (ir.model.data)
+
+Every record created from a data file gets an **external ID** (also called an XML ID) stored in the `ir.model.data` table. This allows data files to reference the same record on subsequent installs/upgrades without creating duplicates.
+
+The external ID format is `module.xml_id`, for example: `estate.property_type_house`.
+
+### Using `ref()` in Python
+
+```python
+# Retrieve a record by external ID
+house_type = self.env.ref('estate.property_type_house')
+
+# In domain expressions
+default_type = self.env.ref('estate.property_type_house').id
+properties = self.env['estate.property'].search([
+    ('property_type_id', '=', default_type)
+])
+```
+
+### Referencing Records in XML
+
+```xml
+<record id="default_property_offer" model="estate.property.offer">
+    <!-- ref="" cross-references another record by its external ID -->
+    <field name="property_id" ref="estate_property_big_villa"/>
+    <field name="partner_id" ref="base.res_partner_1"/>
+    <field name="price">250000</field>
+</record>
+```

@@ -1,0 +1,556 @@
+---
+title: "Odoo Python and JavaScript Coding Guidelines"
+sidebarTitle: "Coding Guidelines"
+description: "Odoo coding standards for Python (PEP8 + Odoo idioms), module structure, XML/QWeb formatting, class attribute ordering, method conventions, and JavaScript/SCSS rules."
+---
+
+Well-structured code is easier to read, easier to debug, and easier for teammates to extend without side effects. These guidelines define the conventions Odoo uses across Python, XML, JavaScript, and SCSS — apply them to every new module and every new piece of development you contribute.
+
+<Warning>
+  **Stable versions:** when modifying existing files in a stable branch, the original file's style strictly supersedes these guidelines. Never reformat existing stable files to comply with these rules — it inflates diffs and disrupts `git blame`. Keep changes minimal.
+
+  **Development version (master):** apply these guidelines to existing code only for lines you are already modifying, or when the file is undergoing a major overhaul. In that case, first make a dedicated `[MOV]` commit to restructure, then apply the feature changes.
+</Warning>
+
+## Module structure
+
+### Directory layout
+
+Every Odoo module follows a predictable directory layout. Knowing the structure tells you immediately where to look for any piece of logic:
+
+| Directory | Contents |
+|---|---|
+| `data/` | Demo and seed data XML |
+| `models/` | Model definitions |
+| `controllers/` | HTTP route controllers |
+| `views/` | Backend views and QWeb templates |
+| `static/` | Web assets: `css/`, `js/`, `img/`, `lib/`, … |
+| `wizard/` | Transient models (`TransientModel`) and their views |
+| `report/` | Printable reports and SQL-view based report models |
+| `tests/` | Python test files |
+| `security/` | Access rights CSV, groups XML, record rules XML |
+
+<Note>
+  Community modules should be prefixed with the company or author name (e.g. `mycompany_sales_extension`) to avoid collisions with Odoo's own modules.
+</Note>
+
+### File naming conventions
+
+Use only lowercase alphanumeric characters and underscores: `[a-z0-9_]`.
+
+Use file permissions `644` for files and `755` for directories.
+
+The complete tree of a sample `plant_nursery` module illustrates all conventions:
+
+```text
+addons/plant_nursery/
+├── __init__.py
+├── __manifest__.py
+├── controllers/
+│   ├── __init__.py
+│   ├── plant_nursery.py      ← main controller
+│   └── portal.py             ← inheriting portal controller
+├── data/
+│   ├── plant_nursery_data.xml
+│   ├── plant_nursery_demo.xml
+│   └── mail_data.xml
+├── models/
+│   ├── __init__.py
+│   ├── plant_nursery.py      ← first main model
+│   ├── plant_order.py        ← second main model
+│   └── res_partner.py        ← inherited Odoo model
+├── report/
+│   ├── plant_order_report.py
+│   ├── plant_order_report_views.xml
+│   ├── plant_order_reports.xml     ← actions, paperformat, …
+│   └── plant_order_templates.xml   ← QWeb templates
+├── security/
+│   ├── ir.model.access.csv
+│   ├── plant_nursery_groups.xml
+│   ├── plant_nursery_security.xml
+│   └── plant_order_security.xml
+├── static/
+│   ├── img/
+│   ├── lib/
+│   └── src/
+│       ├── js/
+│       ├── scss/
+│       └── xml/
+├── views/
+│   ├── plant_nursery_menus.xml
+│   ├── plant_nursery_views.xml
+│   ├── plant_nursery_templates.xml
+│   ├── plant_order_views.xml
+│   └── plant_order_templates.xml
+└── wizard/
+    ├── make_plant_order.py
+    └── make_plant_order_views.xml
+```
+
+**Naming patterns by type:**
+
+| Type | Pattern | Example |
+|---|---|---|
+| Model file | `<main_model>.py` | `plant_nursery.py` |
+| Inherited model | `<inherited_model>.py` | `res_partner.py` |
+| Backend views | `<model>_views.xml` | `plant_order_views.xml` |
+| Portal templates | `<model>_templates.xml` | `plant_nursery_templates.xml` |
+| Menus | `<module>_menus.xml` | `plant_nursery_menus.xml` |
+| Demo data | `<model>_demo.xml` | `plant_nursery_demo.xml` |
+| Seed data | `<model>_data.xml` | `plant_nursery_data.xml` |
+| Wizard model | `<transient>.py` | `make_plant_order.py` |
+| Controller | `<module_name>.py` | `plant_nursery.py` |
+
+## XML files
+
+### Record format
+
+Use the `<record>` notation for view and data declarations:
+
+- Put `id` before `model`.
+- For `<field>` tags, put `name` first, then the value (inline or in `eval`), then other attributes ordered by importance.
+- Group records by model; only break this rule when action/menu/view dependencies require a different order.
+- Use `<data noupdate="1">` only for records that must not be updated on module upgrade. If the entire file is non-updatable, set `noupdate="1"` on `<odoo>` and omit `<data>`.
+
+```xml
+<record id="view_id" model="ir.ui.view">
+    <field name="name">view.name</field>
+    <field name="model">object_name</field>
+    <field name="priority" eval="16"/>
+    <field name="arch" type="xml">
+        <list>
+            <field name="my_field_1"/>
+            <field name="my_field_2" string="My Label" widget="statusbar"
+                   statusbar_visible="draft,sent,progress,done"/>
+        </list>
+    </field>
+</record>
+```
+
+Use the shorthand tags `<menuitem>` and `<template>` when available — they are preferred over the full `<record>` notation.
+
+### XML IDs and naming
+
+<Accordion title="Security, view, and action naming patterns">
+  | Type | Pattern | Example |
+  |---|---|---|
+  | Menu | `<model>_menu` | `plant_nursery_menu` |
+  | Sub-menu | `<model>_menu_<action>` | `plant_nursery_menu_orders` |
+  | View | `<model>_view_<type>` | `plant_order_view_form` |
+  | Main action | `<model>_action` | `plant_order_action` |
+  | Other action | `<model>_action_<detail>` | `plant_order_action_view_kanban` |
+  | Group | `<module>_group_<name>` | `plant_nursery_group_manager` |
+  | Rule | `<model>_rule_<group>` | `plant_order_rule_company` |
+
+  The `name` attribute on a record mirrors the XML ID with dots replacing underscores:
+
+  ```xml
+  <record id="plant_order_view_form" model="ir.ui.view">
+      <field name="name">plant.order.view.form</field>
+  </record>
+  ```
+</Accordion>
+
+### Inheriting XML views
+
+Inheriting views reuse the same XML ID as the original. Add `.inherit.<details>` to the `name` attribute:
+
+```xml
+<record id="model_view_form" model="ir.ui.view">
+    <field name="name">model.view.form.inherit.module2</field>
+    <field name="inherit_id" ref="module1.model_view_form"/>
+    ...
+</record>
+```
+
+New primary views do not need the `.inherit.` suffix:
+
+```xml
+<record id="module2.model_view_form" model="ir.ui.view">
+    <field name="name">model.view.form.module2</field>
+    <field name="inherit_id" ref="module1.model_view_form"/>
+    <field name="mode">primary</field>
+    ...
+</record>
+```
+
+## Python guidelines
+
+<Warning>
+  Also read the [Security Pitfalls](https://www.odoo.com/documentation/latest/developer/reference/backend/security.html#security-pitfalls) reference before writing any code that handles user input or database access.
+</Warning>
+
+### PEP 8 — Odoo exemptions
+
+Odoo follows PEP 8 with three relaxed rules:
+
+- `E501` — line too long (the 100-character soft limit is still a good target)
+- `E301` — expected 1 blank line, found 0
+- `E302` — expected 2 blank lines, found 1
+
+A linter such as `flake8` or `pylint` with Odoo plugin is strongly recommended.
+
+### Import ordering
+
+Imports must be grouped and sorted as follows:
+
+```python
+# 1: Python standard library
+import base64
+import re
+import time
+from datetime import datetime
+
+# 2: Odoo core
+from odoo import Command, _, api, fields, models  # ASCIIbetically ordered
+from odoo.fields import Domain
+from odoo.tools.safe_eval import safe_eval as eval
+
+# 3: Odoo add-on imports (rarely needed)
+from odoo.addons.web.controllers.main import login_redirect
+from odoo.addons.website.models.website import slug
+```
+
+### Python idioms
+
+**Readability over cleverness:**
+
+```python
+# bad
+new_dict = my_dict.clone()
+new_list = old_list.clone()
+
+# good
+new_dict = dict(my_dict)
+new_list = list(old_list)
+```
+
+**Build dicts and lists with literals:**
+
+```python
+# bad
+my_dict = {}
+my_dict['foo'] = 3
+my_dict['bar'] = 4
+
+# good
+my_dict = {'foo': 3, 'bar': 4}
+my_dict.update(foo=3, bar=4, baz=5)
+```
+
+**Use list comprehensions:**
+
+```python
+# not very good
+cube = []
+for i in res:
+    cube.append((i['id'], i['name']))
+
+# better
+cube = [(i['id'], i['name']) for i in res]
+```
+
+**Collections are booleans:**
+
+```python
+bool([]) is False
+bool([1]) is True
+
+# write this:
+if some_collection:
+    ...
+# not this:
+if len(some_collection):
+    ...
+```
+
+**Iterate efficiently:**
+
+```python
+# creates a temporary list
+for key in my_dict.keys():
+    ...
+
+# better
+for key in my_dict:
+    ...
+
+# accessing key-value pairs
+for key, value in my_dict.items():
+    ...
+```
+
+### Never manually commit the transaction
+
+The ORM manages the transaction for every RPC call. Calling `cr.commit()` outside of explicitly created database cursors will cause partial commits, broken rollbacks, and test pollution.
+
+```python
+# BAD: breaks transactional integrity
+cr.commit()
+
+# ONLY acceptable if you created the cursor yourself:
+cr = db.cursor()
+try:
+    res = do_work(cr)
+    cr.commit()
+except Exception:
+    cr.rollback()
+    raise
+finally:
+    cr.close()
+```
+
+### Use savepoints to isolate exception handling
+
+```python
+try:
+    with self.env.cr.savepoint():
+        do_stuff()
+except SomeSpecificException:
+    handle_error()
+```
+
+<Warning>
+  PostgreSQL slows down after 64 savepoints in a single transaction. If you use savepoints in a loop (e.g. processing records one by one), limit the batch size.
+</Warning>
+
+### Translation (`_()`)
+
+Use `self.env._()` for static strings only. Never format the string before passing it to `_()`:
+
+```python
+_ = self.env._
+
+# good: plain strings
+error = _('This record is locked!')
+
+# good: strings with placeholders
+error = _('Record %s cannot be modified!', record)
+
+# good: named placeholders (easier for translators)
+error = _('Answer to question %(title)s is not valid.', title=question)
+
+# bad: formatting BEFORE translation
+error = _('Record %s cannot be modified!' % record)  # ❌
+
+# bad: dynamic string concatenation
+error = _("'" + question + "' is invalid")  # ❌
+```
+
+### Symbols and naming conventions
+
+| Element | Convention | Example |
+|---|---|---|
+| Model name (dotted) | Singular form, prefixed by module | `res.partner`, `sale.order` |
+| Transient model name | `<base_model>.<action>` | `account.invoice.make` |
+| Report model | `<base_model>.report.<action>` | `sale.order.report.summary` |
+| Python class | PascalCase | `AccountInvoice` |
+| Model variable | PascalCase | `Partner = self.env['res.partner']` |
+| Common variable | `snake_case` | `partner_count` |
+| Record ID variable | Suffix `_id` | `partner_id = partners[0].id` |
+| Recordset variable | Suffix `_ids` or plural | `partner_ids`, `partners` |
+| `Many2One` field | Suffix `_id` | `partner_id`, `user_id` |
+| `One2Many` / `Many2Many` | Suffix `_ids` | `sale_order_line_ids` |
+
+### Method naming conventions
+
+| Method type | Pattern | Example |
+|---|---|---|
+| Compute | `_compute_<field>` | `_compute_amount_total` |
+| Search | `_search_<field>` | `_search_partner_name` |
+| Default | `_default_<field>` | `_default_currency_id` |
+| Selection | `_selection_<field>` | `_selection_payment_term` |
+| Onchange | `_onchange_<field>` | `_onchange_date_begin` |
+| Constraint | `_check_<name>` | `_check_seats_limit` |
+| Action | `action_<name>` | `action_validate` |
+
+### Model attribute order
+
+Organise class attributes in this exact sequence:
+
+```python
+class Event(models.Model):
+    # 1. Private attributes
+    _name = 'event.event'
+    _description = 'Event'
+
+    # 2. Default methods and default_get
+    def _default_name(self):
+        ...
+
+    # 3. Field declarations
+    name = fields.Char(string='Name', default=_default_name)
+    seats_reserved = fields.Integer(
+        string='Reserved Seats', store=True,
+        readonly=True, compute='_compute_seats'
+    )
+    seats_available = fields.Integer(
+        string='Available Seats', store=True,
+        readonly=True, compute='_compute_seats'
+    )
+    price = fields.Integer(string='Price')
+    event_type = fields.Selection(string='Type', selection='_selection_type')
+
+    # 4. Compute, inverse, and search methods (same order as field declarations)
+    @api.depends('seats_max', 'registration_ids.state', 'registration_ids.nb_register')
+    def _compute_seats(self):
+        ...
+
+    @api.model
+    def _selection_type(self):
+        return []
+
+    # 5. SQL constraints (and indexes)
+
+    # 6. Constraint and onchange methods
+    @api.constrains('seats_max', 'seats_available')
+    def _check_seats_limit(self):
+        ...
+
+    @api.onchange('date_begin')
+    def _onchange_date_begin(self):
+        ...
+
+    # 7. CRUD overrides (create, write, unlink, name_search, …)
+    @api.model
+    def create(self, vals_list):
+        ...
+
+    # 8. Action methods
+    def action_validate(self):
+        self.ensure_one()
+        ...
+
+    # 9. Business methods
+    def mail_user_confirm(self):
+        ...
+```
+
+## JavaScript guidelines
+
+- Always include `'use strict';` at the top of JavaScript files.
+- Use a linter (`jshint` or ESLint with the Odoo config).
+- Never include minified JavaScript libraries in the source.
+- Use **PascalCase** for class declarations.
+- Each component should live in its own file with a meaningful name (e.g. `activity.js` for activity widgets).
+
+Static files follow the same model-based split as Python: one file per logical component, using the same naming conventions.
+
+See the [Odoo JavaScript coding guidelines wiki](https://github.com/odoo/odoo/wiki/Javascript-coding-guidelines) for more detail.
+
+## CSS and SCSS guidelines
+
+### Syntax and formatting
+
+```scss
+.o_foo, .o_foo_bar, .o_baz {
+    height: $o-statusbar-height;
+
+    .o_qux {
+        height: $o-statusbar-height * 0.5;
+    }
+}
+
+.o_corge {
+    background: $o-list-footer-bg-color;
+}
+```
+
+Rules:
+- 4-space indentation, no tabs.
+- Maximum 80 characters per line.
+- Opening brace `{` on the same line as the last selector, preceded by a space.
+- Closing brace `}` on its own line.
+- One declaration per line.
+
+### Properties order
+
+Order properties from the "outside in": `position` → layout (`display`, `margin`, `padding`, `width`, `height`) → `border` → `background` → `font` → decorative (`filter`, etc.).
+
+Place scoped SCSS variables and CSS variables at the very top of a block, followed by an empty line:
+
+```scss
+.o_element {
+    $-inner-gap: $border-width + $legend-margin-bottom;
+
+    --element-margin: 1rem;
+    --element-size: 3rem;
+
+    @include o-position-absolute(1rem);
+    display: block;
+    margin: var(--element-margin);
+    border: 0;
+    padding: 1rem;
+    background: blue;
+    font-size: 1rem;
+    filter: blur(2px);
+}
+```
+
+### Naming conventions
+
+- Prefix all classes with `o_<module_name>` (e.g. `o_sale_order`, `o_forum`). Exception: the web client uses just `o_`.
+- Avoid `id` selectors.
+- Use the "grandchild" approach — avoid hyper-specific nested names:
+
+```html
+<!-- ❌ Don't — overly nested -->
+<div class="o_element_wrapper">
+  <div class="o_element_wrapper_entries">
+    <span class="o_element_wrapper_entries_entry">
+      <a class="o_element_wrapper_entries_entry_link">Entry</a>
+    </span>
+  </div>
+</div>
+
+<!-- ✅ Do — grandchild approach -->
+<div class="o_element_wrapper">
+  <div class="o_element_entries">
+    <span class="o_element_entry">
+      <a class="o_element_link">Entry</a>
+    </span>
+  </div>
+</div>
+```
+
+### SCSS variable convention
+
+Global variables: `$o-[root]-[element]-[property]-[modifier]`
+
+```scss
+$o-block-color: value;
+$o-block-title-color: value;
+$o-block-title-color-hover: value;
+```
+
+Scoped (block-level) variables: `$-[name]`
+
+```scss
+.o_element {
+    $-inner-gap: compute-something();
+
+    margin-right: $-inner-gap;
+
+    .o_element_child {
+        margin-right: $-inner-gap * 0.5;
+    }
+}
+```
+
+### CSS variables (contextual adaptation)
+
+Use CSS custom properties only for **contextual** DOM adaptations, not as a global design system:
+
+```scss
+// Define with a fallback in the component
+.o_MyComponent {
+    color: var(--MyComponent-color, #{$o-component-color});
+}
+
+// Override in a specific context
+.o_MyDashboard {
+    --MyComponent-color: #{$o-dashboard-color};
+}
+```
+
+Avoid defining CSS variables on `:root` — use SCSS variables for global design tokens instead.

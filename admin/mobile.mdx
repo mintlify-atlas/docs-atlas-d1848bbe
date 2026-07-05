@@ -1,0 +1,77 @@
+---
+title: "Use Odoo on Mobile: iOS and Android Apps"
+sidebarTitle: "Mobile"
+description: "Install and use Odoo on mobile devices via the Progressive Web App (PWA) or the native store apps for iOS and Android."
+---
+
+Odoo offers two ways to access your databases from a mobile device: a **Progressive Web App (PWA)** and native **store apps** for Android and iOS. The PWA is the recommended option for most users because it supports push notifications, SSO authentication, and a seamless full-screen experience across all platforms.
+
+## Progressive Web App (PWA)
+
+PWAs are web-based applications that run inside a browser but behave like native apps — they can be added to your home screen, receive push notifications, and provide a borderless, full-screen navigation experience.
+
+**Odoo PWA features:**
+- Home screen shortcut for quick access
+- Seamless, borderless navigation experience
+- Push notifications
+- SSO (Single Sign-On) authentication
+
+### Installing the PWA
+
+To install the Odoo PWA, open a supported browser, sign in to your Odoo database, and follow the platform-specific instructions below.
+
+<Tabs>
+  <Tab title="Android">
+    **Chrome:** Open Chrome's menu (⋮), select **Install app**, and tap **Install**.
+
+    **Firefox:** Open Firefox's menu (⋮), select **Install**, then either touch and hold the Odoo icon or tap **Add automatically**.
+
+    The PWA can also be installed with **Samsung Internet**, **Edge**, and **Opera**.
+  </Tab>
+  <Tab title="iOS">
+    **Safari:** Tap the **Share** button (square with an upward arrow), select **Add to Home Screen**, optionally edit the app name, and tap **Add**.
+
+    On **iOS 16.4 and above**, the PWA can also be installed using **Chrome**, **Firefox**, and **Edge**.
+  </Tab>
+  <Tab title="Desktop">
+    **Chrome and Edge:** Click the installation icon on the right side of the address bar and click **Install**.
+  </Tab>
+</Tabs>
+
+<Note>
+  Push notifications and home-screen installation require a browser that supports the PWA standard. Safari on iOS 16.3 and earlier only supports installation via the Share menu and does not support push notifications.
+</Note>
+
+## Store Apps
+
+Native Odoo apps are available for download from both major app stores.
+
+<CardGroup cols={2}>
+  <Card title="Google Play Store" icon="android" href="https://play.google.com/store/apps/details?id=com.odoo.mobile">
+    Download the Odoo app for Android from the Google Play Store.
+  </Card>
+  <Card title="Apple App Store" icon="apple" href="https://apps.apple.com/app/odoo/id1272543640">
+    Download the Odoo app for iOS from the Apple App Store.
+  </Card>
+</CardGroup>
+
+### Store App Capabilities and Limitations
+
+<Warning>
+  The store apps support **multi-account** management (switching between multiple Odoo databases), but they are **not compatible with SSO authentication**. If your organization uses Single Sign-On, use the PWA instead.
+</Warning>
+
+## Choosing Between PWA and Store App
+
+| Feature | PWA | Store App |
+|---------|-----|-----------|
+| Push notifications | ✅ | ✅ |
+| SSO authentication | ✅ | ❌ |
+| Multi-account support | Browser-based | ✅ |
+| Home screen shortcut | ✅ | ✅ |
+| Always up-to-date | ✅ Automatic | Requires app update |
+| Works offline (cached) | Partial | Partial |
+
+<Tip>
+  For the best mobile experience, use the **PWA** — it is always up-to-date with your Odoo version, supports SSO, and does not require an app store download or update.
+</Tip>
